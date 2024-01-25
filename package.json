@@ -1,0 +1,44 @@
+{
+  "name": "clarifai-nodejs",
+  "version": "0.0.1",
+  "description": "The official Clarifai Node.js SDK",
+  "source": "src/index.ts",
+  "main": "dist/main.js",
+  "module": "dist/module.js",
+  "types": "dist/types.d.ts",
+  "scripts": {
+    "test": "jest",
+    "prettier": "prettier --write .",
+    "lint": "tsc --noEmit --pretty && prettier --check .",
+    "watch": "parcel watch",
+    "build": "parcel build"
+  },
+  "files": [
+    "dist/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clarifai/clarifai-nodejs.git"
+  },
+  "keywords": [
+    "clarifai",
+    "clarifai-nodejs",
+    "clarifai-typescript"
+  ],
+  "author": "Clarifai Inc.",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Clarifai/clarifai-nodejs/issues"
+  },
+  "homepage": "https://github.com/Clarifai/clarifai-nodejs#readme",
+  "devDependencies": {
+    "@parcel/packager-ts": "^2.11.0",
+    "@parcel/transformer-typescript-types": "^2.11.0",
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "parcel": "^2.11.0",
+    "prettier": "3.2.4",
+    "ts-jest": "^29.1.2",
+    "typescript": "5.3.3"
+  }
+}
