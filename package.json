@@ -8,8 +8,8 @@
   "types": "dist/types.d.ts",
   "scripts": {
     "test": "jest",
-    "prettier": "prettier --write .",
-    "lint": "tsc --noEmit --pretty && prettier --check .",
+    "lint:fix": "eslint . --fix",
+    "lint": "tsc --noEmit --pretty && eslint .",
     "watch": "parcel watch",
     "build": "parcel build"
   },
@@ -35,10 +35,14 @@
     "@parcel/packager-ts": "^2.11.0",
     "@parcel/transformer-typescript-types": "^2.11.0",
     "@types/jest": "^29.5.11",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
     "jest": "^29.7.0",
     "parcel": "^2.11.0",
     "prettier": "3.2.4",
     "ts-jest": "^29.1.2",
-    "typescript": "5.3.3"
+    "typescript": "^5.3.3"
   }
 }
