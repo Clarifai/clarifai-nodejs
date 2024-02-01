@@ -8,8 +8,8 @@
   "types": "dist/types.d.ts",
   "scripts": {
     "test": "jest",
-    "lint:fix": "eslint . --fix",
-    "lint": "tsc --noEmit --pretty && eslint .",
+    "lint:fix": "eslint . --fix --ignore-path .gitignore",
+    "lint": "tsc --noEmit --pretty && eslint . --ignore-path .gitignore",
     "watch": "parcel watch",
     "build": "parcel build"
   },

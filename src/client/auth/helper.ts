@@ -130,6 +130,7 @@ export class ClarifaiAuthHelper {
    * TODO: This method is specific to Streamlit and cannot be directly implemented in Node.js TypeScript.
    * Similar functionality might be possible by handling query parameters in a Node.js web framework.
    */
+  // @ts-expect-error this method is not yet implemented
   private addStreamlitQueryParams(/* parameters, if any */): void {
     // Method logic goes here
     throw new Error("Method not implemented.");
