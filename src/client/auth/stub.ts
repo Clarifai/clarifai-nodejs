@@ -2,6 +2,7 @@ import { credentials, Metadata, ServiceError, status } from "@grpc/grpc-js";
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import { ClarifaiAuthHelper } from "./helper";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import { V2Stub } from "./register";
 
 const throttleStatusCodes = new Set([
   StatusCode.CONN_THROTTLED,
@@ -100,7 +101,7 @@ export class RetryStub extends AuthorizedStub {
 export function createStub(
   authHelper: ClarifaiAuthHelper,
   maxRetryAttempts: number = 10,
-): AuthorizedStub | RetryStub {
+): V2Stub {
   /*
    Create client stub that handles authorization and basic retries for
    unavailable or throttled connections.
