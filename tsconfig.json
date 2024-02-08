@@ -4,6 +4,7 @@
     "target": "es2020", // Specify ECMAScript target version
     "module": "commonjs", // Specify module code generation
     "lib": ["es2020"], // Specify library files to be included in the compilation
+    "types": ["node", "jest"], // Specify type package to be included in the compilation
     "outDir": "./dist", // Redirect output structure to the directory
     "rootDir": "./", // Specify the root directory of input files
     "strict": true, // Enable all strict type-checking options
