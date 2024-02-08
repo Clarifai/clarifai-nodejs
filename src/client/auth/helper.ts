@@ -96,6 +96,8 @@ export class ClarifaiAuthHelper {
     if (validate) {
       this.validate();
     }
+
+    this.setBase(base);
   }
 
   private validate(): void {
