@@ -1,7 +1,7 @@
+import { AuthorizedStub, RetryStub } from "./stub";
+
 // Interface equivalent to V2Stub abstract class
-export interface V2Stub {
-  // This interface will be extended by other interfaces
-}
+export type V2Stub = AuthorizedStub | RetryStub;
 
 // Interface equivalent to RpcCallable abstract class
 export interface RpcCallable {

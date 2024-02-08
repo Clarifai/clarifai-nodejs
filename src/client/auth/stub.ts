@@ -96,3 +96,26 @@ export class RetryStub extends AuthorizedStub {
     throw new Error("Max retry attempts reached");
   }
 }
+
+export function createStub(
+  authHelper: ClarifaiAuthHelper,
+  maxRetryAttempts: number = 10,
+): AuthorizedStub | RetryStub {
+  /*
+   Create client stub that handles authorization and basic retries for
+   unavailable or throttled connections.
+
+   Args:
+    authHelper: ClarifaiAuthHelper to use for auth metadata (default: from env)
+    maxRetryAttempts: max attempts to retry RPCs with retryable failures
+  */
+
+  // Assuming AuthorizedStub's constructor can handle a null authHelper by defaulting internally or through another mechanism
+  const stub: AuthorizedStub = new AuthorizedStub(authHelper);
+
+  if (maxRetryAttempts > 0) {
+    return new RetryStub(authHelper, maxRetryAttempts);
+  }
+
+  return stub;
+}
