@@ -1,10 +1,9 @@
 import axios from "axios";
-import { URL } from "url";
 import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import process from "process";
 
 // TypeScript interface for the cache
-interface Cache {
+export interface Cache {
   [key: string]: boolean;
 }
 
@@ -14,6 +13,19 @@ const DEFAULT_UI = "https://clarifai.com";
 // Map from base domain to True / False for whether the base has https or http.
 const baseHttpsCache: Cache = {};
 const uiHttpsCache: Cache = {};
+
+function getHostnameFromUrl(url: string): string {
+  // Remove protocol (http, https) if present
+  let hostname = url.indexOf("//") > -1 ? url.split("/")[2] : url.split("/")[0];
+
+  // Remove port number if present
+  hostname = hostname.split(":")[0];
+
+  // Remove path if present
+  hostname = hostname.split("?")[0];
+
+  return hostname;
+}
 
 export function clearCache(): void {
   Object.keys(baseHttpsCache).forEach((key) => delete baseHttpsCache[key]);
@@ -31,7 +43,7 @@ export async function httpsCache(cache: Cache, url: string): Promise<string> {
     url = url.replace("http://", "");
     cache[url] = HTTP;
   } else if (!(url in cache)) {
-    const hostname = new URL(url).hostname;
+    const hostname = getHostnameFromUrl(url);
     if (hostname && hostname.endsWith(".clarifai.com")) {
       cache[url] = HTTPS;
     } else {
