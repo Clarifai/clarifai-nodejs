@@ -1,5 +1,7 @@
 import axios from "axios";
 import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import { grpc } from "clarifai-nodejs-grpc";
+import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import process from "process";
 
 // TypeScript interface for the cache
@@ -93,11 +95,12 @@ export class ClarifaiAuthHelper {
     this._base = base;
     this._ui = ui;
 
+    this.setBase(base);
+    this.setUi(ui);
+
     if (validate) {
       this.validate();
     }
-
-    this.setBase(base);
   }
 
   private validate(): void {
@@ -218,10 +221,39 @@ export class ClarifaiAuthHelper {
    * Get the API gRPC stub using the right channel based on the API endpoint base.
    * TODO: This method is currently not implemented due to the lack of a gRPC V2Stub in clarifai-node.js.
    *
-   * @returns The service_pb2_grpc.V2Stub stub for the API.
+   * @returns V2Client - The gRPC client to use to make API calls.
    */
-  getStub(): unknown {
-    throw new Error("Method not implemented.");
+  getStub(): V2Client {
+    if (!(this._base in baseHttpsCache)) {
+      throw new Error(`Cannot determine if base ${this._base} is https`);
+    }
+
+    const https = baseHttpsCache[this._base];
+
+    let client: V2Client;
+
+    if (https) {
+      client = new V2Client(this._base, grpc.ChannelCredentials.createSsl());
+    } else {
+      let host: string;
+      let port: number = 80;
+      if (this._base.includes(":")) {
+        [host, port] = this._base
+          .split(":")
+          .map((item, index) => (index === 1 ? parseInt(item) : item)) as [
+          string,
+          number,
+        ];
+      } else {
+        host = this._base;
+      }
+      client = new V2Client(
+        `${host}:${port}`,
+        grpc.ChannelCredentials.createInsecure(),
+      );
+    }
+
+    return client;
   }
 
   /**
