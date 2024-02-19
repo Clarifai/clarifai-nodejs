@@ -15,7 +15,7 @@ const retryCodesGrpc = new Set([
 ]);
 
 // Utility type to extract the first parameter type from a function
-type FirstParameterType<T> = T extends (
+export type FirstParameterType<T> = T extends (
   arg1: infer P,
   ...args: unknown[]
 ) => unknown
