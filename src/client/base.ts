@@ -1,10 +1,13 @@
 import { UserAppIDSet } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiAuthHelper } from "./auth/helper";
 import { getFromDictOrEnv } from "../utils/misc";
-import { FirstParameterType, createStub } from "./auth/stub";
+import { createStub } from "./auth/stub";
 import { V2Stub } from "./auth/register";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
-import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
+import { KWArgs } from "../utils/types";
+import * as jspb from "google-protobuf";
+import * as grpc from "@grpc/grpc-js";
+import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 /**
  * BaseClient is the base class for all the classes interacting with Clarifai endpoints.
@@ -37,18 +40,7 @@ export class BaseClient {
    * @param {string} [kwargs.base='https://api.clarifai.com'] The base URL for the API endpoint. Defaults to 'https://api.clarifai.com'.
    * @param {string} [kwargs.ui='https://clarifai.com'] The URL for the UI. Defaults to 'https://clarifai.com'.
    */
-  constructor(
-    kwargs:
-      | {
-          userId: string;
-          appId: string;
-          pat: string;
-          token?: string;
-          base?: string;
-          ui?: string;
-        }
-      | Record<string, never> = {},
-  ) {
+  constructor(kwargs: KWArgs = {}) {
     const pat = getFromDictOrEnv("pat", "CLARIFAI_PAT", kwargs);
     kwargs.pat = pat;
     this.authHelper =
@@ -77,11 +69,21 @@ export class BaseClient {
    * @param argument The argument to pass to the gRPC method.
    * @returns A Promise resolving to the result of the gRPC method call.
    */
-  protected async grpcRequest<MethodName extends keyof V2Client>(
-    method: MethodName,
-    argument: FirstParameterType<V2Client[MethodName]>,
-  ) {
-    await this.STUB.makeCall(method, argument);
+  protected async grpcRequest<
+    TRequest extends jspb.Message,
+    TResponseObject extends { status?: Status.AsObject },
+    TResponse extends {
+      toObject: (arg?: boolean) => TResponseObject;
+    },
+  >(
+    endpoint: (
+      request: TRequest,
+      metadata: grpc.Metadata,
+      options: Partial<grpc.CallOptions>,
+    ) => Promise<TResponse>,
+    requestData: TRequest,
+  ): Promise<TResponse> {
+    return await this.STUB.makeCallPromise(endpoint, requestData);
   }
 
   /**

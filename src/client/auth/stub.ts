@@ -3,7 +3,9 @@ import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_p
 import { ClarifaiAuthHelper } from "./helper";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { V2Stub } from "./register";
-import { grpc } from "clarifai-nodejs-grpc";
+import * as grpc from "@grpc/grpc-js";
+import * as jspb from "google-protobuf";
+import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 const throttleStatusCodes = new Set([
   StatusCode.CONN_THROTTLED,
@@ -42,6 +44,7 @@ type CallbackResponseType<T> = T extends (
 export class AuthorizedStub {
   private authHelper: ClarifaiAuthHelper;
   private stub: V2Client;
+  public client: V2Client;
   private metadata: [string, string][];
 
   constructor(authHelper?: ClarifaiAuthHelper) {
@@ -52,6 +55,7 @@ export class AuthorizedStub {
     }
 
     this.stub = this.authHelper.getStub();
+    this.client = this.stub;
     this.metadata = this.authHelper.metadata;
   }
 
@@ -88,6 +92,29 @@ export class AuthorizedStub {
       });
     });
   }
+
+  async makeCallPromise<
+    TRequest extends jspb.Message,
+    TResponseObject extends { status?: Status.AsObject },
+    TResponse extends {
+      toObject: (arg?: boolean) => TResponseObject;
+    },
+  >(
+    endpoint: (
+      request: TRequest,
+      metadata: grpc.Metadata,
+      options: Partial<grpc.CallOptions>,
+    ) => Promise<TResponse>,
+    requestData: TRequest,
+  ): Promise<TResponse> {
+    const metadata = new grpc.Metadata();
+    const authMetadata = this.metadata;
+    authMetadata.forEach((meta) => {
+      metadata.set(meta?.[0], meta?.[1]);
+    });
+
+    return await endpoint(requestData, metadata, {});
+  }
 }
 
 export class RetryStub extends AuthorizedStub {
@@ -113,6 +140,45 @@ export class RetryStub extends AuthorizedStub {
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
       try {
         const response = await super.makeCall(methodName, request);
+        return response;
+      } catch (err) {
+        const errorCode = (err as ServiceError).code;
+        if (
+          retryCodesGrpc.has(errorCode) ||
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (err as any).status?.code in throttleStatusCodes
+        ) {
+          console.log(`Attempt ${attempt} failed, retrying...`);
+          if (attempt < this.maxAttempts) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, this.backoffTime * 1000),
+            );
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+    throw new Error("Max retry attempts reached");
+  }
+
+  async makeCallPromise<
+    TRequest extends jspb.Message,
+    TResponseObject extends { status?: Status.AsObject },
+    TResponse extends {
+      toObject: (arg?: boolean) => TResponseObject;
+    },
+  >(
+    endpoint: (
+      request: TRequest,
+      metadata: grpc.Metadata,
+      options: Partial<grpc.CallOptions>,
+    ) => Promise<TResponse>,
+    requestData: TRequest,
+  ): Promise<TResponse> {
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
+      try {
+        const response = await super.makeCallPromise(endpoint, requestData);
         return response;
       } catch (err) {
         const errorCode = (err as ServiceError).code;
