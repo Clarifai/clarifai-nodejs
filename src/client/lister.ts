@@ -1,4 +1,4 @@
-import * as grpc from "@grpc/grpc-js";
+import { grpc } from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
 import { KWArgs } from "../utils/types";
 import { BaseClient } from "./base";

@@ -35,12 +35,18 @@ export class User extends Lister {
     perPage,
   }: {
     params?:
-      | Omit<ListAppsRequest.AsObject, "userAppId">
+      | Omit<
+          Partial<ListAppsRequest.AsObject>,
+          "userAppId" | "pageNo" | "perPage"
+        >
       | Record<string, never>;
     pageNo?: number;
     perPage?: number;
   }): AsyncGenerator<MultiAppResponse, void, unknown> {
-    const listApps = promisifyGrpcCall(this.STUB.client.listApps);
+    const listApps = promisifyGrpcCall(
+      this.STUB.client.listApps,
+      this.STUB.client,
+    );
     const request = new ListAppsRequest();
     mapParamsToRequest(params, request);
 

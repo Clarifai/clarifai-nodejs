@@ -1,4 +1,4 @@
-import * as grpc from "@grpc/grpc-js";
+import { grpc } from "clarifai-nodejs-grpc";
 
 export type KWArgs =
   | {

@@ -3,7 +3,7 @@ import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_p
 import { ClarifaiAuthHelper } from "./helper";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { V2Stub } from "./register";
-import * as grpc from "@grpc/grpc-js";
+import { grpc } from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 

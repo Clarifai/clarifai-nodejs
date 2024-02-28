@@ -6,7 +6,7 @@ import { V2Stub } from "./auth/register";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
 import { KWArgs } from "../utils/types";
 import * as jspb from "google-protobuf";
-import * as grpc from "@grpc/grpc-js";
+import { grpc } from "clarifai-nodejs-grpc";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 /**
@@ -44,7 +44,7 @@ export class BaseClient {
     const pat = getFromDictOrEnv("pat", "CLARIFAI_PAT", kwargs);
     kwargs.pat = pat;
     this.authHelper =
-      Object.keys(kwargs).length === 0
+      Object.keys(kwargs).length > 0
         ? new ClarifaiAuthHelper(
             kwargs.userId,
             kwargs.appId,

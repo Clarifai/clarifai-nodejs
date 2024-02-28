@@ -1,4 +1,3 @@
-import axios from "axios";
 import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { grpc } from "clarifai-nodejs-grpc";
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
@@ -34,7 +33,7 @@ export function clearCache(): void {
   Object.keys(uiHttpsCache).forEach((key) => delete uiHttpsCache[key]);
 }
 
-export async function httpsCache(cache: Cache, url: string): Promise<string> {
+export function httpsCache(cache: Cache, url: string): string {
   const HTTPS = true;
   const HTTP = false;
 
@@ -45,27 +44,15 @@ export async function httpsCache(cache: Cache, url: string): Promise<string> {
     url = url.replace("http://", "");
     cache[url] = HTTP;
   } else if (!(url in cache)) {
+    // Assuming HTTPS for any URLs without a scheme that end with .clarifai.com
     const hostname = getHostnameFromUrl(url);
     if (hostname && hostname.endsWith(".clarifai.com")) {
       cache[url] = HTTPS;
     } else {
-      try {
-        await axios.get(`https://${url}/v2/auth/methods`, { timeout: 1000 });
-        cache[url] = HTTPS;
-      } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes("SSL")) {
-          cache[url] = HTTP;
-          if (!url.includes(":")) {
-            throw new Error(
-              "When providing an insecure URL, it must have both host:port format.",
-            );
-          }
-        } else {
-          throw new Error(
-            `Could not get a valid response from URL: ${url}, is the API running there?`,
-          );
-        }
-      }
+      // For URLs without a scheme and not ending with .clarifai.com, prompt user to provide the scheme
+      throw new Error(
+        `Please provide a valid scheme for the ${url}, either use http:// or https://`,
+      );
     }
   }
   return url;
@@ -273,19 +260,19 @@ export class ClarifaiAuthHelper {
   }
 
   /**
-   * Asynchronously set the base domain for the API.
+   * set the base domain for the API.
    * @param base - The base domain to set.
    */
-  async setBase(base: string): Promise<void> {
-    this._base = await httpsCache(baseHttpsCache, base);
+  setBase(base: string): void {
+    this._base = httpsCache(baseHttpsCache, base);
   }
 
   /**
-   * Asynchronously set the domain for the UI.
+   * set the domain for the UI.
    * @param ui - The UI domain to set.
    */
-  async setUi(ui: string): Promise<void> {
-    this._ui = await httpsCache(uiHttpsCache, ui);
+  setUi(ui: string): void {
+    this._ui = httpsCache(uiHttpsCache, ui);
   }
 
   /**
