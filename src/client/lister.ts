@@ -43,10 +43,10 @@ export class Lister extends BaseClient {
     while (true) {
       // Prepare request data
       // @ts-expect-error - TS doesn't know that the method exists
-      requestData["page"] = page;
+      requestData.setPage(page);
       if (perPage) {
         // @ts-expect-error - TS doesn't know that the method exists
-        requestData["per_page"] = perPage;
+        requestData.setPerPage(perPage);
       }
 
       // Perform gRPC request

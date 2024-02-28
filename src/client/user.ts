@@ -1,7 +1,10 @@
 // import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Lister } from "./lister";
 import { KWArgs } from "../utils/types";
-import { ListAppsRequest } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+import {
+  ListAppsRequest,
+  MultiAppResponse,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 
 // interface UserAppID {
@@ -36,12 +39,19 @@ export class User extends Lister {
       | Record<string, never>;
     pageNo?: number;
     perPage?: number;
-  }) {
+  }): AsyncGenerator<MultiAppResponse, void, unknown> {
     const listApps = promisifyGrpcCall(this.STUB.client.listApps);
     const request = new ListAppsRequest();
     mapParamsToRequest(params, request);
 
-    yield this.listPagesGenerator(listApps, request, pageNo, perPage);
+    for await (const item of this.listPagesGenerator(
+      listApps,
+      request,
+      pageNo,
+      perPage,
+    )) {
+      yield item;
+    }
   }
 
   //   async listRunners(
