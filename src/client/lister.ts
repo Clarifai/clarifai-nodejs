@@ -37,8 +37,7 @@ export class Lister extends BaseClient {
     requestData: TRequest,
     pageNo: number = 1,
     perPage: number = this.defaultPageSize,
-  ) {
-    // Initial setup
+  ): AsyncGenerator<TResponse, void, unknown> {
     let page = pageNo;
 
     while (true) {
@@ -52,28 +51,18 @@ export class Lister extends BaseClient {
 
       // Perform gRPC request
       const response = await this.grpcRequest(endpoint, requestData);
+      const responseObject = response.toObject();
 
       // Check response status
-      if (response.toObject().status?.code !== StatusCode.SUCCESS) {
+      if (responseObject.status?.code !== StatusCode.SUCCESS) {
         throw new Error(`Listing failed with response ${response}`);
       }
 
       // Process and yield response items
-      if (Object.keys(response).length === 1) {
+      if (Object.keys(responseObject).length === 1) {
         break;
       } else {
         yield response;
-        // const listingResource = Object.keys(response)[1];
-        // for (const item of response[listingResource]) {
-        //   if (listingResource === "dataset_inputs") {
-        //     yield this.processResponseKeys(
-        //       item["input"],
-        //       listingResource.slice(0, -1),
-        //     );
-        //   } else {
-        //     yield this.processResponseKeys(item, listingResource.slice(0, -1));
-        //   }
-        // }
       }
 
       // Exit loop if pagination is not to be continued
