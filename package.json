@@ -51,8 +51,10 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "chalk": "^5.3.0",
     "clarifai-nodejs-grpc": "^10.0.9",
     "google-protobuf": "^3.21.2",
+    "winston": "^3.11.0",
     "zod": "^3.22.4"
   }
 }
