@@ -3,9 +3,23 @@ import { Lister } from "./lister";
 import { KWArgs } from "../utils/types";
 import {
   ListAppsRequest,
+  ListRunnersRequest,
   MultiAppResponse,
+  MultiRunnerResponse,
+  PostAppsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
+import {
+  mapParamsToRequest,
+  mergeObjects,
+  promisifyGrpcCall,
+} from "../utils/misc";
+import { logger } from "../utils/logging";
+import {
+  App,
+  Workflow,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import { App as ClarifaiApp } from "./app";
+import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
 // interface UserAppID {
 //   userId?: string;
@@ -21,14 +35,13 @@ import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 // }
 
 export class User extends Lister {
-  //   private logger: Logger;
+  private logger;
 
   constructor(kwargs: KWArgs = {}) {
     super({ kwargs });
-    // this.logger = getLogger("INFO", __filename);
+    this.logger = logger;
   }
 
-  // Convert generator functions to async functions returning Promises of arrays
   async *listApps({
     params = {},
     pageNo,
@@ -42,7 +55,7 @@ export class User extends Lister {
       | Record<string, never>;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiAppResponse, void, unknown> {
+  }): AsyncGenerator<MultiAppResponse.AsObject, void, unknown> {
     const listApps = promisifyGrpcCall(
       this.STUB.client.listApps,
       this.STUB.client,
@@ -56,21 +69,91 @@ export class User extends Lister {
       pageNo,
       perPage,
     )) {
-      yield item;
+      yield item.toObject();
     }
   }
 
-  //   async listRunners(
-  //     filterBy: Record<string, any> = {},
-  //     pageNo?: number,
-  //     perPage?: number,
-  //   ) {}
+  async *listRunners({
+    params = {},
+    pageNo,
+    perPage,
+  }: {
+    params?:
+      | Omit<
+          Partial<ListRunnersRequest.AsObject>,
+          "userAppId" | "pageNo" | "perPage"
+        >
+      | Record<string, never>;
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {
+    const listRunners = promisifyGrpcCall(
+      this.STUB.client.listRunners,
+      this.STUB.client,
+    );
+    const request = new ListRunnersRequest();
+    mapParamsToRequest(params, request);
 
-  //   async createApp(
-  //     appId: string,
-  //     baseWorkflow: string = "Empty",
-  //     kwargs: Record<string, any> = {},
-  //   ) {}
+    for await (const item of this.listPagesGenerator(
+      listRunners,
+      request,
+      pageNo,
+      perPage,
+    )) {
+      yield item.toObject();
+    }
+  }
+
+  async createApp({
+    appId,
+    baseWorkflow = "Empty",
+    kwargs = {},
+  }: {
+    appId: string;
+    baseWorkflow: string;
+    kwargs: KWArgs;
+  }) {
+    const workflow = new Workflow();
+    workflow.setId(baseWorkflow);
+    workflow.setAppId("main");
+    workflow.setUserId("clarifai");
+
+    const app = new App();
+    app.setId(appId);
+    app.setDefaultWorkflow(workflow);
+
+    const request = new PostAppsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setAppsList([app]);
+
+    const postApps = promisifyGrpcCall(
+      this.STUB.client.postApps,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postApps, request);
+
+    const responseObject = response.toObject();
+
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(
+        `Failed to create app: ${responseObject.status?.description}`,
+      );
+    }
+
+    this.logger.info(
+      `App created. Status Code: ${responseObject.status?.code}`,
+    );
+
+    kwargs = mergeObjects(kwargs, {
+      userId: this.userAppId.getUserId(),
+      base: this.base,
+      pat: this.pat,
+      appId: responseObject.appsList?.[0]?.id,
+    });
+
+    return new ClarifaiApp({ kwargs });
+  }
 
   // TypeScript does not have a direct equivalent to Python's __getattr__, so this functionality may need to be implemented differently if required.
 

@@ -1,6 +1,6 @@
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import { UserError } from "../errors";
-import { GrpcWithCallback } from "./types";
+import { GrpcWithCallback, KWArgs } from "./types";
 import { grpc } from "clarifai-nodejs-grpc";
 
 /**
@@ -71,4 +71,17 @@ export function promisifyGrpcCall<TRequest, TResponse>(
       });
     });
   };
+}
+
+export function mergeObjects(obj1: KWArgs, obj2: KWArgs): KWArgs {
+  const result = { ...obj1 };
+
+  type KnownKey = keyof KWArgs;
+  Object.entries(obj2).forEach(([key, value]) => {
+    if (value) {
+      result[key as KnownKey] = value;
+    }
+  });
+
+  return result;
 }

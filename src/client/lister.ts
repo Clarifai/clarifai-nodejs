@@ -19,9 +19,6 @@ export class Lister extends BaseClient {
     this.defaultPageSize = pageSize;
   }
 
-  /**
-   * TODO: Implement the actual pagination logic
-   */
   async *listPagesGenerator<
     TRequest extends jspb.Message,
     TResponseObject extends { status?: Status.AsObject },
@@ -58,17 +55,24 @@ export class Lister extends BaseClient {
         throw new Error(`Listing failed with response ${response}`);
       }
 
-      // Process and yield response items
-      if (Object.keys(responseObject).length === 1) {
-        break;
-      } else {
-        yield response;
+      const dataListEntries = Object.entries(responseObject).find(
+        ([key, value]) => key !== "status" && Array.isArray(value),
+      );
+
+      if (!dataListEntries) {
+        break; // If no data list is found, stop pagination
       }
 
-      // Exit loop if pagination is not to be continued
-      if (pageNo !== undefined || perPage !== undefined) {
+      yield response;
+
+      const [, dataList] = dataListEntries;
+
+      // If the length of the data list is less than perPage, it means we've reached the end
+      // @ts-expect-error - TS doesn't know that data format is array
+      if (dataList.length < perPage) {
         break;
       }
+
       page += 1;
     }
   }
