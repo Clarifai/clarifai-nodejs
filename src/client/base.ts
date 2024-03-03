@@ -108,17 +108,4 @@ export class BaseClient {
 
     return timestamp;
   }
-
-  /**
-   * Converts keys in a response object to resource proto format.
-   *
-   * @param oldObj The object to convert.
-   * @param listingResource Optionally specifies a resource name to transform 'id' keys.
-   * @returns The object with keys processed according to protobuf structures.
-   *
-   * TODO: Implement the actual conversion logic
-   */
-  processResponseKeys() {
-    throw new Error("Not implemented");
-  }
 }

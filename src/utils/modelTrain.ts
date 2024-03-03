@@ -1,6 +1,5 @@
 import { MultiModelTypeResponse } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { writeFileSync } from "fs";
-import { MessageToDict } from "google.protobuf.json_format";
 
 /**
  * Converts the response from the API to a list of templates for the given model type id.

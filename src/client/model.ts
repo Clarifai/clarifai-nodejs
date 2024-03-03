@@ -1,30 +1,45 @@
 import {
+  DeleteModelVersionRequest,
   GetModelRequest,
   ListModelTypesRequest,
+  ListModelVersionsRequest,
+  MultiModelVersionResponse,
+  MultiOutputResponse,
+  PostModelOutputsRequest,
+  PostModelVersionsRequest,
+  SingleModelResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
-import { promisifyGrpcCall } from "../utils/misc";
+import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 import { KWArgs } from "../utils/types";
 import { Lister } from "./lister";
 import {
   Model as GrpcModel,
+  Input,
   ModelVersion,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
-import { TRAINABLE_MODEL_TYPES } from "../constants/model";
+import {
+  MAX_MODEL_PREDICT_INPUTS,
+  TRAINABLE_MODEL_TYPES,
+} from "../constants/model";
 import {
   findAndReplaceKey,
   responseToModelParams,
+  responseToParamInfo,
   responseToTemplates,
 } from "../utils/modelTrain";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 
 export class Model extends Lister {
+  // @ts-expect-error - Variable yet to be used
   private userId: string;
   private appId: string;
+  // @ts-expect-error - Variable yet to be used
   private token: string | undefined;
+  // @ts-expect-error - Variable yet to be used
   private ui: string | undefined;
   private id: string;
   private modelVersion: { id: string } | undefined;
@@ -245,4 +260,267 @@ export class Model extends Lister {
       findAndReplaceKey(this.trainingParams, key, value);
     }
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async getParamInfo(param: string): Promise<Record<string, any>> {
+    if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
+      throw new UserError(
+        `Model type ${this.modelInfo.getModelTypeId()} is not trainable`,
+      );
+    }
+    if (Object.keys(this.trainingParams).length === 0) {
+      throw new UserError(
+        `Run 'model.getParams' to get the params for the ${this.modelInfo.getModelTypeId()} model type`,
+      );
+    }
+
+    const allKeys = [
+      ...Object.keys(this.trainingParams),
+      ...Object.values(this.trainingParams)
+        .filter((value) => typeof value === "object")
+        .flatMap((value) => Object.keys(value as Record<string, unknown>)),
+    ];
+    if (!allKeys.includes(param)) {
+      throw new UserError(
+        `Invalid param: '${param}' for model type '${this.modelInfo.getModelTypeId()}'`,
+      );
+    }
+    const template =
+      // @ts-expect-error - train_params isn't typed yet
+      this.trainingParams?.["train_params"]?.["template"] ?? null;
+
+    const request = new ListModelTypesRequest();
+    request.setUserAppId(this.userAppId);
+
+    const listModelTypes = promisifyGrpcCall(
+      this.STUB.client.listModelTypes,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(listModelTypes, request);
+    const responseObject = response.toObject();
+
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.toString());
+    }
+    const paramInfo = responseToParamInfo(
+      responseObject,
+      this.modelInfo.getModelTypeId(),
+      param,
+      template,
+    );
+
+    if (!paramInfo) {
+      throw new Error("Failed to fetch params info");
+    }
+
+    return paramInfo;
+  }
+
+  /**
+   * Deletes a model version for the Model.
+   *
+   * @param versionId - The version ID to delete.
+   *
+   * @example
+   * const model = new Model({ modelId: 'model_id', userId: 'user_id', appId: 'app_id' });
+   * model.deleteVersion('version_id');
+   */
+  async deleteVersion(versionId: string): Promise<void> {
+    const request = new DeleteModelVersionRequest();
+    request.setUserAppId(this.userAppId);
+    request.setModelId(this.id);
+    request.setVersionId(versionId);
+
+    const deleteModelVersion = promisifyGrpcCall(
+      this.STUB.client.deleteModelVersion,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(deleteModelVersion, request);
+
+    const responseObject = response.toObject();
+
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.toString());
+    }
+  }
+
+  async createVersion(
+    args: ModelVersion.AsObject,
+  ): Promise<SingleModelResponse.AsObject> {
+    if (this.modelInfo.getModelTypeId() in TRAINABLE_MODEL_TYPES) {
+      throw new UserError(
+        `${this.modelInfo.getModelTypeId()} is a trainable model type. Use 'model.train()' to train the model`,
+      );
+    }
+
+    const request = new PostModelVersionsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setModelId(this.id);
+    const modelVersion = new ModelVersion();
+    mapParamsToRequest(args, modelVersion);
+    request.setModelVersionsList([modelVersion]);
+
+    const postModelVersions = promisifyGrpcCall(
+      this.STUB.client.postModelVersions,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postModelVersions, request);
+
+    const responseObject = response.toObject();
+
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.toString());
+    }
+
+    return responseObject;
+  }
+
+  async *listVersions(
+    pageNo?: number,
+    perPage?: number,
+  ): AsyncGenerator<MultiModelVersionResponse.AsObject, void, void> {
+    const request = new ListModelVersionsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setModelId(this.id);
+
+    const listModelVersions = promisifyGrpcCall(
+      this.STUB.client.listModelVersions,
+      this.STUB.client,
+    );
+
+    const allModelVersionsInfo = this.listPagesGenerator(
+      listModelVersions,
+      request,
+      perPage,
+      pageNo,
+    );
+
+    for await (const modelVersionInfo of allModelVersionsInfo) {
+      yield modelVersionInfo.toObject();
+    }
+  }
+
+  async predict(
+    inputs: Input.AsObject[],
+  ): Promise<MultiOutputResponse.AsObject> {
+    if (!Array.isArray(inputs)) {
+      throw new Error(
+        "Invalid inputs, inputs must be an array of Input objects.",
+      );
+    }
+    if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
+      throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
+    }
+
+    const requestInputs: Input[] = [];
+    for (const input of inputs) {
+      const inputObject = new Input();
+      mapParamsToRequest(input, inputObject);
+      requestInputs.push(inputObject);
+    }
+
+    const request = new PostModelOutputsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setModelId(this.id);
+    if (this.modelVersion && this.modelVersion.id)
+      request.setVersionId(this.modelVersion.id);
+    request.setInputsList(requestInputs);
+    request.setModel(this.modelInfo);
+
+    const startTime = Date.now();
+    return new Promise<MultiOutputResponse.AsObject>((resolve, reject) => {
+      const makeRequest = () => {
+        this.STUB.client.postModelOutputs(request, (error, response) => {
+          if (error) {
+            reject(
+              new Error(`Model Predict failed with error: ${error.message}`),
+            );
+          } else {
+            const responseObject = response.toObject();
+            if (
+              responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
+              Date.now() - startTime < 600000
+            ) {
+              console.log(
+                `${this.id} model is still deploying, please wait...`,
+              );
+              setTimeout(makeRequest, 5000);
+            } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
+              reject(
+                new Error(
+                  `Model Predict failed with response ${responseObject.status?.toString()}`,
+                ),
+              );
+            } else {
+              resolve(response.toObject());
+            }
+          }
+        });
+      };
+      makeRequest();
+    });
+
+    // const start_time = Date.now();
+    // const backoffIterator = new BackoffIterator();
+    // return new Promise((resolve, reject) => {
+    //   const makeRequest = () => {
+    //     this.STUB.PostModelOutputs(request, (error, response) => {
+    //       if (error) {
+    //         reject(
+    //           new Error(`Model Predict failed with error: ${error.message}`),
+    //         );
+    //       } else {
+    //         if (
+    //           response.status.code === status_code_pb2.MODEL_DEPLOYING &&
+    //           Date.now() - start_time < 600000
+    //         ) {
+    //           // 10 minutes
+    //           this.logger.info(
+    //             `${this.id} model is still deploying, please wait...`,
+    //           );
+    //           setTimeout(makeRequest, backoffIterator.next());
+    //         } else if (response.status.code !== status_code_pb2.SUCCESS) {
+    //           reject(
+    //             new Error(
+    //               `Model Predict failed with response ${response.status}`,
+    //             ),
+    //           );
+    //         } else {
+    //           resolve(response);
+    //         }
+    //       }
+    //     });
+    //   };
+
+    //   makeRequest();
+    // });
+  }
+
+  // private async listConcepts(): Promise<string[]> {
+  //   const request = new ListConceptsRequest();
+  //   request.setUserAppId(this.userAppId);
+
+  //   const listConcepts = promisifyGrpcCall(
+  //     this.STUB.client.listConcepts,
+  //     this.STUB.client,
+  //   );
+
+  //   const allConceptsInfosGenerator = this.listPagesGenerator(
+  //     listConcepts,
+  //     request,
+  //   );
+
+  //   const allConceptsInfos: MultiConceptResponse.AsObject["conceptsList"][] =
+  //     [];
+  //   for await (const conceptInfo of allConceptsInfosGenerator) {
+  //     allConceptsInfos.push(conceptInfo.toObject()?.conceptsList ?? []);
+  //   }
+
+  //   return allConceptsInfos.flatMap((conceptInfo) =>
+  //     conceptInfo.map((each) => each.id),
+  //   );
+  // }
 }
