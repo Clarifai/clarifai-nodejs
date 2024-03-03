@@ -63,9 +63,15 @@ export class Lister extends BaseClient {
         break; // If no data list is found, stop pagination
       }
 
-      yield response;
-
       const [, dataList] = dataListEntries;
+
+      // If the length of the data list is less than perPage, it means we've reached the end
+      // @ts-expect-error - TS doesn't know that data format is array
+      if (dataList.length === 0) {
+        break;
+      }
+
+      yield response;
 
       // If the length of the data list is less than perPage, it means we've reached the end
       // @ts-expect-error - TS doesn't know that data format is array
@@ -75,5 +81,41 @@ export class Lister extends BaseClient {
 
       page += 1;
     }
+  }
+
+  async listPagesData<
+    TRequest extends jspb.Message,
+    TResponseObject extends { status?: Status.AsObject },
+    TResponse extends {
+      toObject: (arg?: boolean) => TResponseObject;
+    },
+  >(
+    endpoint: (
+      request: TRequest,
+      metadata: grpc.Metadata,
+      options: Partial<grpc.CallOptions>,
+    ) => Promise<TResponse>,
+    requestData: TRequest,
+    pageNo: number = 1,
+    perPage: number = this.defaultPageSize,
+  ): Promise<TResponse> {
+    // Prepare request data
+    // @ts-expect-error - TS doesn't know that the method exists
+    requestData.setPage(pageNo);
+    if (perPage) {
+      // @ts-expect-error - TS doesn't know that the method exists
+      requestData.setPerPage(perPage);
+    }
+
+    // Perform gRPC request
+    const response = await this.grpcRequest(endpoint, requestData);
+    const responseObject = response.toObject();
+
+    // Check response status
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(`Listing failed with response ${response}`);
+    }
+
+    return response;
   }
 }

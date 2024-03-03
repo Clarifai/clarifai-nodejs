@@ -1,6 +1,6 @@
 // import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Lister } from "./lister";
-import { KWArgs } from "../utils/types";
+import { KWArgs, RequestParams } from "../utils/types";
 import {
   ListAppsRequest,
   ListRunnersRequest,
@@ -13,7 +13,7 @@ import {
   mergeObjects,
   promisifyGrpcCall,
 } from "../utils/misc";
-import { logger } from "../utils/logging";
+// import { logger } from "../utils/logging";
 import {
   App,
   Workflow,
@@ -35,11 +35,11 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 // }
 
 export class User extends Lister {
-  private logger;
+  // private logger;
 
   constructor(kwargs: KWArgs = {}) {
     super({ kwargs });
-    this.logger = logger;
+    // this.logger = logger;
   }
 
   async *listApps({
@@ -78,12 +78,7 @@ export class User extends Lister {
     pageNo,
     perPage,
   }: {
-    params?:
-      | Omit<
-          Partial<ListRunnersRequest.AsObject>,
-          "userAppId" | "pageNo" | "perPage"
-        >
-      | Record<string, never>;
+    params?: RequestParams<ListRunnersRequest.AsObject>;
     pageNo?: number;
     perPage?: number;
   }): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {
@@ -141,9 +136,9 @@ export class User extends Lister {
       );
     }
 
-    this.logger.info(
-      `App created. Status Code: ${responseObject.status?.code}`,
-    );
+    // this.logger.info(
+    //   `App created. Status Code: ${responseObject.status?.code}`,
+    // );
 
     kwargs = mergeObjects(kwargs, {
       userId: this.userAppId.getUserId(),
