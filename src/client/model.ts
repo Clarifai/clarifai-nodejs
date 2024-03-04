@@ -403,9 +403,7 @@ export class Model extends Lister {
     }
   }
 
-  async predict(
-    inputs: Input.AsObject[],
-  ): Promise<MultiOutputResponse.AsObject> {
+  async predict(inputs: Input[]): Promise<MultiOutputResponse.AsObject> {
     if (!Array.isArray(inputs)) {
       throw new Error(
         "Invalid inputs, inputs must be an array of Input objects.",
@@ -417,9 +415,7 @@ export class Model extends Lister {
 
     const requestInputs: Input[] = [];
     for (const input of inputs) {
-      const inputObject = new Input();
-      mapParamsToRequest(input, inputObject);
-      requestInputs.push(inputObject);
+      requestInputs.push(input);
     }
 
     const request = new PostModelOutputsRequest();
@@ -433,12 +429,12 @@ export class Model extends Lister {
     const startTime = Date.now();
     return new Promise<MultiOutputResponse.AsObject>((resolve, reject) => {
       const makeRequest = () => {
-        this.STUB.client.postModelOutputs(request, (error, response) => {
-          if (error) {
-            reject(
-              new Error(`Model Predict failed with error: ${error.message}`),
-            );
-          } else {
+        const postModelOutputs = promisifyGrpcCall(
+          this.STUB.client.postModelOutputs,
+          this.STUB.client,
+        );
+        this.grpcRequest(postModelOutputs, request)
+          .then((response) => {
             const responseObject = response.toObject();
             if (
               responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
@@ -457,46 +453,15 @@ export class Model extends Lister {
             } else {
               resolve(response.toObject());
             }
-          }
-        });
+          })
+          .catch((error) => {
+            reject(
+              new Error(`Model Predict failed with error: ${error.message}`),
+            );
+          });
       };
       makeRequest();
     });
-
-    // const start_time = Date.now();
-    // const backoffIterator = new BackoffIterator();
-    // return new Promise((resolve, reject) => {
-    //   const makeRequest = () => {
-    //     this.STUB.PostModelOutputs(request, (error, response) => {
-    //       if (error) {
-    //         reject(
-    //           new Error(`Model Predict failed with error: ${error.message}`),
-    //         );
-    //       } else {
-    //         if (
-    //           response.status.code === status_code_pb2.MODEL_DEPLOYING &&
-    //           Date.now() - start_time < 600000
-    //         ) {
-    //           // 10 minutes
-    //           this.logger.info(
-    //             `${this.id} model is still deploying, please wait...`,
-    //           );
-    //           setTimeout(makeRequest, backoffIterator.next());
-    //         } else if (response.status.code !== status_code_pb2.SUCCESS) {
-    //           reject(
-    //             new Error(
-    //               `Model Predict failed with response ${response.status}`,
-    //             ),
-    //           );
-    //         } else {
-    //           resolve(response);
-    //         }
-    //       }
-    //     });
-    //   };
-
-    //   makeRequest();
-    // });
   }
 
   // private async listConcepts(): Promise<string[]> {

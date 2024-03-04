@@ -58,9 +58,6 @@ export class App extends Lister {
     }
   }
 
-  /**
-   * TODO: Return model class after the class is defined
-   */
   async *listModels({
     params = {},
     onlyInApp = true,
