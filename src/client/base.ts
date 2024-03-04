@@ -4,7 +4,7 @@ import { getFromDictOrEnv } from "../utils/misc";
 import { createStub } from "./auth/stub";
 import { V2Stub } from "./auth/register";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
-import { KWArgs } from "../utils/types";
+import { AuthConfig } from "../utils/types";
 import * as jspb from "google-protobuf";
 import { grpc } from "clarifai-nodejs-grpc";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
@@ -32,26 +32,26 @@ export class BaseClient {
   /**
    * Constructs a new BaseClient instance with specified configuration options.
    *
-   * @param {Object} kwargs Configuration options for the client.
-   * @param {string} kwargs.userId A user ID for authentication.
-   * @param {string} kwargs.appId An app ID for the application to interact with.
-   * @param {string} kwargs.pat A personal access token for authentication. If not provided, it attempts to fetch from environment variables.
-   * @param {string} [kwargs.token] An optional token for authentication.
-   * @param {string} [kwargs.base='https://api.clarifai.com'] The base URL for the API endpoint. Defaults to 'https://api.clarifai.com'.
-   * @param {string} [kwargs.ui='https://clarifai.com'] The URL for the UI. Defaults to 'https://clarifai.com'.
+   * @param {Object} authConfig Configuration options for the client.
+   * @param {string} authConfig.userId A user ID for authentication.
+   * @param {string} authConfig.appId An app ID for the application to interact with.
+   * @param {string} authConfig.pat A personal access token for authentication. If not provided, it attempts to fetch from environment variables.
+   * @param {string} [authConfig.token] An optional token for authentication.
+   * @param {string} [authConfig.base='https://api.clarifai.com'] The base URL for the API endpoint. Defaults to 'https://api.clarifai.com'.
+   * @param {string} [authConfig.ui='https://clarifai.com'] The URL for the UI. Defaults to 'https://clarifai.com'.
    */
-  constructor(kwargs: KWArgs = {}) {
-    const pat = getFromDictOrEnv("pat", "CLARIFAI_PAT", kwargs);
-    kwargs.pat = pat;
+  constructor(authConfig: AuthConfig = {}) {
+    const pat = getFromDictOrEnv("pat", "CLARIFAI_PAT", authConfig);
+    authConfig.pat = pat;
     this.authHelper =
-      Object.keys(kwargs).length > 0
+      Object.keys(authConfig).length > 0
         ? new ClarifaiAuthHelper(
-            kwargs.userId,
-            kwargs.appId,
-            kwargs.pat,
-            kwargs.token,
-            kwargs.base,
-            kwargs.ui,
+            authConfig.userId,
+            authConfig.appId,
+            authConfig.pat,
+            authConfig.token,
+            authConfig.base,
+            authConfig.ui,
             false,
           )
         : ClarifaiAuthHelper.fromEnv(false); // The validate parameter is set to false explicitly

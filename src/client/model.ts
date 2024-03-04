@@ -12,7 +12,7 @@ import {
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
-import { KWArgs } from "../utils/types";
+import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import {
   Model as GrpcModel,
@@ -50,19 +50,19 @@ export class Model extends Lister {
     url,
     modelId,
     modelVersion,
-    kwargs = {},
+    authConfig = {},
   }:
     | {
         url: string;
         modelId?: undefined;
         modelVersion?: { id: string };
-        kwargs?: KWArgs;
+        authConfig?: AuthConfig;
       }
     | {
         url?: undefined;
         modelId: string;
         modelVersion?: { id: string };
-        kwargs?: KWArgs;
+        authConfig?: AuthConfig;
       }) {
     if (url && modelId) {
       throw new UserError("You can only specify one of url or model_id.");
@@ -81,15 +81,15 @@ export class Model extends Lister {
       } else {
         modelVersion = { id: modelVersionId };
       }
-      kwargs.userId = userId;
-      kwargs.appId = appId;
+      authConfig.userId = userId;
+      authConfig.appId = appId;
     }
 
-    super({ kwargs });
-    this.userId = kwargs.userId;
-    this.appId = kwargs.appId;
-    this.token = kwargs.token;
-    this.ui = kwargs.ui;
+    super({ authConfig: authConfig });
+    this.userId = authConfig.userId;
+    this.appId = authConfig.appId;
+    this.token = authConfig.token;
+    this.ui = authConfig.ui;
     this.modelVersion = modelVersion;
     this.id = (modelIdFromUrl || modelId) as string;
     this.modelInfo = new GrpcModel();
@@ -236,7 +236,7 @@ export class Model extends Lister {
     return params;
   }
 
-  updateParams(kwargs: Record<string, unknown>): void {
+  updateParams(modelParams: Record<string, unknown>): void {
     if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
       throw new UserError(
         `Model type ${this.modelInfo.getModelTypeId()} is not trainable`,
@@ -253,10 +253,10 @@ export class Model extends Lister {
         .filter((value) => typeof value === "object")
         .flatMap((value) => Object.keys(value as Record<string, unknown>)),
     ];
-    if (!Object.keys(kwargs).every((key) => allKeys.includes(key))) {
+    if (!Object.keys(modelParams).every((key) => allKeys.includes(key))) {
       throw new UserError("Invalid params");
     }
-    for (const [key, value] of Object.entries(kwargs)) {
+    for (const [key, value] of Object.entries(modelParams)) {
       findAndReplaceKey(this.trainingParams, key, value);
     }
   }

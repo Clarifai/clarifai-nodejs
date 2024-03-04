@@ -1,6 +1,6 @@
 // import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Lister } from "./lister";
-import { KWArgs, RequestParams } from "../utils/types";
+import { AuthConfig, RequestParams } from "../utils/types";
 import {
   ListAppsRequest,
   ListRunnersRequest,
@@ -37,8 +37,8 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 export class User extends Lister {
   // private logger;
 
-  constructor(kwargs: KWArgs = {}) {
-    super({ kwargs });
+  constructor(authConfig: AuthConfig = {}) {
+    super({ authConfig });
     // this.logger = logger;
   }
 
@@ -102,11 +102,11 @@ export class User extends Lister {
   async createApp({
     appId,
     baseWorkflow = "Empty",
-    kwargs = {},
+    authConfig = {},
   }: {
     appId: string;
     baseWorkflow: string;
-    kwargs: KWArgs;
+    authConfig: AuthConfig;
   }) {
     const workflow = new Workflow();
     workflow.setId(baseWorkflow);
@@ -140,14 +140,14 @@ export class User extends Lister {
     //   `App created. Status Code: ${responseObject.status?.code}`,
     // );
 
-    kwargs = mergeObjects(kwargs, {
+    authConfig = mergeObjects(authConfig, {
       userId: this.userAppId.getUserId(),
       base: this.base,
       pat: this.pat,
       appId: responseObject.appsList?.[0]?.id,
     });
 
-    return new ClarifaiApp({ kwargs });
+    return new ClarifaiApp({ authConfig });
   }
 
   // TypeScript does not have a direct equivalent to Python's __getattr__, so this functionality may need to be implemented differently if required.

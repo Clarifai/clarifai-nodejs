@@ -1,6 +1,6 @@
 import { grpc } from "clarifai-nodejs-grpc";
 
-export type KWArgs =
+export type AuthConfig =
   | {
       userId: string;
       appId: string;

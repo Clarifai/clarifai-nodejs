@@ -5,29 +5,29 @@ import {
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
-import { KWArgs, RequestParams } from "../utils/types";
+import { AuthConfig, RequestParams } from "../utils/types";
 import { Lister } from "./lister";
 import { App as ProtoApp } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 
 export class App extends Lister {
   private appInfo;
 
-  constructor({ url, kwargs }: { url?: string; kwargs: KWArgs }) {
-    if (url && kwargs.appId) {
+  constructor({ url, authConfig }: { url?: string; authConfig: AuthConfig }) {
+    if (url && authConfig.appId) {
       throw new UserError("You can only specify one of url or app_id.");
     }
 
     if (url) {
       const [userId, appId] = ClarifaiUrlHelper.splitClarifaiAppUrl(url);
-      if (userId) kwargs.userId = userId;
-      if (appId) kwargs.appId = appId;
+      if (userId) authConfig.userId = userId;
+      if (appId) authConfig.appId = appId;
     }
 
-    super({ kwargs });
+    super({ authConfig: authConfig });
 
     this.appInfo = new ProtoApp();
-    this.appInfo.setUserId(kwargs.userId);
-    this.appInfo.setId(kwargs.appId);
+    this.appInfo.setUserId(authConfig.userId);
+    this.appInfo.setId(authConfig.appId);
   }
 
   async *listDataSets({

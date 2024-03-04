@@ -1,6 +1,6 @@
 import { grpc } from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
-import { KWArgs } from "../utils/types";
+import { AuthConfig } from "../utils/types";
 import { BaseClient } from "./base";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
@@ -9,13 +9,13 @@ export class Lister extends BaseClient {
   defaultPageSize: number;
 
   constructor({
-    kwargs = {},
+    authConfig = {},
     pageSize = 16,
   }: {
-    kwargs?: KWArgs;
+    authConfig?: AuthConfig;
     pageSize?: number;
   }) {
-    super(kwargs);
+    super(authConfig);
     this.defaultPageSize = pageSize;
   }
 
