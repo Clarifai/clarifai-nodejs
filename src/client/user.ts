@@ -1,4 +1,3 @@
-// import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Lister } from "./lister";
 import { AuthConfig, RequestParams } from "../utils/types";
 import {
@@ -8,38 +7,16 @@ import {
   MultiRunnerResponse,
   PostAppsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import {
-  mapParamsToRequest,
-  mergeObjects,
-  promisifyGrpcCall,
-} from "../utils/misc";
-// import { logger } from "../utils/logging";
+import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 import {
   App,
   Workflow,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { App as ClarifaiApp } from "./app";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
-// interface UserAppID {
-//   userId?: string;
-//   appId?: string;
-// }
-
-// interface AppInfo {
-//   // Define properties based on the Python code's usage
-// }
-
-// interface RunnerInfo {
-//   // Define properties based on the Python code's usage
-// }
-
 export class User extends Lister {
-  // private logger;
-
   constructor(authConfig: AuthConfig = {}) {
     super({ authConfig });
-    // this.logger = logger;
   }
 
   async *listApps({
@@ -102,11 +79,9 @@ export class User extends Lister {
   async createApp({
     appId,
     baseWorkflow = "Empty",
-    authConfig = {},
   }: {
     appId: string;
     baseWorkflow: string;
-    authConfig: AuthConfig;
   }) {
     const workflow = new Workflow();
     workflow.setId(baseWorkflow);
@@ -136,23 +111,6 @@ export class User extends Lister {
       );
     }
 
-    // this.logger.info(
-    //   `App created. Status Code: ${responseObject.status?.code}`,
-    // );
-
-    authConfig = mergeObjects(authConfig, {
-      userId: this.userAppId.getUserId(),
-      base: this.base,
-      pat: this.pat,
-      appId: responseObject.appsList?.[0]?.id,
-    });
-
-    return new ClarifaiApp({ authConfig });
-  }
-
-  // TypeScript does not have a direct equivalent to Python's __getattr__, so this functionality may need to be implemented differently if required.
-
-  toString() {
-    // Implementation of a method to return user details as a string
+    return responseObject;
   }
 }

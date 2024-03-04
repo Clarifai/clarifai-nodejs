@@ -113,34 +113,6 @@ export class ClarifaiAuthHelper {
   }
 
   /**
-   * TODO: This method cannot be directly implemented in Node.js TypeScript as there is no equivalent of Streamlit.
-   * A similar functionality might be achieved by using environment variables and additional parameters from a web framework like Express.js.
-   */
-  static fromStreamlit(/* parameters, if any */): ClarifaiAuthHelper {
-    // Method logic goes here
-    throw new Error("Method not implemented.");
-  }
-
-  /**
-   * TODO: This method cannot be directly implemented in Node.js TypeScript as it's specific to Streamlit.
-   * In a Node.js environment, similar functionality could be achieved using query parameters from HTTP requests.
-   */
-  static fromStreamlitQueryParams(/* parameters, if any */): ClarifaiAuthHelper {
-    // Method logic goes here
-    throw new Error("Method not implemented.");
-  }
-
-  /**
-   * TODO: This method is specific to Streamlit and cannot be directly implemented in Node.js TypeScript.
-   * Similar functionality might be possible by handling query parameters in a Node.js web framework.
-   */
-  // @ts-expect-error this method is not yet implemented
-  private addStreamlitQueryParams(/* parameters, if any */): void {
-    // Method logic goes here
-    throw new Error("Method not implemented.");
-  }
-
-  /**
    * Will look for the following environment variables:
    *  - user_id: CLARIFAI_USER_ID environment variable.
    *  - app_id: CLARIFAI_APP_ID environment variable.
