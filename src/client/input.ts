@@ -12,7 +12,7 @@ import { Buffer } from "buffer";
 import fs from "fs";
 
 export class Input extends Lister {
-  constructor({ authConfig }: { authConfig: AuthConfig }) {
+  constructor({ authConfig }: { authConfig?: AuthConfig }) {
     super({ authConfig });
   }
 
