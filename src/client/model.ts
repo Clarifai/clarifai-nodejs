@@ -11,7 +11,11 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
-import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
+import {
+  BackoffIterator,
+  mapParamsToRequest,
+  promisifyGrpcCall,
+} from "../utils/misc";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import {
@@ -427,6 +431,7 @@ export class Model extends Lister {
     request.setModel(this.modelInfo);
 
     const startTime = Date.now();
+    const backoffIterator = new BackoffIterator();
     return new Promise<MultiOutputResponse.AsObject>((resolve, reject) => {
       const makeRequest = () => {
         const postModelOutputs = promisifyGrpcCall(
@@ -443,7 +448,7 @@ export class Model extends Lister {
               console.log(
                 `${this.id} model is still deploying, please wait...`,
               );
-              setTimeout(makeRequest, 5000);
+              setTimeout(makeRequest, backoffIterator.next().value * 1000);
             } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
               reject(
                 new Error(
