@@ -352,3 +352,4 @@ $RECYCLE.BIN/
 # Build files
 *.tgz
 example/*
+.vscode
