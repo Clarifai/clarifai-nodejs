@@ -1,8 +1,13 @@
 import {
+  ListConceptsRequest,
   ListDatasetsRequest,
+  ListInstalledModuleVersionsRequest,
   ListModelsRequest,
+  ListModulesRequest,
   ListWorkflowsRequest,
   MultiDatasetResponse,
+  PostDatasetsRequest,
+  PostModelsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
@@ -13,7 +18,13 @@ import {
   Model,
   App as GrpcApp,
   Workflow,
+  Module,
+  InstalledModuleVersion,
+  Concept,
+  Dataset,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import { TRAINABLE_MODEL_TYPES } from "../constants/model";
+import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
 export class App extends Lister {
   private appInfo: GrpcApp;
@@ -98,12 +109,10 @@ export class App extends Lister {
         }
         if (
           onlyInApp &&
-          // TODO: verify how App ID is being set
           eachModel.modelVersion.appId !== this.userAppId.getAppId()
         ) {
           continue;
         }
-        // TODO: Construct the model class before yielding
         models.push(eachModel);
       }
       yield models;
@@ -147,5 +156,162 @@ export class App extends Lister {
       }
       yield workflows;
     }
+  }
+
+  async *listModules({
+    params = {},
+    onlyInApp,
+    pageNo,
+    perPage,
+  }: {
+    params?: PaginationRequestParams<ListModulesRequest.AsObject>;
+    onlyInApp?: boolean;
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<Module.AsObject[], void, unknown> {
+    const listModules = promisifyGrpcCall(
+      this.STUB.client.listModules,
+      this.STUB.client,
+    );
+
+    const request = new ListModulesRequest();
+    request.setUserAppId(this.userAppId);
+    mapParamsToRequest(params, request);
+
+    for await (const item of this.listPagesGenerator(
+      listModules,
+      request,
+      pageNo,
+      perPage,
+    )) {
+      const modules = [];
+      const modulesListResponse = item.toObject();
+      for (const eachModule of modulesListResponse.modulesList) {
+        if (onlyInApp && eachModule.appId !== this.userAppId.getAppId()) {
+          continue;
+        }
+        modules.push(eachModule);
+      }
+      yield modules;
+    }
+  }
+
+  async *listInstalledModuleVersions({
+    params = {},
+    pageNo,
+    perPage,
+  }: {
+    params?: PaginationRequestParams<ListModulesRequest.AsObject>;
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<InstalledModuleVersion.AsObject[], void, unknown> {
+    const listInstalledModuleVersions = promisifyGrpcCall(
+      this.STUB.client.listInstalledModuleVersions,
+      this.STUB.client,
+    );
+    const request = new ListInstalledModuleVersionsRequest();
+    request.setUserAppId(this.userAppId);
+    mapParamsToRequest(params, request);
+    for await (const item of this.listPagesGenerator(
+      listInstalledModuleVersions,
+      request,
+      pageNo,
+      perPage,
+    )) {
+      const moduleVersions = [];
+      const modulesListResponseObject = item.toObject();
+      for (const eachModule of modulesListResponseObject.installedModuleVersionsList) {
+        // @ts-expect-error - delete needed here due to debt in the backend
+        delete eachModule.deployUrl;
+        // @ts-expect-error - delete needed here due to debt in the backend
+        delete eachModule.installedModuleVersionId; // TODO: remove this after the backend fix
+        moduleVersions.push(eachModule);
+      }
+      yield moduleVersions;
+    }
+  }
+
+  async *listConcepts({
+    pageNo,
+    perPage,
+  }: {
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<Concept.AsObject[], void, unknown> {
+    const listConcepts = promisifyGrpcCall(
+      this.STUB.client.listConcepts,
+      this.STUB.client,
+    );
+    const request = new ListConceptsRequest();
+    request.setUserAppId(this.userAppId);
+    for await (const item of this.listPagesGenerator(
+      listConcepts,
+      request,
+      pageNo,
+      perPage,
+    )) {
+      const conceptsListResponse = item.toObject();
+      yield conceptsListResponse.conceptsList;
+    }
+  }
+
+  listTrainableModelTypes(): string[] {
+    return TRAINABLE_MODEL_TYPES;
+  }
+
+  async createDataset(
+    datasetId: string,
+    params: Omit<Partial<Dataset.AsObject>, "id">,
+  ): Promise<Dataset.AsObject> {
+    const request = new PostDatasetsRequest();
+    request.setUserAppId(this.userAppId);
+
+    const newDataSet = new Dataset();
+    newDataSet.setId(datasetId);
+    mapParamsToRequest(params, newDataSet);
+
+    request.setDatasetsList([newDataSet]);
+
+    const postDatasets = promisifyGrpcCall(
+      this.STUB.client.postDatasets,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postDatasets, request);
+    const responseObject = response.toObject();
+
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+
+    console.info("\nDataset created\n%s", responseObject.status.description);
+
+    return responseObject.datasetsList?.[0];
+  }
+
+  async createModel(
+    modelId: string,
+    params: Omit<Partial<Model.AsObject>, "id">,
+  ): Promise<Model.AsObject> {
+    const request = new PostModelsRequest();
+    request.setUserAppId(this.userAppId);
+    const newModel = new Model();
+    newModel.setId(modelId);
+    mapParamsToRequest(params, newModel);
+    request.setModelsList([newModel]);
+    const postModels = promisifyGrpcCall(
+      this.STUB.client.postModels,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(postModels, request);
+    const responseObject = response.toObject();
+    if (
+      responseObject.status?.code !== StatusCode.SUCCESS ||
+      !responseObject.model
+    ) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nModel created\n%s", responseObject.status.description);
+    return responseObject.model;
   }
 }
