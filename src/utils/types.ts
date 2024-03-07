@@ -18,6 +18,6 @@ export type GrpcWithCallback<TRequest, TResponse> = (
   callback: (error: grpc.ServiceError | null, response: TResponse) => void,
 ) => grpc.ClientUnaryCall;
 
-export type RequestParams<T> =
+export type PaginationRequestParams<T extends Record<string, unknown>> =
   | Omit<Partial<T>, "userAppId" | "pageNo" | "perPage">
   | Record<string, never>;

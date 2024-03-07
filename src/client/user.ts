@@ -1,5 +1,5 @@
 import { Lister } from "./lister";
-import { AuthConfig, RequestParams } from "../utils/types";
+import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import {
   ListAppsRequest,
   ListRunnersRequest,
@@ -24,12 +24,7 @@ export class User extends Lister {
     pageNo,
     perPage,
   }: {
-    params?:
-      | Omit<
-          Partial<ListAppsRequest.AsObject>,
-          "userAppId" | "pageNo" | "perPage"
-        >
-      | Record<string, never>;
+    params?: PaginationRequestParams<ListAppsRequest.AsObject>;
     pageNo?: number;
     perPage?: number;
   }): AsyncGenerator<MultiAppResponse.AsObject, void, unknown> {
@@ -55,7 +50,7 @@ export class User extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: RequestParams<ListRunnersRequest.AsObject>;
+    params?: PaginationRequestParams<ListRunnersRequest.AsObject>;
     pageNo?: number;
     perPage?: number;
   }): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {

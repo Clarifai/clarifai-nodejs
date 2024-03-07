@@ -1,16 +1,22 @@
 import {
   ListDatasetsRequest,
   ListModelsRequest,
+  ListWorkflowsRequest,
+  MultiDatasetResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
-import { AuthConfig, RequestParams } from "../utils/types";
+import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import { Lister } from "./lister";
-import { App as ProtoApp } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import {
+  Model,
+  App as GrpcApp,
+  Workflow,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 
 export class App extends Lister {
-  private appInfo;
+  private appInfo: GrpcApp;
 
   constructor({ url, authConfig }: { url?: string; authConfig: AuthConfig }) {
     if (url && authConfig.appId) {
@@ -25,7 +31,7 @@ export class App extends Lister {
 
     super({ authConfig: authConfig });
 
-    this.appInfo = new ProtoApp();
+    this.appInfo = new GrpcApp();
     this.appInfo.setUserId(authConfig.userId);
     this.appInfo.setId(authConfig.appId);
   }
@@ -35,10 +41,10 @@ export class App extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: RequestParams<ListDatasetsRequest.AsObject>;
-    pageNo: number;
-    perPage: number;
-  }) {
+    params?: PaginationRequestParams<ListDatasetsRequest.AsObject>;
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiDatasetResponse.AsObject, void, unknown> {
     const listDataSets = promisifyGrpcCall(
       this.STUB.client.listDatasets,
       this.STUB.client,
@@ -64,11 +70,11 @@ export class App extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: RequestParams<ListModelsRequest.AsObject>;
+    params?: PaginationRequestParams<ListModelsRequest.AsObject>;
     onlyInApp?: boolean;
-    pageNo: number;
-    perPage: number;
-  }) {
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<Model.AsObject[], void, unknown> {
     const listModels = promisifyGrpcCall(
       this.STUB.client.listModels,
       this.STUB.client,
@@ -102,7 +108,44 @@ export class App extends Lister {
       }
       yield models;
     }
+  }
 
-    yield null;
+  async *listWorkflows({
+    params = {},
+    onlyInApp = true,
+    pageNo,
+    perPage,
+  }: {
+    params?: PaginationRequestParams<ListWorkflowsRequest.AsObject>;
+    onlyInApp?: boolean;
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<Workflow.AsObject[], void, unknown> {
+    const request = new ListWorkflowsRequest();
+    mapParamsToRequest(params, request);
+
+    const listWorkflows = promisifyGrpcCall(
+      this.STUB.client.listWorkflows,
+      this.STUB.client,
+    );
+
+    const listWorkflowsGenerator = this.listPagesGenerator(
+      listWorkflows,
+      request,
+      pageNo,
+      perPage,
+    );
+
+    for await (const workflow of listWorkflowsGenerator) {
+      const workflows = [];
+      const workflowObject = workflow.toObject();
+      for (const eachWorkflow of workflowObject.workflowsList) {
+        if (onlyInApp && eachWorkflow.appId !== this.userAppId.getAppId()) {
+          continue;
+        }
+        workflows.push(eachWorkflow);
+      }
+      yield workflows;
+    }
   }
 }

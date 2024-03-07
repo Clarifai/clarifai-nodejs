@@ -382,10 +382,13 @@ export class Model extends Lister {
     return responseObject;
   }
 
-  async *listVersions(
-    pageNo?: number,
-    perPage?: number,
-  ): AsyncGenerator<MultiModelVersionResponse.AsObject, void, void> {
+  async *listVersions({
+    pageNo,
+    perPage,
+  }: {
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiModelVersionResponse.AsObject, void, void> {
     const request = new ListModelVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setModelId(this.id);

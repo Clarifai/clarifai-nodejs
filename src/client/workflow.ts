@@ -208,10 +208,13 @@ export class Workflow extends Lister {
     return this.predict({ inputs: [inputProto] });
   }
 
-  async *listVersions(
-    pageNo?: number,
-    perPage?: number,
-  ): AsyncGenerator<MultiWorkflowVersionResponse.AsObject, void, void> {
+  async *listVersions({
+    pageNo,
+    perPage,
+  }: {
+    pageNo?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiWorkflowVersionResponse.AsObject, void, void> {
     const request = new ListWorkflowVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setWorkflowId(this.id);
