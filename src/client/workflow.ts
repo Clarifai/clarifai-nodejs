@@ -129,7 +129,7 @@ export class Workflow extends Lister {
             } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
               reject(
                 new Error(
-                  `Workflow Predict failed with response ${responseObject.status?.toString()}`,
+                  `Workflow Predict failed with response ${responseObject.status?.description}`,
                 ),
               );
             } else {
