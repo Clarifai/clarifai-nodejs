@@ -47,8 +47,8 @@ export class Search extends Lister {
     metric = DEFAULT_SEARCH_METRIC,
     authConfig,
   }: {
-    topK: number;
-    metric: string;
+    topK?: number;
+    metric?: string;
     authConfig?: AuthConfig;
   }) {
     super({ pageSize: 1000, authConfig });
@@ -249,10 +249,13 @@ export class Search extends Lister {
     }
   }
 
-  query(
-    ranks: FilterType = [{}],
-    filters: FilterType = [{}],
-  ): AsyncGenerator<
+  query({
+    ranks = [{}],
+    filters = [{}],
+  }: {
+    ranks?: FilterType;
+    filters?: FilterType;
+  }): AsyncGenerator<
     MultiSearchResponse.AsObject & Record<"hits", unknown>,
     void,
     void
