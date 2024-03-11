@@ -353,3 +353,4 @@ $RECYCLE.BIN/
 *.tgz
 example/*
 .vscode
+docs/*
