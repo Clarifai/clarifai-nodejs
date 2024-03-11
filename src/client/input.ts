@@ -11,11 +11,39 @@ import { Lister } from "./lister";
 import { Buffer } from "buffer";
 import fs from "fs";
 
+/**
+ * Inputs is a class that provides access to Clarifai API endpoints related to Input information.
+ * @noInheritDoc
+ */
 export class Input extends Lister {
+  /**
+   * Initializes an input object.
+   *
+   * @param {Object} params - The parameters for the Input object.
+   * @param {string} params.userId - A user ID for authentication.
+   * @param {string} params.appId - An app ID for the application to interact with.
+   * @param {string} params.baseUrl - Base API url. Default "https://api.clarifai.com"
+   * @param {string} params.pat - A personal access token for authentication. Can be set as env var CLARIFAI_PAT
+   * @param {string} params.token - A session token for authentication. Accepts either a session token or a pat. Can be set as env var CLARIFAI_SESSION_TOKEN
+   */
   constructor({ authConfig }: { authConfig?: AuthConfig }) {
     super({ authConfig });
   }
 
+  /**
+   * Create input proto for image data type.
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @param imagePb - The image proto to be used for the input.
+   * @param videoPb - The video proto to be used for the input.
+   * @param audioPb - The audio proto to be used for the input.
+   * @param textPb - The text proto to be used for the input.
+   * @param geoInfo - A list of longitude and latitude for the geo point.
+   * @param labels - A list of labels for the input.
+   * @param metadata - A Struct of metadata for the input.
+   * @returns - An Input object for the specified input ID.
+   */
   private static getProto({
     inputId,
     datasetId = null,
@@ -59,6 +87,30 @@ export class Input extends Lister {
     }
   }
 
+  /**
+   * Creates an input proto from bytes.
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param imageBytes - The bytes for the image as `Uint8Array` or `null`.
+   * @param videoBytes - The bytes for the video as `Uint8Array` or `null`.
+   * @param audioBytes - The bytes for the audio as `Uint8Array` or `null`.
+   * @param textBytes - The bytes for the text as `Uint8Array` or `null`.
+   * @param datasetId - The dataset ID for the dataset to add the input to, can be `null`.
+   * @returns An `Input` object for the specified input ID.
+   *
+   * @example
+   * ```typescript
+   * import { Input } from 'clarifai-nodejs';
+   *
+   * const image = new Uint8Array(fs.readFileSync('demo.jpg'));
+   * const video = new Uint8Array(fs.readFileSync('demo.mp4'));
+   * const inputProto = Inputs.getInputFromBytes({
+   *   inputId: 'demo',
+   *   imageBytes: image,
+   *   videoBytes: video,
+   * });
+   * ```
+   */
   static getInputFromBytes({
     inputId,
     imageBytes = null,
@@ -101,6 +153,27 @@ export class Input extends Lister {
     });
   }
 
+  /**
+   * Create input proto from files.
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param imageFile - The file path for the image.
+   * @param videoFile - The file path for the video.
+   * @param audioFile - The file path for the audio.
+   * @param textFile - The file path for the text.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @returns - An Input object for the specified input ID.
+   *
+   * @example
+   * ```typescript
+   * import { Input } from 'clarifai-nodejs';
+   *
+   * const inputProto = Input.getInputFromFile({
+   *   inputId: 'demo',
+   *   imageFile: 'file_path',
+   * });
+   * ```
+   */
   static getInputFromFile({
     inputId,
     imageFile = null,
@@ -143,6 +216,27 @@ export class Input extends Lister {
     });
   }
 
+  /**
+   * Upload input from URL.
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param imageUrl - The URL for the image.
+   * @param videoUrl - The URL for the video.
+   * @param audioUrl - The URL for the audio.
+   * @param textUrl - The URL for the text.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @returns - Job ID for the upload request.
+   *
+   * @example
+   * ```typescript
+   * import { Input } from 'clarifai-nodejs';
+   *
+   * const inputJobId = Input.uploadFromUrl({
+   *   inputId: 'demo',
+   *   imageUrl: 'https://samples.clarifai.com/metro-north.jpg',
+   * });
+   * ```
+   */
   static getInputFromUrl({
     inputId,
     imageUrl = null,

@@ -1,7 +1,10 @@
 import { Lister } from "./lister";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import {
+  DeleteAppRequest,
+  DeleteRunnersRequest,
   GetAppRequest,
+  GetRunnerRequest,
   ListAppsRequest,
   ListRunnersRequest,
   MultiAppResponse,
@@ -9,6 +12,7 @@ import {
   PostAppsRequest,
   PostRunnersRequest,
   SingleAppResponse,
+  SingleRunnerResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 import {
@@ -21,6 +25,7 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 
 /**
  * User is a class that provides access to Clarifai API endpoints related to user information.
+ * @noInheritDoc
  */
 export class User extends Lister {
   /**
@@ -280,5 +285,98 @@ export class User extends Lister {
       );
     }
     return responseObject;
+  }
+
+  /**
+   * Returns a Runner object if exists.
+   *
+   * @param runnerId The runner ID to interact with.
+   * @returns A Runner object for the existing runner ID.
+   *
+   * @example
+   * ```typescript
+   * import { User } from 'clarifai-nodejs';
+   * const user = new User(authConfig);
+   * const runner = await user.runner({ runnerId: 'runner_id' });
+   * ```
+   */
+  async runner({
+    runnerId,
+  }: {
+    runnerId: string;
+  }): Promise<SingleRunnerResponse.AsObject> {
+    const request = new GetRunnerRequest();
+    request.setUserAppId(this.userAppId);
+    request.setRunnerId(runnerId);
+    const getRunner = promisifyGrpcCall(
+      this.STUB.client.getRunner,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(getRunner, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(
+        `Failed to retrieve runner: ${responseObject.status?.description}`,
+      );
+    }
+    return responseObject;
+  }
+
+  /**
+   * Deletes an app for the user.
+   *
+   * @param appId The app ID for the app to delete.
+   *
+   * @example
+   * ```typescript
+   * import { User } from 'clarifai-nodejs';
+   * const user = new User(authConfig);
+   * await user.deleteApp({ appId: 'app_id' });
+   * ```
+   */
+  async deleteApp({ appId }: { appId: string }): Promise<void> {
+    const request = new DeleteAppRequest();
+    const appIdSet = new UserAppIDSet();
+    appIdSet.setUserId(this.userAppId.getUserId());
+    appIdSet.setAppId(appId);
+    request.setUserAppId(appIdSet);
+    const deleteApp = promisifyGrpcCall(
+      this.STUB.client.deleteApp,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteApp, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nApp Deleted\n%s", responseObject.status.description);
+  }
+
+  /**
+   * Deletes a runner for the user.
+   *
+   * @param runnerId The runner ID to delete.
+   *
+   * @example
+   * ```typescript
+   * import { User } from 'clarifai-nodejs';
+   * const user = new User(authConfig);
+   * await user.deleteRunner({ runnerId: 'runner_id' });
+   * ```
+   */
+  async deleteRunner({ runnerId }: { runnerId: string }): Promise<void> {
+    const request = new DeleteRunnersRequest();
+    request.setUserAppId(this.userAppId);
+    request.setIdsList([runnerId]);
+    const deleteRunners = promisifyGrpcCall(
+      this.STUB.client.deleteRunners,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteRunners, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nRunner Deleted\n%s", responseObject.status.description);
   }
 }
