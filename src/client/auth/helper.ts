@@ -66,6 +66,29 @@ export class ClarifaiAuthHelper {
   private _base: string;
   private _ui: string;
 
+  /**
+   * A helper to get the authorization information needed to make API calls with the grpc
+   * client to a specific app using a personal access token.
+   *
+   * There are class methods to make this object easily from either query_params provided by streamlit or from env vars.
+   *
+   * Note: only one of personal access token (pat) or a session token (token) can be provided.
+   * Always use PATs in your code and never session tokens, those are only provided internal UI code.
+   *
+   * @param user_id - A user id who owns the resource you want to make calls to.
+   * @param app_id - An app id for the application that owns the resource you want to interact with.
+   * @param pat - A personal access token.
+   * @param token - A session token (internal use only, always use a PAT).
+   * @param base - A url to the API endpoint to hit. Examples include api.clarifai.com,
+   *               https://api.clarifai.com (default), https://host:port, http://host:port,
+   *               host:port (will be treated as http, not https). It's highly recommended to include
+   *               the http:// or https:// otherwise we need to check the endpoint to determine if it has SSL during this __init__.
+   * @param ui - A url to the UI. Examples include clarifai.com,
+   *             https://clarifai.com (default), https://host:port, http://host:port,
+   *             host:port (will be treated as http, not https). It's highly recommended to include
+   *             the http:// or https:// otherwise we need to check the endpoint to determine if it has SSL during this __init__.
+   * @param validate - Whether to validate the inputs. This is useful for overriding vars then validating.
+   */
   constructor(
     userId: string,
     appId: string,
@@ -113,13 +136,15 @@ export class ClarifaiAuthHelper {
   }
 
   /**
-   * Will look for the following environment variables:
-   *  - user_id: CLARIFAI_USER_ID environment variable.
-   *  - app_id: CLARIFAI_APP_ID environment variable.
-   *  - One of:
-   *    - token: CLARIFAI_SESSION_TOKEN environment variable.
-   *    - pat: CLARIFAI_PAT environment variable.
-   *  - base: CLARIFAI_API_BASE environment variable.
+   * Will look for the following env vars:
+   * user_id: CLARIFAI_USER_ID env var.
+   * app_id: CLARIFAI_APP_ID env var.
+   * one of:
+   *   token: CLARIFAI_SESSION_TOKEN env var.
+   *   pat: CLARIFAI_PAT env var.
+   * base: CLARIFAI_API_BASE env var.
+   *
+   * @param validate - Whether to validate the inputs. This is useful for overriding vars then validating.
    */
   static fromEnv(validate: boolean = true): ClarifaiAuthHelper {
     const userId = process.env.CLARIFAI_USER_ID || "";
