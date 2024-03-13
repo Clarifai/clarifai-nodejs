@@ -28,6 +28,9 @@ import {
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { uuid } from "uuidv4";
+import { PostInputsRequest } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+import { promisifyGrpcCall } from "../utils/misc";
+import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
 interface CSVRecord {
   inputid: string;
@@ -740,5 +743,46 @@ export class Input extends Lister {
       .setInputId(inputId)
       .setData(new Data().setRegionsList(regions));
     return inputMaskProto;
+  }
+
+  async uploadInputs({
+    inputs,
+    showLog = true,
+  }: {
+    inputs: GrpcInput[];
+    showLog?: boolean;
+  }): Promise<string> {
+    if (!Array.isArray(inputs)) {
+      throw new Error("inputs must be an array of Input objects");
+    }
+    const inputJobId = uuid(); // generate a unique id for this job
+    const request = new PostInputsRequest()
+      .setUserAppId(this.userAppId)
+      .setInputsList(inputs)
+      .setInputsAddJobId(inputJobId);
+
+    const postInputs = promisifyGrpcCall(
+      this.STUB.client.postInputs,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postInputs, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      if (showLog) {
+        console.warn(responseObject.status?.description);
+      }
+      throw new Error(
+        `Inputs upload failed with response ${responseObject.status?.description}`,
+      );
+    } else {
+      if (showLog) {
+        console.info(
+          "\nInputs Uploaded\n%s",
+          responseObject.status?.description,
+        );
+      }
+    }
+    return inputJobId;
   }
 }
