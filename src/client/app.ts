@@ -1,4 +1,7 @@
 import {
+  GetDatasetRequest,
+  GetModelRequest,
+  GetWorkflowRequest,
   ListConceptsRequest,
   ListDatasetsRequest,
   ListInstalledModuleVersionsRequest,
@@ -8,6 +11,10 @@ import {
   MultiDatasetResponse,
   PostDatasetsRequest,
   PostModelsRequest,
+  SingleModelResponse,
+  SingleWorkflowResponse,
+  SingleDatasetResponse,
+  PostModulesRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
@@ -85,7 +92,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<Model.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<Model.AsObject[], void, unknown> {
     const listModels = promisifyGrpcCall(
       this.STUB.client.listModels,
       this.STUB.client,
@@ -129,7 +136,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<Workflow.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<Workflow.AsObject[], void, unknown> {
     const request = new ListWorkflowsRequest();
     mapParamsToRequest(params, request);
 
@@ -168,7 +175,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<Module.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<Module.AsObject[], void, unknown> {
     const listModules = promisifyGrpcCall(
       this.STUB.client.listModules,
       this.STUB.client,
@@ -259,10 +266,13 @@ export class App extends Lister {
     return TRAINABLE_MODEL_TYPES;
   }
 
-  async createDataset(
-    datasetId: string,
-    params: Omit<Partial<Dataset.AsObject>, "id">,
-  ): Promise<Dataset.AsObject> {
+  async createDataset({
+    datasetId,
+    params = {},
+  }: {
+    datasetId: string;
+    params?: Omit<Partial<Dataset.AsObject>, "id">;
+  }): Promise<Dataset.AsObject> {
     const request = new PostDatasetsRequest();
     request.setUserAppId(this.userAppId);
 
@@ -289,10 +299,13 @@ export class App extends Lister {
     return responseObject.datasetsList?.[0];
   }
 
-  async createModel(
-    modelId: string,
-    params: Omit<Partial<Model.AsObject>, "id">,
-  ): Promise<Model.AsObject> {
+  async createModel({
+    modelId,
+    params = {},
+  }: {
+    modelId: string;
+    params?: Omit<Partial<Model.AsObject>, "id">;
+  }): Promise<Model.AsObject> {
     const request = new PostModelsRequest();
     request.setUserAppId(this.userAppId);
     const newModel = new Model();
@@ -313,5 +326,93 @@ export class App extends Lister {
     }
     console.info("\nModel created\n%s", responseObject.status.description);
     return responseObject.model;
+  }
+
+  async createModule({
+    moduleId,
+    description,
+  }: {
+    moduleId: string;
+    description: string;
+  }): Promise<Module.AsObject> {
+    const request = new PostModulesRequest();
+    request.setUserAppId(this.userAppId);
+    const newModule = new Module();
+    newModule.setId(moduleId);
+    newModule.setDescription(description);
+    request.setModulesList([newModule]);
+    const postModules = promisifyGrpcCall(
+      this.STUB.client.postModules,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(postModules, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nModule created\n%s", responseObject.status.description);
+    return responseObject.modulesList?.[0];
+  }
+
+  async model({
+    modelId,
+    modelVersionId,
+  }: {
+    modelId: string;
+    modelVersionId: string;
+  }): Promise<SingleModelResponse.AsObject["model"]> {
+    const request = new GetModelRequest();
+    request.setUserAppId(this.userAppId);
+    request.setModelId(modelId);
+    request.setVersionId(modelVersionId);
+
+    const getModel = promisifyGrpcCall(
+      this.STUB.client.getModel,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(getModel, request);
+    const responseObject = response.toObject();
+    return responseObject.model;
+  }
+
+  async workflow({
+    workflowId,
+  }: {
+    workflowId: string;
+  }): Promise<SingleWorkflowResponse.AsObject["workflow"]> {
+    const request = new GetWorkflowRequest();
+    request.setUserAppId(this.userAppId);
+    request.setWorkflowId(workflowId);
+    const getWorkflow = promisifyGrpcCall(
+      this.STUB.client.getWorkflow,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(getWorkflow, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    return responseObject.workflow;
+  }
+
+  async dataset({
+    datasetId,
+  }: {
+    datasetId: string;
+  }): Promise<SingleDatasetResponse.AsObject["dataset"]> {
+    const request = new GetDatasetRequest();
+    request.setUserAppId(this.userAppId);
+    request.setDatasetId(datasetId);
+    const getDataset = promisifyGrpcCall(
+      this.STUB.client.getDataset,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(getDataset, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    return responseObject.dataset;
   }
 }

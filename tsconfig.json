@@ -2,7 +2,7 @@
   "compilerOptions": {
     /* Basic Options */
     "target": "es2020", // Specify ECMAScript target version
-    "module": "commonjs", // Specify module code generation
+    "module": "ESNext", // Specify module code generation
     "lib": ["es2020"], // Specify library files to be included in the compilation
     "types": ["node"], // Specify type package to be included in the compilation
     "outDir": "./dist", // Redirect output structure to the directory
@@ -24,6 +24,7 @@
     /* Module Resolution Options */
     "moduleResolution": "node", // Choose the module resolution strategy
     "resolveJsonModule": true, // Include modules imported with '.json' extension
+    "typeRoots": ["node_modules/@types", "tests/types"], // List of folders to include type definitions
   },
   "include": ["src/**/*", "tests/**/*"], // Include all files in the src folder
   "exclude": ["node_modules", "dist"], // Exclude node_modules and dist directories

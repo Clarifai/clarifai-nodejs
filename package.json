@@ -8,6 +8,8 @@
   "types": "dist/types.d.ts",
   "scripts": {
     "test": "vitest",
+    "test:unit": "vitest unit.test",
+    "test:integration": "vitest run integration.test",
     "lint:fix": "eslint . --fix --ignore-path .gitignore",
     "lint": "tsc --noEmit --pretty && eslint . --ignore-path .gitignore",
     "watch": "parcel watch",

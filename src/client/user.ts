@@ -77,7 +77,11 @@ export class User extends Lister {
     params?: PaginationRequestParams<ListAppsRequest.AsObject>;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiAppResponse.AsObject, void, unknown> {
+  } = {}): AsyncGenerator<
+    MultiAppResponse.AsObject["appsList"],
+    void,
+    unknown
+  > {
     const listApps = promisifyGrpcCall(
       this.STUB.client.listApps,
       this.STUB.client,
@@ -91,7 +95,7 @@ export class User extends Lister {
       pageNo,
       perPage,
     )) {
-      yield item.toObject();
+      yield item.toObject()?.appsList;
     }
   }
 
@@ -168,8 +172,8 @@ export class User extends Lister {
     baseWorkflow = "Empty",
   }: {
     appId: string;
-    baseWorkflow: string;
-  }): Promise<MultiAppResponse.AsObject> {
+    baseWorkflow?: string;
+  }): Promise<App.AsObject> {
     const workflow = new Workflow();
     workflow.setId(baseWorkflow);
     workflow.setAppId("main");
@@ -198,7 +202,7 @@ export class User extends Lister {
       );
     }
 
-    return responseObject;
+    return responseObject.appsList?.[0];
   }
 
   /**
@@ -228,7 +232,7 @@ export class User extends Lister {
     runnerId: string;
     labels: string[];
     description: string;
-  }): Promise<MultiRunnerResponse.AsObject> {
+  }): Promise<MultiRunnerResponse.AsObject["runnersList"][0]> {
     if (!Array.isArray(labels)) {
       throw new Error("Labels must be an array of strings");
     }
@@ -254,7 +258,7 @@ export class User extends Lister {
     }
     console.info("\nRunner created\n%s", responseObject.status.description);
 
-    return responseObject;
+    return responseObject.runnersList?.[0];
   }
 
   /**
