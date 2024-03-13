@@ -1,6 +1,9 @@
 import {
   Audio,
+  Concept,
   Data,
+  Geo,
+  GeoPoint,
   Input as GrpcInput,
   Image,
   Text,
@@ -10,6 +13,23 @@ import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import { Buffer } from "buffer";
 import fs from "fs";
+import path from "path";
+import { z } from "zod";
+import {
+  JavaScriptValue,
+  Struct,
+} from "google-protobuf/google/protobuf/struct_pb";
+import { parse } from "csv-parse";
+import { finished } from "stream/promises";
+import { uuid } from "uuidv4";
+
+interface CSVRecord {
+  inputid: string;
+  input: string;
+  concepts: string;
+  metadata: string;
+  geopoints: string;
+}
 
 /**
  * Inputs is a class that provides access to Clarifai API endpoints related to Input information.
@@ -51,40 +71,96 @@ export class Input extends Lister {
     videoPb = null,
     audioPb = null,
     textPb = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
   }: {
     inputId: string;
     datasetId?: string | null;
-    imagePb?: { base64: string } | null;
+    imagePb?:
+      | { base64: string; url?: undefined }
+      | { url: string; base64?: undefined }
+      | null;
     videoPb?: { base64: string } | null;
     audioPb?: { base64: string } | null;
     textPb?: { raw: string } | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
-    if (datasetId) {
-      return new GrpcInput()
-        .setId(inputId)
-        .setDatasetIdsList([datasetId])
-        .setData(
-          new Data()
-            .setImage(
-              imagePb ? new Image().setBase64(imagePb.base64) : undefined,
-            )
-            .setVideo(
-              videoPb ? new Video().setBase64(videoPb.base64) : undefined,
-            )
-            .setAudio(
-              audioPb ? new Audio().setBase64(audioPb.base64) : undefined,
-            )
-            .setText(textPb ? new Text().setRaw(textPb.raw) : undefined),
-        );
-    } else {
-      return new GrpcInput().setId(inputId).setData(
-        new Data()
-          .setImage(imagePb ? new Image().setBase64(imagePb.base64) : undefined)
-          .setVideo(videoPb ? new Video().setBase64(videoPb.base64) : undefined)
-          .setAudio(audioPb ? new Audio().setBase64(audioPb.base64) : undefined)
-          .setText(textPb ? new Text().setRaw(textPb.raw) : undefined),
-      );
+    const geoInfoSchema = z
+      .array(
+        z.object({
+          latitude: z.number(),
+          longitude: z.number(),
+        }),
+      )
+      .or(z.null());
+
+    const labelsSchema = z.array(z.string()).or(z.null());
+
+    const metaDataSchema = z.record(z.string(), z.unknown()).or(z.null());
+
+    try {
+      geoInfoSchema.parse(geoInfo);
+    } catch {
+      throw new Error("geoInfo must be a list of longitude and latitude");
     }
+
+    try {
+      labelsSchema.parse(labels);
+    } catch {
+      throw new Error("labels must be a list of strings");
+    }
+
+    try {
+      metaDataSchema.parse(metadata);
+    } catch {
+      throw new Error("metadata must be a valid object");
+    }
+
+    const metadataStruct = metadata
+      ? Struct.fromJavaScript(metadata)
+      : undefined;
+
+    const geoPb = geoInfo
+      ? new Geo().setGeoPoint(
+          new GeoPoint()
+            .setLatitude(geoInfo.latitude)
+            .setLongitude(geoInfo.longitude),
+        )
+      : undefined;
+
+    const concepts =
+      labels?.map((_label) => {
+        return new Concept()
+          .setId(`id-${_label.replace(/\s/g, "")}`)
+          .setName(_label)
+          .setValue(1);
+      }) ?? [];
+
+    const input = new GrpcInput().setId(inputId).setData(
+      new Data()
+        .setImage(
+          imagePb
+            ? imagePb.base64
+              ? new Image().setBase64(imagePb.base64)
+              : imagePb.url
+                ? new Image().setUrl(imagePb.url)
+                : undefined
+            : undefined,
+        )
+        .setVideo(videoPb ? new Video().setBase64(videoPb.base64) : undefined)
+        .setAudio(audioPb ? new Audio().setBase64(audioPb.base64) : undefined)
+        .setText(textPb ? new Text().setRaw(textPb.raw) : undefined)
+        .setGeo(geoPb)
+        .setConceptsList(concepts)
+        .setMetadata(metadataStruct),
+    );
+    if (datasetId) {
+      input.setDatasetIdsList([datasetId]);
+    }
+    return input;
   }
 
   /**
@@ -272,5 +348,233 @@ export class Input extends Lister {
       input.setDatasetIdsList([datasetId]);
     }
     return input;
+  }
+
+  static getImageInputsFromFolder({
+    folderPath,
+    datasetId = null,
+    labels = false,
+  }: {
+    folderPath: string;
+    datasetId?: string | null;
+    labels?: boolean;
+  }): GrpcInput[] {
+    const inputProtos: GrpcInput[] = [];
+    const folderName = folderPath.split("/").pop()!;
+    const labelList = labels ? [folderName] : null;
+    fs.readdirSync(folderPath).forEach((filename) => {
+      const extension = filename.split(".").pop();
+      if (
+        extension &&
+        ["jpg", "jpeg", "png", "tiff", "webp"].includes(extension.toLowerCase())
+      ) {
+        const inputId = filename.split(".")[0];
+        const imageBytes = fs.readFileSync(path.join(folderPath, filename));
+        const imagePb = { base64: Buffer.from(imageBytes).toString("base64") };
+        const inputProto = Input.getProto({
+          inputId,
+          datasetId,
+          imagePb,
+          labels: labelList,
+        });
+        inputProtos.push(inputProto);
+      }
+    });
+    return inputProtos;
+  }
+
+  /**
+   * Create input proto for text data type from raw text.
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param rawText - The raw text input.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @returns - An Input object for the specified input ID.
+   *
+   * @example
+   * ```typescript
+   * import { Input } from 'clarifai-nodejs';
+   *
+   * const inputProto = Input.getTextInput({
+   *   inputId: 'demo',
+   *   rawText: 'This is a test',
+   * });
+   * ```
+   */
+  static getTextInput({
+    inputId,
+    rawText,
+    datasetId = null,
+  }: {
+    inputId: string;
+    rawText: string;
+    datasetId?: string | null;
+  }): GrpcInput {
+    const textPb = rawText ? { raw: rawText } : null;
+    return this.getProto({
+      inputId,
+      datasetId,
+      textPb,
+    });
+  }
+
+  static getMultimodalInput({
+    inputId,
+    rawText = null,
+    textBytes = null,
+    imageUrl = null,
+    imageBytes = null,
+    datasetId = null,
+  }: {
+    inputId: string;
+    rawText?: string | null;
+    textBytes?: Uint8Array | null;
+    imageUrl?: string | null;
+    imageBytes?: Uint8Array | null;
+    datasetId?: string | null;
+  }): GrpcInput {
+    if ((imageBytes && imageUrl) || (!imageBytes && !imageUrl)) {
+      throw new Error(
+        "Please supply only one of imageBytes or imageUrl, and not both.",
+      );
+    }
+    if ((textBytes && rawText) || (!textBytes && !rawText)) {
+      throw new Error(
+        "Please supply only one of textBytes or rawText, and not both.",
+      );
+    }
+
+    const imagePb = imageBytes
+      ? { base64: Buffer.from(imageBytes).toString("base64") }
+      : imageUrl
+        ? { url: imageUrl }
+        : null;
+    const textPb = textBytes
+      ? { raw: Buffer.from(textBytes).toString("utf-8") }
+      : rawText
+        ? { raw: rawText }
+        : null;
+
+    return Input.getProto({
+      inputId,
+      datasetId,
+      imagePb,
+      textPb,
+    });
+  }
+
+  static async getInputsFromCsv({
+    csvPath,
+    inputType = "text",
+    csvType = "raw",
+    datasetId = null,
+    labels = true,
+  }: {
+    csvPath: string;
+    inputType: string;
+    csvType: string;
+    datasetId?: string | null;
+    labels: boolean;
+  }): Promise<GrpcInput[]> {
+    const inputProtos: GrpcInput[] = [];
+    const csvData = await fs.promises.readFile(csvPath, "utf8");
+    const parser = parse(csvData, { columns: true });
+    const records: Array<CSVRecord> = [];
+    parser.on("readable", function () {
+      let record;
+      while ((record = parser.read()) !== null) {
+        // individual record
+        records.push(record);
+      }
+    });
+    await finished(parser);
+
+    for (const record of records) {
+      const { inputid, input, concepts, metadata, geopoints, ...otherColumns } =
+        record;
+
+      if (Object.keys(otherColumns).length > 0) {
+        throw new Error(
+          `CSV file may have 'inputid', 'input', 'concepts', 'metadata', 'geopoints' columns. Does not support: '${Object.keys(otherColumns).join(", ")}'`,
+        );
+      }
+
+      const inputLabels = labels ? concepts.split(",") : null;
+
+      let inputMetadata = null;
+      if (metadata) {
+        try {
+          // TODO: Test CSV parsing of json values with actual test cases
+          const metadataDict = JSON.parse(metadata.replace(/'/g, '"'));
+          inputMetadata = { fields: metadataDict };
+        } catch (error) {
+          throw new Error("metadata column in CSV file should be a valid JSON");
+        }
+      }
+
+      let inputGeoInfo = null;
+      if (geopoints) {
+        const geoPoints = geopoints.split(",");
+        if (geoPoints.length === 2) {
+          inputGeoInfo = {
+            latitude: parseFloat(geoPoints[0]),
+            longitude: parseFloat(geoPoints[1]),
+          };
+        } else {
+          throw new Error(
+            "geopoints column in CSV file should have longitude,latitude",
+          );
+        }
+      }
+
+      const inputId = inputid || uuid();
+      const text = inputType === "text" ? input : null;
+      const image = inputType === "image" ? input : null;
+      const video = inputType === "video" ? input : null;
+      const audio = inputType === "audio" ? input : null;
+
+      if (csvType === "raw") {
+        inputProtos.push(
+          Input.getTextInput({
+            inputId,
+            rawText: text as string,
+            datasetId,
+            labels: inputLabels,
+            metadata: inputMetadata,
+            geoInfo: inputGeoInfo,
+          }),
+        );
+      } else if (csvType === "url") {
+        inputProtos.push(
+          Input.getInputFromUrl({
+            inputId,
+            imageUrl: image,
+            textUrl: text,
+            audioUrl: audio,
+            videoUrl: video,
+            datasetId,
+            labels: inputLabels,
+            metadata: inputMetadata,
+            geoInfo: inputGeoInfo,
+          }),
+        );
+      } else {
+        inputProtos.push(
+          Input.getInputFromFile({
+            inputId,
+            imageFile: image,
+            textFile: text,
+            audioFile: audio,
+            videoFile: video,
+            datasetId,
+            labels: inputLabels,
+            metadata: inputMetadata,
+            geoInfo: inputGeoInfo,
+          }),
+        );
+      }
+    }
+
+    return inputProtos;
   }
 }
