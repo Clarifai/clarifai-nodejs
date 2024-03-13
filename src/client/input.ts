@@ -1,11 +1,17 @@
 import {
+  Annotation,
   Audio,
+  BoundingBox,
   Concept,
   Data,
   Geo,
   GeoPoint,
   Input as GrpcInput,
   Image,
+  Point,
+  Polygon,
+  Region,
+  RegionInfo,
   Text,
   Video,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
@@ -622,5 +628,117 @@ export class Input extends Lister {
     }
 
     return inputProtos;
+  }
+
+  static getTextInputsFromFolder({
+    folderPath,
+    datasetId = null,
+    labels = false,
+  }: {
+    folderPath: string;
+    datasetId: string | null;
+    labels: boolean;
+  }): GrpcInput[] {
+    const inputProtos: GrpcInput[] = [];
+    const labelList = labels ? [folderPath.split("/").pop()!] : null;
+    const files = fs.readdirSync(folderPath);
+    for (const filename of files) {
+      if (filename.split(".").pop() !== "txt") {
+        continue;
+      }
+      const inputId = filename.split(".")[0];
+      const rawText = fs.readFileSync(path.join(folderPath, filename), "utf8");
+      const textPb = { raw: rawText };
+      inputProtos.push(
+        Input.getProto({
+          inputId,
+          datasetId,
+          textPb,
+          labels: labelList,
+        }),
+      );
+    }
+    return inputProtos;
+  }
+
+  static getBboxProto({
+    inputId,
+    label,
+    bbox,
+  }: {
+    inputId: string;
+    label: string;
+    bbox: number[];
+  }): Annotation {
+    const bboxSchema = z.array(z.number()).length(4);
+    try {
+      bboxSchema.parse(bbox);
+    } catch {
+      throw new Error("bbox must be an array of coordinates");
+    }
+    const [xMin, yMin, xMax, yMax] = bbox;
+    const inputAnnotProto = new Annotation().setInputId(inputId).setData(
+      new Data().setRegionsList([
+        new Region()
+          .setRegionInfo(
+            new RegionInfo().setBoundingBox(
+              new BoundingBox()
+                .setTopRow(yMin)
+                .setLeftCol(xMin)
+                .setBottomRow(yMax)
+                .setRightCol(xMax),
+            ),
+          )
+          .setData(
+            new Data().setConceptsList([
+              new Concept()
+                .setId(`id-${label.replace(/\s/g, "")}`)
+                .setName(label)
+                .setValue(1),
+            ]),
+          ),
+      ]),
+    );
+    return inputAnnotProto;
+  }
+
+  static getMaskProto(
+    inputId: string,
+    label: string,
+    polygons: number[][][],
+  ): Annotation {
+    const polygonsSchema = z.array(z.array(z.array(z.number())));
+    try {
+      polygonsSchema.parse(polygons);
+    } catch {
+      throw new Error("polygons must be a list of points");
+    }
+    const regions = polygons.map((points) => {
+      return new Region()
+        .setRegionInfo(
+          new RegionInfo().setPolygon(
+            new Polygon().setPointsList(
+              points.map((point) => {
+                return new Point()
+                  .setRow(point[1])
+                  .setCol(point[0])
+                  .setVisibility(Point.Visibility["VISIBLE"]);
+              }),
+            ),
+          ),
+        )
+        .setData(
+          new Data().setConceptsList([
+            new Concept()
+              .setId(`id-${label.replace(/\s/g, "")}`)
+              .setName(label)
+              .setValue(1),
+          ]),
+        );
+    });
+    const inputMaskProto = new Annotation()
+      .setInputId(inputId)
+      .setData(new Data().setRegionsList(regions));
+    return inputMaskProto;
   }
 }
