@@ -257,6 +257,9 @@ export class Input extends Lister {
     audioFile = null,
     textFile = null,
     datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
   }: {
     inputId: string;
     imageFile?: string | null;
@@ -264,6 +267,9 @@ export class Input extends Lister {
     audioFile?: string | null;
     textFile?: string | null;
     datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageFile || videoFile || audioFile || textFile)) {
       throw new Error(
@@ -289,6 +295,9 @@ export class Input extends Lister {
       videoPb,
       audioPb,
       textPb,
+      geoInfo,
+      labels,
+      metadata,
     });
   }
 
@@ -320,6 +329,9 @@ export class Input extends Lister {
     audioUrl = null,
     textUrl = null,
     datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
   }: {
     inputId: string;
     imageUrl?: string | null;
@@ -327,6 +339,9 @@ export class Input extends Lister {
     audioUrl?: string | null;
     textUrl?: string | null;
     datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageUrl || videoUrl || audioUrl || textUrl)) {
       throw new Error(
@@ -337,12 +352,34 @@ export class Input extends Lister {
     const videoPb = videoUrl ? new Video().setUrl(videoUrl) : null;
     const audioPb = audioUrl ? new Audio().setUrl(audioUrl) : null;
     const textPb = textUrl ? new Text().setUrl(textUrl) : null;
+    const concepts =
+      labels?.map((_label) => {
+        return new Concept()
+          .setId(`id-${_label.replace(/\s/g, "")}`)
+          .setName(_label)
+          .setValue(1);
+      }) ?? [];
+    const metadataStruct = metadata
+      ? Struct.fromJavaScript(metadata)
+      : undefined;
+
     const input = new GrpcInput().setId(inputId).setData(
       new Data()
         .setImage(imagePb ? imagePb : undefined)
         .setVideo(videoPb ? videoPb : undefined)
         .setAudio(audioPb ? audioPb : undefined)
-        .setText(textPb ? textPb : undefined),
+        .setText(textPb ? textPb : undefined)
+        .setGeo(
+          geoInfo
+            ? new Geo().setGeoPoint(
+                new GeoPoint()
+                  .setLatitude(geoInfo.latitude)
+                  .setLongitude(geoInfo.longitude),
+              )
+            : undefined,
+        )
+        .setConceptsList(concepts)
+        .setMetadata(metadataStruct),
     );
     if (datasetId) {
       input.setDatasetIdsList([datasetId]);
@@ -405,16 +442,25 @@ export class Input extends Lister {
     inputId,
     rawText,
     datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
   }: {
     inputId: string;
     rawText: string;
     datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     const textPb = rawText ? { raw: rawText } : null;
     return this.getProto({
       inputId,
       datasetId,
       textPb,
+      geoInfo,
+      labels,
+      metadata,
     });
   }
 
