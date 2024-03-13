@@ -15,6 +15,10 @@ import {
   SingleWorkflowResponse,
   SingleDatasetResponse,
   PostModulesRequest,
+  DeleteDatasetsRequest,
+  DeleteModelsRequest,
+  DeleteWorkflowsRequest,
+  DeleteModulesRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrlHelper } from "../urls/helper";
@@ -62,7 +66,11 @@ export class App extends Lister {
     params?: PaginationRequestParams<ListDatasetsRequest.AsObject>;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiDatasetResponse.AsObject, void, unknown> {
+  } = {}): AsyncGenerator<
+    MultiDatasetResponse.AsObject["datasetsList"],
+    void,
+    unknown
+  > {
     const listDataSets = promisifyGrpcCall(
       this.STUB.client.listDatasets,
       this.STUB.client,
@@ -78,7 +86,7 @@ export class App extends Lister {
       pageNo,
       perPage,
     )) {
-      yield item.toObject();
+      yield item.toObject()?.datasetsList;
     }
   }
 
@@ -414,5 +422,69 @@ export class App extends Lister {
       throw new Error(responseObject.status?.description);
     }
     return responseObject.dataset;
+  }
+
+  async deleteDataset({ datasetId }: { datasetId: string }): Promise<void> {
+    const request = new DeleteDatasetsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setDatasetIdsList([datasetId]);
+    const deleteDatasets = promisifyGrpcCall(
+      this.STUB.client.deleteDatasets,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteDatasets, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nDataset Deleted\n%s", responseObject.status?.description);
+  }
+
+  async deleteModel({ modelId }: { modelId: string }): Promise<void> {
+    const request = new DeleteModelsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setIdsList([modelId]);
+    const deleteModels = promisifyGrpcCall(
+      this.STUB.client.deleteModels,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteModels, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nModel Deleted\n%s", responseObject.status?.description);
+  }
+
+  async deleteWorkflow({ workflowId }: { workflowId: string }): Promise<void> {
+    const request = new DeleteWorkflowsRequest();
+    request.setUserAppId(this.userAppId);
+    request.setIdsList([workflowId]);
+    const deleteWorkflows = promisifyGrpcCall(
+      this.STUB.client.deleteWorkflows,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteWorkflows, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nWorkflow Deleted\n%s", responseObject.status?.description);
+  }
+
+  async deleteModule({ moduleId }: { moduleId: string }): Promise<void> {
+    const request = new DeleteModulesRequest();
+    request.setUserAppId(this.userAppId);
+    request.setIdsList([moduleId]);
+    const deleteModules = promisifyGrpcCall(
+      this.STUB.client.deleteModules,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(deleteModules, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nModule Deleted\n%s", responseObject.status?.description);
   }
 }

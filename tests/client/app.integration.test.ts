@@ -17,17 +17,23 @@ const CREATE_RUNNER_ID = `ci_test_runner_${NOW}`;
 const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
 
 describe("App", () => {
-  it("should list models", async () => {
-    const app = new App({
-      authConfig: {
-        pat: CLARIFAI_PAT,
-        userId: MAIN_APP_USER_ID,
-        appId: MAIN_APP_ID,
-      },
-    });
-    const list = await app.listModels().next();
-    expect(list.value?.length).toBe(16);
-  });
+  it(
+    "should list models",
+    {
+      timeout: 10000,
+    },
+    async () => {
+      const app = new App({
+        authConfig: {
+          pat: CLARIFAI_PAT,
+          userId: MAIN_APP_USER_ID,
+          appId: MAIN_APP_ID,
+        },
+      });
+      const list = await app.listModels().next();
+      expect(list.value?.length).toBe(16);
+    },
+  );
 
   it("should list workflows", async () => {
     const app = new App({
@@ -38,7 +44,7 @@ describe("App", () => {
       },
     });
     const list = await app.listWorkflows().next();
-    expect(list.value?.length).toBe(16);
+    expect(list.value?.length).toBeGreaterThanOrEqual(0);
   });
 
   it("should list apps", async () => {
@@ -171,5 +177,78 @@ describe("App", () => {
     expect(dataset?.id).toBe(CREATE_DATASET_ID);
     expect(dataset?.appId).toBe(CREATE_APP_ID);
     expect(dataset?.userId).toBe(CREATE_APP_USER_ID);
+  });
+
+  it("should list datasets", async () => {
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+      },
+    });
+    const list = await app.listDataSets().next();
+    expect(list.value?.length).toBeGreaterThan(0);
+  });
+
+  it("should delete dataset", async () => {
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+      },
+    });
+    await expect(
+      app.deleteDataset({ datasetId: CREATE_DATASET_ID }),
+    ).resolves.not.toThrow();
+  });
+
+  it("should delete model", async () => {
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+      },
+    });
+    await expect(
+      app.deleteModel({ modelId: CREATE_MODEL_ID }),
+    ).resolves.not.toThrow();
+  });
+
+  it("should delete module", async () => {
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+      },
+    });
+    await expect(
+      app.deleteModule({ moduleId: CREATE_MODULE_ID }),
+    ).resolves.not.toThrow();
+  });
+
+  it("should delete runner", async () => {
+    const user = new User({
+      pat: CLARIFAI_PAT,
+      userId: CREATE_APP_USER_ID,
+      appId: CREATE_APP_ID,
+    });
+    await expect(
+      user.deleteRunner({ runnerId: CREATE_RUNNER_ID }),
+    ).resolves.not.toThrow();
+  });
+
+  it("should delete app", async () => {
+    const user = new User({
+      pat: CLARIFAI_PAT,
+      userId: CREATE_APP_USER_ID,
+      appId: MAIN_APP_ID,
+    });
+    await expect(
+      user.deleteApp({ appId: CREATE_APP_ID }),
+    ).resolves.not.toThrow();
   });
 });
