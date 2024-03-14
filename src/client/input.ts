@@ -28,7 +28,11 @@ import {
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { uuid } from "uuidv4";
-import { PostInputsRequest } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+import {
+  PatchInputsRequest,
+  PostAnnotationsRequest,
+  PostInputsRequest,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
@@ -203,6 +207,9 @@ export class Input extends Lister {
     audioBytes = null,
     textBytes = null,
     datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
   }: {
     inputId: string;
     imageBytes?: Uint8Array | null;
@@ -210,6 +217,9 @@ export class Input extends Lister {
     audioBytes?: Uint8Array | null;
     textBytes?: Uint8Array | null;
     datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageBytes || videoBytes || audioBytes || textBytes)) {
       throw new Error(
@@ -235,6 +245,9 @@ export class Input extends Lister {
       videoPb,
       audioPb,
       textPb,
+      geoInfo,
+      labels,
+      metadata,
     });
   }
 
@@ -784,5 +797,195 @@ export class Input extends Lister {
       }
     }
     return inputJobId;
+  }
+
+  uploadFromUrl({
+    inputId,
+    imageUrl = null,
+    videoUrl = null,
+    audioUrl = null,
+    textUrl = null,
+    datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
+  }: {
+    inputId: string;
+    imageUrl?: string | null;
+    videoUrl?: string | null;
+    audioUrl?: string | null;
+    textUrl?: string | null;
+    datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
+  }): Promise<string> {
+    const inputPb = Input.getInputFromUrl({
+      inputId,
+      imageUrl,
+      videoUrl,
+      audioUrl,
+      textUrl,
+      datasetId,
+      geoInfo,
+      labels,
+      metadata,
+    });
+    return this.uploadInputs({ inputs: [inputPb] });
+  }
+
+  uploadFromFile({
+    inputId,
+    imageFile = null,
+    videoFile = null,
+    audioFile = null,
+    textFile = null,
+    datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
+  }: {
+    inputId: string;
+    imageFile?: string | null;
+    videoFile?: string | null;
+    audioFile?: string | null;
+    textFile?: string | null;
+    datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
+  }): Promise<string> {
+    const inputProto = Input.getInputFromFile({
+      inputId,
+      imageFile,
+      videoFile,
+      audioFile,
+      textFile,
+      datasetId,
+      geoInfo,
+      labels,
+      metadata,
+    });
+    return this.uploadInputs({ inputs: [inputProto] });
+  }
+
+  uploadFromBytes({
+    inputId,
+    imageBytes = null,
+    videoBytes = null,
+    audioBytes = null,
+    textBytes = null,
+    datasetId = null,
+    geoInfo = null,
+    labels = null,
+    metadata = null,
+  }: {
+    inputId: string;
+    imageBytes?: Uint8Array | null;
+    videoBytes?: Uint8Array | null;
+    audioBytes?: Uint8Array | null;
+    textBytes?: Uint8Array | null;
+    datasetId?: string | null;
+    geoInfo?: GeoPoint.AsObject | null;
+    labels?: string[] | null;
+    metadata?: Record<string, JavaScriptValue> | null;
+  }): Promise<string> {
+    const inputProto = Input.getInputFromBytes({
+      inputId,
+      imageBytes,
+      videoBytes,
+      audioBytes,
+      textBytes,
+      datasetId,
+      geoInfo,
+      labels,
+      metadata,
+    });
+    return this.uploadInputs({ inputs: [inputProto] });
+  }
+
+  uploadText({
+    inputId,
+    rawText,
+    datasetId = null,
+  }: {
+    inputId: string;
+    rawText: string;
+    datasetId?: string | null;
+  }): Promise<string> {
+    const inputPb = Input.getProto({
+      inputId,
+      datasetId,
+      textPb: { raw: rawText },
+    });
+    return this.uploadInputs({ inputs: [inputPb] });
+  }
+
+  async patchInputs({
+    inputs,
+    action = "merge",
+  }: {
+    inputs: GrpcInput[];
+    action?: string;
+  }): Promise<string> {
+    if (!Array.isArray(inputs)) {
+      throw new Error("inputs must be an array of Input objects");
+    }
+    const requestId = uuid(); // generate a unique id for this job
+    const request = new PatchInputsRequest()
+      .setUserAppId(this.userAppId)
+      .setInputsList(inputs)
+      .setAction(action);
+    const patchInputs = promisifyGrpcCall(
+      this.STUB.client.patchInputs,
+      this.STUB.client,
+    );
+    const response = await this.grpcRequest(patchInputs, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      console.warn(
+        `Patch inputs failed, status: ${responseObject.status?.description}`,
+      );
+      throw Error(
+        `Patch inputs failed, status: ${responseObject.status?.description}`,
+      );
+    }
+    console.info(
+      "\nPatch Inputs Successful\n%s",
+      responseObject.status?.description,
+    );
+    return requestId;
+  }
+
+  async uploadAnnotations({
+    batchAnnot,
+    showLog = true,
+  }: {
+    batchAnnot: Annotation[];
+    showLog?: boolean;
+  }): Promise<Annotation[]> {
+    const retryUpload: Annotation[] = []; // those that fail to upload are stored for retries
+    const request = new PostAnnotationsRequest()
+      .setUserAppId(this.userAppId)
+      .setAnnotationsList(batchAnnot);
+
+    const postAnnotations = promisifyGrpcCall(
+      this.STUB.client.postAnnotations,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postAnnotations, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      console.warn(
+        `Post annotations failed, status: ${responseObject.status?.description}`,
+      );
+      retryUpload.push(...batchAnnot);
+    } else {
+      if (showLog) {
+        console.info("\nAnnotations Uploaded\n%s", responseObject.status);
+      }
+    }
+    return retryUpload;
   }
 }

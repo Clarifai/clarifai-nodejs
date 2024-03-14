@@ -471,29 +471,4 @@ export class Model extends Lister {
       makeRequest();
     });
   }
-
-  // private async listConcepts(): Promise<string[]> {
-  //   const request = new ListConceptsRequest();
-  //   request.setUserAppId(this.userAppId);
-
-  //   const listConcepts = promisifyGrpcCall(
-  //     this.STUB.client.listConcepts,
-  //     this.STUB.client,
-  //   );
-
-  //   const allConceptsInfosGenerator = this.listPagesGenerator(
-  //     listConcepts,
-  //     request,
-  //   );
-
-  //   const allConceptsInfos: MultiConceptResponse.AsObject["conceptsList"][] =
-  //     [];
-  //   for await (const conceptInfo of allConceptsInfosGenerator) {
-  //     allConceptsInfos.push(conceptInfo.toObject()?.conceptsList ?? []);
-  //   }
-
-  //   return allConceptsInfos.flatMap((conceptInfo) =>
-  //     conceptInfo.map((each) => each.id),
-  //   );
-  // }
 }
