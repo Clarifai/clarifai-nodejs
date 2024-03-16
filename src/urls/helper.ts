@@ -4,6 +4,17 @@ interface ClarifaiAuthHelper {
   ui: string;
 }
 
+type USERID = string;
+type APPID = string;
+type RESOURCE_TYPE = string;
+type RESOURCEID = string;
+type RESOURCE_VERSION_TYPE = string;
+type RESOURCE_VERSION_ID = string;
+export type ClarifaiUrl =
+  | `${string}://${string}/${USERID}/${APPID}/${RESOURCE_TYPE}/${RESOURCEID}/${RESOURCE_VERSION_TYPE}/${RESOURCE_VERSION_ID}`
+  | `${string}://${string}/${USERID}/${APPID}/${RESOURCE_TYPE}/${RESOURCEID}`;
+export type ClarifaiAppUrl = `${string}://${string}/${USERID}/${APPID}`;
+
 export class ClarifaiUrlHelper {
   private auth: ClarifaiAuthHelper;
   private moduleManagerImvId: string;
@@ -109,10 +120,14 @@ export class ClarifaiUrlHelper {
 
   /**
    * Splits a Clarifai app URL into its component parts.
+   * clarifai.com uses fully qualified urls to resources.
+   * They are in the format of:
+   * https://clarifai.com/{user_id}/{app_id}
+   *
    * @param url The Clarifai app URL.
    * @returns A tuple containing userId and appId.
    */
-  static splitClarifaiAppUrl(url: string): [string, string] {
+  static splitClarifaiAppUrl(url: ClarifaiAppUrl): [string, string] {
     const o = new URL(url);
     const parts = o.pathname.split("/").filter((part) => part.length > 0);
     if (parts.length !== 3) {
@@ -125,11 +140,16 @@ export class ClarifaiUrlHelper {
 
   /**
    * Splits a Clarifai URL into its component parts, including optional resource version.
+   * clarifai.com uses fully qualified urls to resources.
+   * They are in the format of:
+   * https://clarifai.com/{user_id}/{app_id}/{resource_type}/{resource_id}/{resource_version_type}/{resource_version_id}
+   * Those last two are optional.
+   *
    * @param url The Clarifai URL.
    * @returns A tuple containing userId, appId, resourceType, resourceId, and optionally resourceVersionId.
    */
   static splitClarifaiUrl(
-    url: string,
+    url: ClarifaiUrl,
   ): [string, string, string, string, string?] {
     const o = new URL(url);
     const parts = o.pathname.split("/").filter((part) => part.length > 0);
@@ -145,10 +165,14 @@ export class ClarifaiUrlHelper {
 
   /**
    * Splits a module UI URL into its component IDs.
+   * Takes in a path like https://clarifai.com/zeiler/app/modules/module1/versions/2 to split it apart into it's IDs.
+   *
    * @param install The module UI URL.
    * @returns A tuple containing userId, appId, moduleId, and moduleVersionId.
    */
-  static splitModuleUiUrl(install: string): [string, string, string, string] {
+  static splitModuleUiUrl(
+    install: ClarifaiUrl,
+  ): [string, string, string, string] {
     const [userId, appId, resourceType, resourceId, resourceVersionId] =
       this.splitClarifaiUrl(install);
     if (resourceType !== "modules" || resourceVersionId === undefined) {

@@ -10,7 +10,7 @@ import {
   SingleModelResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
-import { ClarifaiUrlHelper } from "../urls/helper";
+import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import {
   BackoffIterator,
   mapParamsToRequest,
@@ -64,7 +64,7 @@ export class Model extends Lister {
     authConfig = {},
   }:
     | {
-        url: string;
+        url: ClarifaiUrl;
         modelId?: undefined;
         modelVersion?: { id: string };
         authConfig?: AuthConfig;

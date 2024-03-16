@@ -1,7 +1,7 @@
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import { UserError } from "../errors";
-import { ClarifaiUrlHelper } from "../urls/helper";
+import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import {
   Input as GrpcInput,
   OutputConfig as GrpcOutputConfig,
@@ -28,7 +28,7 @@ type OutputConfig = { minValue: number };
 
 type WorkflowConfig =
   | {
-      url: string;
+      url: ClarifaiUrl;
       workflowId?: undefined;
       workflowVersion?: undefined;
       outputConfig?: OutputConfig;

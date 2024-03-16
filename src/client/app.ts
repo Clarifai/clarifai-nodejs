@@ -21,7 +21,7 @@ import {
   DeleteModulesRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
-import { ClarifaiUrlHelper } from "../urls/helper";
+import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import { Lister } from "./lister";
@@ -37,10 +37,20 @@ import {
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
+type AppConfig =
+  | {
+      url: ClarifaiAppUrl;
+      authConfig: Omit<AuthConfig, "appId"> & { appId?: undefined };
+    }
+  | {
+      url?: undefined;
+      authConfig: AuthConfig;
+    };
+
 export class App extends Lister {
   private appInfo: GrpcApp;
 
-  constructor({ url, authConfig }: { url?: string; authConfig: AuthConfig }) {
+  constructor({ url, authConfig }: AppConfig) {
     if (url && authConfig.appId) {
       throw new UserError("You can only specify one of url or app_id.");
     }
@@ -48,14 +58,15 @@ export class App extends Lister {
     if (url) {
       const [userId, appId] = ClarifaiUrlHelper.splitClarifaiAppUrl(url);
       if (userId) authConfig.userId = userId;
+      // @ts-expect-error - since url is parsed, we need to set appId here
       if (appId) authConfig.appId = appId;
     }
 
-    super({ authConfig: authConfig });
+    super({ authConfig: authConfig as AuthConfig });
 
     this.appInfo = new GrpcApp();
     this.appInfo.setUserId(authConfig.userId);
-    this.appInfo.setId(authConfig.appId);
+    this.appInfo.setId(authConfig.appId!);
   }
 
   async *listDataSets({
