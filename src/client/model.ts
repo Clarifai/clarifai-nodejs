@@ -20,8 +20,10 @@ import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import {
   Model as GrpcModel,
-  Input,
+  Input as GrpcInput,
   ModelVersion,
+  OutputConfig,
+  OutputInfo,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -36,6 +38,11 @@ import {
 } from "../utils/modelTrain";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
+import { Input } from "./input";
+import {
+  JavaScriptValue,
+  Struct,
+} from "google-protobuf/google/protobuf/struct_pb";
 
 export class Model extends Lister {
   // @ts-expect-error - Variable yet to be used
@@ -410,7 +417,15 @@ export class Model extends Lister {
     }
   }
 
-  async predict(inputs: Input[]): Promise<MultiOutputResponse.AsObject> {
+  async predict({
+    inputs,
+    inferenceParams,
+    outputConfig,
+  }: {
+    inputs: GrpcInput[];
+    inferenceParams?: Record<string, JavaScriptValue>;
+    outputConfig?: OutputConfig;
+  }): Promise<MultiOutputResponse.AsObject> {
     if (!Array.isArray(inputs)) {
       throw new Error(
         "Invalid inputs, inputs must be an array of Input objects.",
@@ -420,7 +435,8 @@ export class Model extends Lister {
       throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
     }
 
-    const requestInputs: Input[] = [];
+    this.overrideModelVersion({ inferenceParams, outputConfig });
+    const requestInputs: GrpcInput[] = [];
     for (const input of inputs) {
       requestInputs.push(input);
     }
@@ -470,5 +486,152 @@ export class Model extends Lister {
       };
       makeRequest();
     });
+  }
+
+  predictByUrl({
+    url,
+    inputType,
+    inferenceParams,
+    outputConfig,
+  }: {
+    url: string;
+    inputType: "image" | "text" | "video" | "audio";
+    inferenceParams?: Record<string, JavaScriptValue>;
+    outputConfig?: OutputConfig;
+  }): Promise<MultiOutputResponse.AsObject> {
+    let inputProto: GrpcInput;
+    if (inputType === "image") {
+      inputProto = Input.getInputFromUrl({ inputId: "", imageUrl: url });
+    } else if (inputType === "text") {
+      inputProto = Input.getInputFromUrl({ inputId: "", textUrl: url });
+    } else if (inputType === "video") {
+      inputProto = Input.getInputFromUrl({ inputId: "", videoUrl: url });
+    } else if (inputType === "audio") {
+      inputProto = Input.getInputFromUrl({ inputId: "", audioUrl: url });
+    } else {
+      throw new Error(
+        `Got input type ${inputType} but expected one of image, text, video, audio.`,
+      );
+    }
+
+    return this.predict({
+      inputs: [inputProto],
+      inferenceParams,
+      outputConfig,
+    });
+  }
+
+  predictByFilepath({
+    filepath,
+    inputType,
+    inferenceParams,
+    outputConfig,
+  }: {
+    filepath: string;
+    inputType: "image" | "text" | "video" | "audio";
+    inferenceParams?: Record<string, JavaScriptValue>;
+    outputConfig?: OutputConfig;
+  }): Promise<MultiOutputResponse.AsObject> {
+    if (!fs.existsSync(filepath)) {
+      throw new Error("Invalid filepath.");
+    }
+
+    const fileBuffer = fs.readFileSync(filepath);
+
+    return this.predictByBytes({
+      inputBytes: fileBuffer,
+      inputType,
+      inferenceParams,
+      outputConfig,
+    });
+  }
+
+  predictByBytes({
+    inputBytes,
+    inputType,
+    inferenceParams,
+    outputConfig,
+  }: {
+    inputBytes: Buffer;
+    inputType: "image" | "text" | "video" | "audio";
+    inferenceParams?: Record<string, JavaScriptValue>;
+    outputConfig?: OutputConfig;
+  }): Promise<MultiOutputResponse.AsObject> {
+    if (!(inputBytes instanceof Buffer)) {
+      throw new Error("Invalid bytes.");
+    }
+
+    let inputProto: GrpcInput;
+    if (inputType === "image") {
+      inputProto = Input.getInputFromBytes({
+        inputId: "",
+        imageBytes: inputBytes,
+      });
+    } else if (inputType === "text") {
+      inputProto = Input.getInputFromBytes({
+        inputId: "",
+        textBytes: inputBytes,
+      });
+    } else if (inputType === "video") {
+      inputProto = Input.getInputFromBytes({
+        inputId: "",
+        videoBytes: inputBytes,
+      });
+    } else if (inputType === "audio") {
+      inputProto = Input.getInputFromBytes({
+        inputId: "",
+        audioBytes: inputBytes,
+      });
+    } else {
+      throw new Error(
+        `Got input type ${inputType} but expected one of image, text, video, audio.`,
+      );
+    }
+
+    return this.predict({
+      inputs: [inputProto],
+      inferenceParams,
+      outputConfig,
+    });
+  }
+
+  /**
+   * Overrides the model version.
+   *
+   * @param inferenceParams - The inference params to override.
+   * @param outputConfig - The output config to override.
+   *   min_value (number) - The minimum value of the prediction confidence to filter.
+   *   max_concepts (number) - The maximum number of concepts to return.
+   *   select_concepts (Concept[]) - The concepts to select.
+   *   sample_ms (number) - The number of milliseconds to sample.
+   */
+  private overrideModelVersion({
+    inferenceParams,
+    outputConfig,
+  }: {
+    inferenceParams?: Record<string, JavaScriptValue>;
+    outputConfig?: OutputConfig;
+  }): void {
+    let currentModelVersion = this.modelInfo.getModelVersion();
+    if (!currentModelVersion) {
+      currentModelVersion = new ModelVersion();
+    }
+    let currentOutputInfo = currentModelVersion?.getOutputInfo();
+    if (!currentOutputInfo) {
+      currentOutputInfo = new OutputInfo();
+    }
+    if (outputConfig) {
+      const newOutputInfo = currentOutputInfo.setOutputConfig(outputConfig);
+      currentModelVersion?.setOutputInfo(newOutputInfo);
+      this.modelInfo.setModelVersion(currentModelVersion);
+    }
+    const updatedModelVersion = this.modelInfo.getModelVersion();
+    const updatedOutputInfo = updatedModelVersion?.getOutputInfo();
+    if (updatedOutputInfo && inferenceParams) {
+      const params = Struct.fromJavaScript(inferenceParams);
+      updatedOutputInfo.setParams(params);
+      updatedModelVersion?.setOutputInfo(updatedOutputInfo);
+      this.modelInfo.setModelVersion(updatedModelVersion);
+    }
   }
 }
