@@ -22,8 +22,8 @@ const MAIN_APP_USER_ID = "clarifai";
 const GENERAL_MODEL_ID = "aaa03c23b3724a16a56b629203edc62c";
 const CLIP_EMBED_MODEL_ID = "multimodal-clip-embed";
 
-// const RAW_TEXT = "Hi my name is Jim.";
-// const RAW_TEXT_BYTES: Buffer = Buffer.from("Hi my name is Jim.");
+const RAW_TEXT = "Hi my name is Jim.";
+const RAW_TEXT_BYTES = Buffer.from(RAW_TEXT);
 
 const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
 
@@ -249,7 +249,7 @@ describe("Model", () => {
     });
     const input = Input.getInputFromBytes({
       inputId: "",
-      textBytes: Buffer.from("Hi my name is Jim."),
+      textBytes: RAW_TEXT_BYTES,
     });
     const prediction = await model.predict({
       inputs: [input],

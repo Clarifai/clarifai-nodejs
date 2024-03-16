@@ -34,7 +34,7 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
-type FilterType = z.infer<ReturnType<typeof getSchema>>;
+export type FilterType = z.infer<ReturnType<typeof getSchema>>;
 
 export class Search extends Lister {
   private topK: number;
