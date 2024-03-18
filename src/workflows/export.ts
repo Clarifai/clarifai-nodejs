@@ -34,7 +34,7 @@ export class Exporter {
   }
 
   public export(out_path: string): void {
-    const yamlString = yaml.dump(this.wf_dict?.["workflow"], { flowLevel: 0 });
+    const yamlString = yaml.dump(this.wf_dict?.["workflow"], { flowLevel: -1 });
     fs.writeFileSync(out_path, yamlString);
   }
 

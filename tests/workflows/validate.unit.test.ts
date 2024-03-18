@@ -1,4 +1,4 @@
-import { validate } from "../../src/workflows/validate";
+import { validateWorkflow } from "../../src/workflows/validate";
 import { describe, expect, it } from "vitest";
 
 describe("validate", () => {
@@ -28,7 +28,7 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).not.toThrow();
+    expect(() => validateWorkflow(data)).not.toThrow();
   });
 
   it("should throw error for incorrect id", () => {
@@ -39,7 +39,7 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).toThrow();
+    expect(() => validateWorkflow(data)).toThrow();
   });
 
   it("should throw error for incorrect model_id", () => {
@@ -57,7 +57,7 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).toThrow();
+    expect(() => validateWorkflow(data)).toThrow();
   });
 
   it("should throw error for incorrect model_version_id", () => {
@@ -76,7 +76,7 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).toThrow();
+    expect(() => validateWorkflow(data)).toThrow();
   });
 
   it("should throw error for model with model_version_id and other fields", () => {
@@ -96,7 +96,7 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).toThrow();
+    expect(() => validateWorkflow(data)).toThrow();
   });
 
   it("should throw error for node with missing input", () => {
@@ -119,6 +119,6 @@ describe("validate", () => {
       },
     };
 
-    expect(() => validate(data)).toThrow();
+    expect(() => validateWorkflow(data)).toThrow();
   });
 });

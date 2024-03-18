@@ -14,6 +14,8 @@ export type ClarifaiUrl =
   | `${string}://${string}/${USERID}/${APPID}/${RESOURCE_TYPE}/${RESOURCEID}/${RESOURCE_VERSION_TYPE}/${RESOURCE_VERSION_ID}`
   | `${string}://${string}/${USERID}/${APPID}/${RESOURCE_TYPE}/${RESOURCEID}`;
 export type ClarifaiAppUrl = `${string}://${string}/${USERID}/${APPID}`;
+export type ClarifaiModuleUrl =
+  `${string}://${string}/${USERID}/${APPID}/modules/${RESOURCEID}/${RESOURCE_VERSION_TYPE}/${RESOURCE_VERSION_ID}`;
 
 export class ClarifaiUrlHelper {
   private auth: ClarifaiAuthHelper;
@@ -130,7 +132,7 @@ export class ClarifaiUrlHelper {
   static splitClarifaiAppUrl(url: ClarifaiAppUrl): [string, string] {
     const o = new URL(url);
     const parts = o.pathname.split("/").filter((part) => part.length > 0);
-    if (parts.length !== 3) {
+    if (parts.length !== 2) {
       throw new Error(
         `Provided url must have 2 parts after the domain name. The current parts are: ${parts}`,
       );
@@ -153,13 +155,13 @@ export class ClarifaiUrlHelper {
   ): [string, string, string, string, string?] {
     const o = new URL(url);
     const parts = o.pathname.split("/").filter((part) => part.length > 0);
-    if (parts.length !== 5 && parts.length !== 7) {
+    if (parts.length !== 4 && parts.length !== 6) {
       throw new Error(
         "Provided url must have 4 or 6 parts after the domain name.",
       );
     }
-    const [userId, appId, resourceType, resourceId] = parts.slice(1, 5);
-    const resourceVersionId = parts.length === 7 ? parts[6] : undefined;
+    const [userId, appId, resourceType, resourceId] = parts;
+    const resourceVersionId = parts.length === 6 ? parts[5] : undefined;
     return [userId, appId, resourceType, resourceId, resourceVersionId];
   }
 
@@ -171,11 +173,14 @@ export class ClarifaiUrlHelper {
    * @returns A tuple containing userId, appId, moduleId, and moduleVersionId.
    */
   static splitModuleUiUrl(
-    install: ClarifaiUrl,
+    install: ClarifaiModuleUrl,
   ): [string, string, string, string] {
     const [userId, appId, resourceType, resourceId, resourceVersionId] =
       this.splitClarifaiUrl(install);
-    if (resourceType !== "modules" || resourceVersionId === undefined) {
+    if (resourceType !== "modules") {
+      throw new Error("Provided install url must be a module.");
+    }
+    if (resourceVersionId === undefined) {
       throw new Error(
         "Provided install url must have 6 parts after the domain name.",
       );

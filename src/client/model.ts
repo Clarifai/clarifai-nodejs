@@ -358,7 +358,7 @@ export class Model extends Lister {
   }
 
   async createVersion(
-    args: ModelVersion.AsObject,
+    args: Partial<ModelVersion.AsObject>,
   ): Promise<SingleModelResponse.AsObject> {
     if (this.modelInfo.getModelTypeId() in TRAINABLE_MODEL_TYPES) {
       throw new UserError(

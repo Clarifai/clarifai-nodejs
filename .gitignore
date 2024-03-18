@@ -354,3 +354,6 @@ $RECYCLE.BIN/
 example/*
 .vscode
 docs/*
+
+# Test outputs
+tests/client/workflow/fixtures/export_general.yml

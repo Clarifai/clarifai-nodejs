@@ -19,6 +19,7 @@ import {
   DeleteModelsRequest,
   DeleteWorkflowsRequest,
   DeleteModulesRequest,
+  PostWorkflowsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
@@ -33,14 +34,25 @@ import {
   InstalledModuleVersion,
   Concept,
   Dataset,
+  WorkflowNode,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import * as fs from "fs";
+import * as yaml from "js-yaml";
+import { validateWorkflow } from "../workflows/validate";
+import { getYamlOutputInfoProto, isSameYamlModel } from "../workflows/utils";
+import { Model as ModelConstructor } from "./model";
+import { uuid } from "uuidv4";
+import { fromProtobufObject } from "from-protobuf-object";
 
 type AppConfig =
   | {
       url: ClarifaiAppUrl;
-      authConfig: Omit<AuthConfig, "appId"> & { appId?: undefined };
+      authConfig: Omit<AuthConfig, "appId" | "userId"> & {
+        appId?: undefined;
+        userId?: undefined;
+      };
     }
   | {
       url?: undefined;
@@ -57,6 +69,7 @@ export class App extends Lister {
 
     if (url) {
       const [userId, appId] = ClarifaiUrlHelper.splitClarifaiAppUrl(url);
+      // @ts-expect-error - since url is parsed, we need to set appId here
       if (userId) authConfig.userId = userId;
       // @ts-expect-error - since url is parsed, we need to set appId here
       if (appId) authConfig.appId = appId;
@@ -65,7 +78,7 @@ export class App extends Lister {
     super({ authConfig: authConfig as AuthConfig });
 
     this.appInfo = new GrpcApp();
-    this.appInfo.setUserId(authConfig.userId);
+    this.appInfo.setUserId(authConfig.userId!);
     this.appInfo.setId(authConfig.appId!);
   }
 
@@ -373,6 +386,148 @@ export class App extends Lister {
     return responseObject.modulesList?.[0];
   }
 
+  async createWorkflow({
+    configFilePath,
+    generateNewId = false,
+    display = true,
+  }: {
+    configFilePath: string;
+    generateNewId?: boolean;
+    display?: boolean;
+  }): Promise<Workflow.AsObject> {
+    if (!fs.existsSync(configFilePath)) {
+      throw new UserError(
+        `Workflow config file not found at ${configFilePath}`,
+      );
+    }
+
+    const data = yaml.load(fs.readFileSync(configFilePath, "utf8"));
+
+    const validatedData = validateWorkflow(data);
+    const workflow = validatedData["workflow"];
+
+    // Get all model objects from the workflow nodes.
+    const allModels: Model.AsObject[] = [];
+    let modelObject: Model.AsObject | undefined;
+    for (const node of workflow["nodes"]) {
+      const outputInfo = getYamlOutputInfoProto(node?.model?.outputInfo ?? {});
+      try {
+        const model = await this.model({
+          modelId: node.model.modelId,
+          modelVersionId: node.model.modelVersionId ?? "",
+        });
+        modelObject = model;
+        if (model) allModels.push(model);
+      } catch (e) {
+        // model doesn't exist, create a new model from yaml config
+        if (
+          (e as { message?: string })?.message?.includes(
+            "Model does not exist",
+          ) &&
+          outputInfo
+        ) {
+          const { modelId, ...otherParams } = node.model;
+          modelObject = await this.createModel({
+            modelId,
+            params: otherParams as Omit<Partial<Model.AsObject>, "id">,
+          });
+          const model = new ModelConstructor({
+            modelId: modelObject.id,
+            authConfig: {
+              pat: this.pat,
+              appId: this.userAppId.getAppId(),
+              userId: this.userAppId.getUserId(),
+            },
+          });
+          const modelVersion = await model.createVersion({
+            outputInfo: outputInfo.toObject(),
+          });
+          if (modelVersion.model) {
+            allModels.push(modelVersion.model);
+            continue;
+          }
+        }
+      }
+
+      // If the model version ID is specified, or if the yaml model is the same as the one in the api
+      if (
+        (node.model.modelVersionId ?? "") ||
+        (modelObject && isSameYamlModel(modelObject, node.model))
+      ) {
+        allModels.push(modelObject!);
+      } else if (modelObject && outputInfo) {
+        const model = new ModelConstructor({
+          modelId: modelObject.id,
+          authConfig: {
+            pat: this.pat,
+            appId: this.userAppId.getAppId(),
+            userId: this.userAppId.getUserId(),
+          },
+        });
+        const modelVersion = await model.createVersion({
+          outputInfo: outputInfo.toObject(),
+        });
+        if (modelVersion.model) {
+          allModels.push(modelVersion.model);
+        }
+      }
+    }
+
+    // Convert nodes to resources_pb2.WorkflowNodes.
+    const nodes: WorkflowNode.AsObject[] = [];
+    for (let i = 0; i < workflow["nodes"].length; i++) {
+      const ymlNode = workflow["nodes"][i];
+      const node: WorkflowNode.AsObject = {
+        id: ymlNode["id"],
+        model: allModels[i],
+        // TODO: setting default values, need to check for right values to set here
+        nodeInputsList: [],
+        // TODO: setting default values, need to check for right values to set here
+        suppressOutput: false,
+      };
+      // Add node inputs if they exist, i.e. if these nodes do not connect directly to the input.
+      if (ymlNode.nodeInputs) {
+        for (const ni of ymlNode.nodeInputs) {
+          node?.nodeInputsList.push({ nodeId: ni.nodeId });
+        }
+      }
+      nodes.push(node);
+    }
+
+    let workflowId = workflow["id"];
+    if (generateNewId) {
+      workflowId = uuid();
+    }
+
+    // Create the workflow.
+    const request = new PostWorkflowsRequest();
+    request.setUserAppId(this.userAppId);
+    const workflowNodesList = nodes.map((eachNode) =>
+      fromProtobufObject(WorkflowNode, eachNode),
+    );
+    request.setWorkflowsList([
+      new Workflow().setId(workflowId).setNodesList(workflowNodesList),
+    ]);
+
+    const postWorkflows = promisifyGrpcCall(
+      this.STUB.client.postWorkflows,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(postWorkflows, request);
+    const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
+    console.info("\nWorkflow created\n%s", responseObject.status?.description);
+
+    // Display the workflow nodes tree.
+    if (display) {
+      console.table(responseObject.workflowsList?.[0]?.nodesList);
+    }
+    return responseObject.workflowsList?.[0];
+  }
+
   async model({
     modelId,
     modelVersionId,
@@ -392,6 +547,9 @@ export class App extends Lister {
 
     const response = await this.grpcRequest(getModel, request);
     const responseObject = response.toObject();
+    if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      throw new Error(responseObject.status?.description);
+    }
     return responseObject.model;
   }
 

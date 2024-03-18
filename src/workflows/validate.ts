@@ -17,9 +17,9 @@ const hexIdValidator = z.preprocess(
 const modelDoesNotHaveModelVersionIdAndOtherFields = (
   model: Record<string, unknown>,
 ): boolean => {
-  if (model.model_version_id && modelHasOtherFields(model)) {
+  if (model.modelVersionId && modelHasOtherFields(model)) {
     throw new Error(
-      `model should not set model_version_id and other model fields: ${JSON.stringify(model)}; please remove model_version_id or other model fields.`,
+      `model should not set modelVersionId and other model fields: ${JSON.stringify(model)}; please remove modelVersionId or other model fields.`,
     );
   }
   return true;
@@ -27,22 +27,22 @@ const modelDoesNotHaveModelVersionIdAndOtherFields = (
 
 const modelHasOtherFields = (model: Record<string, unknown>): boolean => {
   return Object.keys(model).some(
-    (key) => key !== "model_id" && key !== "model_version_id",
+    (key) => key !== "modelId" && key !== "modelVersionId",
   );
 };
 
 const workflowNodesHaveValidDependencies = <
-  T extends { id: string; node_inputs?: K[] },
-  K extends { node_id: string },
+  T extends { id: string; nodeInputs?: K[] },
+  K extends { nodeId: string },
 >(
   nodes: Array<T>,
 ): boolean => {
   const nodeIds = new Set();
   for (const node of nodes) {
-    (node.node_inputs || []).forEach((nodeInput) => {
-      if (!nodeIds.has(nodeInput.node_id)) {
+    (node.nodeInputs || []).forEach((nodeInput) => {
+      if (!nodeIds.has(nodeInput.nodeId)) {
         throw new Error(
-          `missing input '${nodeInput.node_id}' for node '${node.id}'`,
+          `missing input '${nodeInput.nodeId}' for node '${node.id}'`,
         );
       }
     });
@@ -60,23 +60,23 @@ const dataSchema = z.object({
           id: z.string().min(1),
           model: z
             .object({
-              model_id: idValidator,
-              app_id: idValidator.optional(),
-              user_id: idValidator.optional(),
-              model_version_id: hexIdValidator.optional(),
-              model_type_id: idValidator.optional(),
+              modelId: idValidator,
+              appId: idValidator.optional(),
+              userId: idValidator.optional(),
+              modelVersionId: hexIdValidator.optional(),
+              modelTypeId: idValidator.optional(),
               description: z.string().optional(),
-              output_info: z
+              outputInfo: z
                 .object({
                   params: z.record(z.any()).optional(),
                 })
                 .optional(),
             })
             .refine(modelDoesNotHaveModelVersionIdAndOtherFields),
-          node_inputs: z
+          nodeInputs: z
             .array(
               z.object({
-                node_id: z.string().min(1),
+                nodeId: z.string().min(1),
               }),
             )
             .optional(),
@@ -87,6 +87,6 @@ const dataSchema = z.object({
 });
 
 // Function to validate data
-export const validate = (data: unknown) => {
+export const validateWorkflow = (data: unknown) => {
   return dataSchema.parse(data);
 };

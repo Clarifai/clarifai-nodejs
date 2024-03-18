@@ -32,7 +32,10 @@ type WorkflowConfig =
       workflowId?: undefined;
       workflowVersion?: undefined;
       outputConfig?: OutputConfig;
-      authConfig?: AuthConfig;
+      authConfig?: Omit<AuthConfig, "userId" | "appId"> & {
+        appId?: undefined;
+        userId?: undefined;
+      };
     }
   | {
       url?: undefined;
@@ -69,7 +72,7 @@ export class Workflow extends Lister {
       workflowId = _workflowId;
     }
 
-    super({ authConfig });
+    super({ authConfig: authConfig as AuthConfig });
     this.id = "";
     if (workflowId) this.id = workflowId;
     this.versionId = workflowVersion.id;
