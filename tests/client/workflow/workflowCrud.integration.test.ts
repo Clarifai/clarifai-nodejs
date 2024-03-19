@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { App, User } from "../../../src/index";
+import { App, User, Workflow } from "../../../src/index";
+import { Workflow as GrpcWorkflow } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import path from "path";
 import * as fs from "fs";
 
@@ -9,18 +10,19 @@ const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
 const CREATE_APP_ID = `test_workflow_create_delete_app_${NOW}`;
 const MAIN_APP_ID = "main";
 
-// const workflowFile = path.resolve(__dirname, "./export_general.yml");
+const workflowFile = path.resolve(__dirname, "./fixtures/general.yml");
+const workflowExportPath = path.resolve(__dirname, "./export_general.yml");
 const workflowFixtures = path.resolve(__dirname, "./fixtures");
 
 // get all files in the workflowFixtures directory in an array
 const workflowFixtureFiles = fs
   .readdirSync(workflowFixtures)
   .map((each) => path.resolve(workflowFixtures, each));
-console.log(workflowFixtureFiles);
 
 describe("Workflow CRUD", () => {
   let user: User;
   let app: App;
+  let generalWorkflow: GrpcWorkflow.AsObject;
 
   beforeAll(async () => {
     user = new User({
@@ -70,10 +72,35 @@ describe("Workflow CRUD", () => {
           configFilePath: file,
           generateNewId,
         });
+        if (file.endsWith("general.yml")) {
+          generalWorkflow = workflow;
+        }
         expect(workflow.id).toBeDefined();
       }
     },
   );
+
+  it("should export workflow", async () => {
+    const workflow = new Workflow({
+      workflowId: generalWorkflow.id,
+      authConfig: {
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+        pat: CLARIFAI_PAT,
+      },
+      ...(generalWorkflow.version
+        ? { workflowVersion: { id: generalWorkflow.version.id } }
+        : {}),
+    });
+
+    await workflow.exportWorkflow(workflowExportPath);
+
+    const expectedFile = fs.readFileSync(workflowExportPath, "utf-8");
+
+    const actualFile = fs.readFileSync(workflowFile, "utf-8");
+
+    expect(expectedFile).toBe(actualFile);
+  });
 
   afterAll(async () => {
     await user.deleteApp({ appId: CREATE_APP_ID });

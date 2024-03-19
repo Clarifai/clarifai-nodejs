@@ -6,8 +6,10 @@ const VALID_YAML_KEYS = [
   "workflow",
   "id",
   "nodes",
-  "node_inputs",
-  "node_id",
+  "nodesList",
+  "nodeInputs",
+  "nodeInputsList",
+  "nodeId",
   "model",
 ];
 
@@ -34,8 +36,19 @@ export class Exporter {
   }
 
   public export(out_path: string): void {
-    const yamlString = yaml.dump(this.wf_dict?.["workflow"], { flowLevel: -1 });
-    fs.writeFileSync(out_path, yamlString);
+    const yamlString = yaml.dump(this.wf_dict?.["workflow"], {
+      flowLevel: -1,
+      replacer: (_key, val) => {
+        if (Array.isArray(val) && val.length === 0) {
+          return undefined;
+        }
+        return val;
+      },
+    });
+    fs.writeFileSync(
+      out_path,
+      yamlString.replace(new RegExp("sList", "g"), "s"),
+    );
   }
 
   public close(): void {
@@ -54,25 +67,25 @@ function cleanUpUnusedKeys(wf: Record<string, any>): Record<string, any> {
     }
     if (key === "model") {
       new_wf["model"] = {
-        model_id: wf["model"]["id"],
-        model_version_id: wf["model"]["model_version"]["id"],
+        modelId: wf["model"]["id"],
+        modelVersionId: wf["model"]["modelVersion"]["id"],
       };
       // If the model is not from clarifai main, add the app_id and user_id to the model dict.
       if (
-        wf["model"]["user_id"] !== "clarifai" &&
-        wf["model"]["app_id"] !== "main"
+        wf["model"]["userId"] !== "clarifai" &&
+        wf["model"]["appId"] !== "main"
       ) {
         new_wf["model"] = {
           ...new_wf["model"],
-          app_id: wf["model"]["app_id"],
-          user_id: wf["model"]["user_id"],
+          appId: wf["model"]["appId"],
+          userId: wf["model"]["userId"],
         };
       }
-    } else if (typeof val === "object") {
-      new_wf[key] = cleanUpUnusedKeys(val);
     } else if (Array.isArray(val)) {
       const new_list = val.map((i) => cleanUpUnusedKeys(i));
       new_wf[key] = new_list;
+    } else if (typeof val === "object") {
+      new_wf[key] = cleanUpUnusedKeys(val);
     } else {
       new_wf[key] = val;
     }

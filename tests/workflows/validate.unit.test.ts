@@ -10,17 +10,17 @@ describe("validate", () => {
           {
             id: "node1",
             model: {
-              model_id: "testModel",
+              modelId: "testModel",
             },
           },
           {
             id: "node2",
             model: {
-              model_id: "testModel",
+              modelId: "testModel",
             },
             node_inputs: [
               {
-                node_id: "node1",
+                nodeId: "node1",
               },
             ],
           },
@@ -50,7 +50,7 @@ describe("validate", () => {
           {
             id: "node1",
             model: {
-              model_id: "",
+              modelId: "",
             },
           },
         ],
@@ -68,8 +68,8 @@ describe("validate", () => {
           {
             id: "node1",
             model: {
-              model_id: "testModel",
-              model_version_id: "incorrect",
+              modelId: "testModel",
+              modelVersionId: "incorrect",
             },
           },
         ],
@@ -87,8 +87,8 @@ describe("validate", () => {
           {
             id: "node1",
             model: {
-              model_id: "testModel",
-              model_version_id: "12345678901234567890123456789012",
+              modelId: "testModel",
+              modelVersionId: "12345678901234567890123456789012",
               description: "test",
             },
           },
@@ -107,11 +107,11 @@ describe("validate", () => {
           {
             id: "node1",
             model: {
-              model_id: "testModel",
+              modelId: "testModel",
             },
-            node_inputs: [
+            nodeInputs: [
               {
-                node_id: "node2",
+                nodeId: "node2",
               },
             ],
           },
