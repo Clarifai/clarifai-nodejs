@@ -1,0 +1,13 @@
+workflow:
+  id: test-sb-pcm
+  nodes:
+    - id: detector
+      model:
+          modelId: face-detection
+          modelVersionId: 45fb9a671625463fa646c3523a3087d5
+    - id: cropper
+      model:
+          modelId: margin-110-image-crop
+          modelVersionId: b9987421b40a46649566826ef9325303
+      nodeInputs:
+        - nodeId: detector

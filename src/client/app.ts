@@ -41,10 +41,11 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { validateWorkflow } from "../workflows/validate";
-import { getYamlOutputInfoProto, isSameYamlModel } from "../workflows/utils";
+import { getYamlOutputInfoProto } from "../workflows/utils";
 import { Model as ModelConstructor } from "./model";
 import { uuid } from "uuidv4";
 import { fromProtobufObject } from "from-protobuf-object";
+import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
 
 type AppConfig =
   | {
@@ -340,9 +341,10 @@ export class App extends Lister {
   }): Promise<Model.AsObject> {
     const request = new PostModelsRequest();
     request.setUserAppId(this.userAppId);
-    const newModel = new Model();
-    newModel.setId(modelId);
-    mapParamsToRequest(params, newModel);
+    const newModel = fromPartialProtobufObject(Model, {
+      id: modelId,
+      ...params,
+    });
     request.setModelsList([newModel]);
     const postModels = promisifyGrpcCall(
       this.STUB.client.postModels,
@@ -408,8 +410,8 @@ export class App extends Lister {
 
     // Get all model objects from the workflow nodes.
     const allModels: Model.AsObject[] = [];
-    let modelObject: Model.AsObject | undefined;
-    for (const node of workflow["nodes"]) {
+    for (const node of workflow.nodes) {
+      let modelObject: Model.AsObject | undefined;
       const outputInfo = getYamlOutputInfoProto(node?.model?.outputInfo ?? {});
       try {
         const model = await this.model({
@@ -417,7 +419,9 @@ export class App extends Lister {
           modelVersionId: node.model.modelVersionId ?? "",
         });
         modelObject = model;
-        if (model) allModels.push(model);
+        if (model) {
+          allModels.push(model);
+        }
       } catch (e) {
         // model doesn't exist, create a new model from yaml config
         if (
@@ -450,27 +454,27 @@ export class App extends Lister {
       }
 
       // If the model version ID is specified, or if the yaml model is the same as the one in the api
-      if (
-        (node.model.modelVersionId ?? "") ||
-        (modelObject && isSameYamlModel(modelObject, node.model))
-      ) {
-        allModels.push(modelObject!);
-      } else if (modelObject && outputInfo) {
-        const model = new ModelConstructor({
-          modelId: modelObject.id,
-          authConfig: {
-            pat: this.pat,
-            appId: this.userAppId.getAppId(),
-            userId: this.userAppId.getUserId(),
-          },
-        });
-        const modelVersion = await model.createVersion({
-          outputInfo: outputInfo.toObject(),
-        });
-        if (modelVersion.model) {
-          allModels.push(modelVersion.model);
-        }
-      }
+      // if (
+      //   (node.model.modelVersionId ?? "") ||
+      //   (modelObject && isSameYamlModel(modelObject, node.model))
+      // ) {
+      //   allModels.push(modelObject!);
+      // } else if (modelObject && outputInfo) {
+      //   const model = new ModelConstructor({
+      //     modelId: modelObject.id,
+      //     authConfig: {
+      //       pat: this.pat,
+      //       appId: this.userAppId.getAppId(),
+      //       userId: this.userAppId.getUserId(),
+      //     },
+      //   });
+      //   const modelVersion = await model.createVersion({
+      //     outputInfo: outputInfo.toObject(),
+      //   });
+      //   if (modelVersion.model) {
+      //     allModels.push(modelVersion.model);
+      //   }
+      // }
     }
 
     // Convert nodes to resources_pb2.WorkflowNodes.

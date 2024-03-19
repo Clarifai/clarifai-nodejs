@@ -43,6 +43,7 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
+import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
 
 export class Model extends Lister {
   // @ts-expect-error - Variable yet to be used
@@ -369,8 +370,7 @@ export class Model extends Lister {
     const request = new PostModelVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setModelId(this.id);
-    const modelVersion = new ModelVersion();
-    mapParamsToRequest(args, modelVersion);
+    const modelVersion = fromPartialProtobufObject(ModelVersion, args);
     request.setModelVersionsList([modelVersion]);
 
     const postModelVersions = promisifyGrpcCall(
@@ -383,7 +383,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new Error(responseObject.status?.description);
     }
 
     return responseObject;

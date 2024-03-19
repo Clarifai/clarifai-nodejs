@@ -356,4 +356,4 @@ example/*
 docs/*
 
 # Test outputs
-tests/client/workflow/fixtures/export_general.yml
+tests/client/workflow/export_general.yml
