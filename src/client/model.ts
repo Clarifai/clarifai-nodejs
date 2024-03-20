@@ -11,11 +11,7 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
-import {
-  BackoffIterator,
-  mapParamsToRequest,
-  promisifyGrpcCall,
-} from "../utils/misc";
+import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import {

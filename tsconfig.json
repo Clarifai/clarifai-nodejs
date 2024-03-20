@@ -26,6 +26,13 @@
     "resolveJsonModule": true, // Include modules imported with '.json' extension
     "typeRoots": ["node_modules/@types", "tests/types"], // List of folders to include type definitions
   },
-  "include": ["src/**/*", "tests/**/*"], // Include all files in the src folder
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    // same as our --compilerOptions flag and our TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "include": ["src/**/*", "tests/**/*", "examples/**/*"], // Include all files in the src folder
   "exclude": ["node_modules", "dist"], // Exclude node_modules and dist directories
 }

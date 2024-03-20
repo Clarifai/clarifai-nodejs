@@ -15,7 +15,7 @@
     "lint": "tsc --noEmit --pretty && eslint . --ignore-path .gitignore",
     "watch": "parcel watch",
     "build": "parcel build",
-    "generate-docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-plugin-no-inherit --out docs src/"
+    "generate-docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-plugin-no-inherit --plugin typedoc-plugin-expand-object-like-types --plugin typedoc-plugin-include-example --out docs src/"
   },
   "files": [
     "dist/"
@@ -44,12 +44,15 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "@vitest/coverage-v8": "^1.3.1",
+    "dotenv": "^16.4.5",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "parcel": "^2.11.0",
     "prettier": "3.2.4",
     "typedoc": "^0.25.12",
+    "typedoc-plugin-expand-object-like-types": "^0.1.2",
+    "typedoc-plugin-include-example": "^1.2.0",
     "typedoc-plugin-markdown": "^3.17.1",
     "typedoc-plugin-no-inherit": "^1.4.0",
     "typescript": "^5.3.3",

@@ -47,7 +47,7 @@ import { uuid } from "uuidv4";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
 
-type AppConfig =
+export type AppConfig =
   | {
       url: ClarifaiAppUrl;
       authConfig: Omit<AuthConfig, "appId" | "userId"> & {
@@ -60,9 +60,32 @@ type AppConfig =
       authConfig: AuthConfig;
     };
 
+export type ListDatasetsParam =
+  PaginationRequestParams<ListDatasetsRequest.AsObject>;
+export type ListModelsParam =
+  PaginationRequestParams<ListModelsRequest.AsObject>;
+export type ListWorkflowsParam =
+  PaginationRequestParams<ListWorkflowsRequest.AsObject>;
+export type ListModulesParam =
+  PaginationRequestParams<ListModulesRequest.AsObject>;
+export type ListInstalledModuleVersionsParam =
+  PaginationRequestParams<ListInstalledModuleVersionsRequest.AsObject>;
+export type CreateDatasetParam = Omit<Partial<Dataset.AsObject>, "id">;
+export type CreateModelParam = Omit<Partial<Model.AsObject>, "id">;
+
+/**
+ * App is a class that provides access to Clarifai API endpoints related to App information.
+ */
 export class App extends Lister {
   private appInfo: GrpcApp;
 
+  /**
+   * Initializes an App object.
+   * @param config - The configuration object for the App.
+   * @param config.url - The URL of the app.
+   *
+   * @includeExample examples/app/index.ts
+   */
   constructor({ url, authConfig }: AppConfig) {
     if (url && authConfig.appId) {
       throw new UserError("You can only specify one of url or app_id.");
@@ -83,12 +106,26 @@ export class App extends Lister {
     this.appInfo.setId(authConfig.appId!);
   }
 
+  /**
+   * Lists all the datasets for the app.
+   *
+   * @param pageNo - The page number to list.
+   * @param perPage - The number of items per page.
+   *
+   * @yields Dataset - Dataset objects for the datasets in the app.
+   *
+   * @includeExample examples/app/listDatasets.ts
+   *
+   * @remarks
+   * Defaults to 16 per page if pageNo is specified and perPage is not specified.
+   * If both pageNo and perPage are undefined, then lists all the resources.
+   */
   async *listDataSets({
     params = {},
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListDatasetsRequest.AsObject>;
+    params?: ListDatasetsParam;
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<
@@ -115,13 +152,23 @@ export class App extends Lister {
     }
   }
 
+  /**
+   * Lists all the available models for the user.
+   *
+   * @param params - A object of filters to apply to the list of models.
+   * @param onlyInApp - If True, only return models that are in the app.
+   * @param pageNo - The page number to list.
+   * @param perPage - The number of items per page.
+   *
+   * @includeExample examples/app/listModels.ts
+   */
   async *listModels({
     params = {},
     onlyInApp = true,
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListModelsRequest.AsObject>;
+    params?: ListModelsParam;
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
@@ -159,13 +206,29 @@ export class App extends Lister {
     }
   }
 
+  /**
+   * Lists all the available workflows for the user.
+   *
+   * @param params - A object of filters to apply to the list of workflows.
+   * @param onlyInApp - If True, only return workflows that are in the app.
+   * @param pageNo - The page number to list.
+   * @param perPage - The number of items per page.
+   *
+   * @yields Workflow - Workflow objects for the workflows in the app.
+   *
+   * @includeExample examples/app/listWorkflows.ts
+   *
+   * @remarks
+   * Defaults to 16 per page if page_no is specified and per_page is not specified.
+   * If both page_no and per_page are undefined, then lists all the resources.
+   */
   async *listWorkflows({
     params = {},
     onlyInApp = true,
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListWorkflowsRequest.AsObject>;
+    params?: ListWorkflowsParam;
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
@@ -204,7 +267,7 @@ export class App extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListModulesRequest.AsObject>;
+    params?: ListModulesParam;
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
@@ -241,7 +304,7 @@ export class App extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListModulesRequest.AsObject>;
+    params?: ListInstalledModuleVersionsParam;
     pageNo?: number;
     perPage?: number;
   }): AsyncGenerator<InstalledModuleVersion.AsObject[], void, unknown> {
@@ -304,7 +367,7 @@ export class App extends Lister {
     params = {},
   }: {
     datasetId: string;
-    params?: Omit<Partial<Dataset.AsObject>, "id">;
+    params?: CreateDatasetParam;
   }): Promise<Dataset.AsObject> {
     const request = new PostDatasetsRequest();
     request.setUserAppId(this.userAppId);
@@ -337,7 +400,7 @@ export class App extends Lister {
     params = {},
   }: {
     modelId: string;
-    params?: Omit<Partial<Model.AsObject>, "id">;
+    params?: CreateModelParam;
   }): Promise<Model.AsObject> {
     const request = new PostModelsRequest();
     request.setUserAppId(this.userAppId);
@@ -433,7 +496,7 @@ export class App extends Lister {
           const { modelId, ...otherParams } = node.model;
           modelObject = await this.createModel({
             modelId,
-            params: otherParams as Omit<Partial<Model.AsObject>, "id">,
+            params: otherParams as CreateModelParam,
           });
           const model = new ModelConstructor({
             modelId: modelObject.id,
