@@ -10,4 +10,12 @@ module.exports = {
   env: {
     node: true,
   },
+  overrides: [
+    {
+      files: ["typedoc-plugins/**/*.js"],
+      rules: {
+        "@typescript-eslint/no-var-requires": "off",
+      },
+    },
+  ],
 };
