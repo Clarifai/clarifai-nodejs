@@ -1,4 +1,4 @@
-import { Model } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
+import { Model } from "../../src/index";
 
 export const getModel = (id: string) =>
   new Model({

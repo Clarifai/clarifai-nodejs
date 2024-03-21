@@ -1,4 +1,4 @@
-import { Input } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
+import { Input } from "../../src/index";
 
 export const input = new Input({
   authConfig: {

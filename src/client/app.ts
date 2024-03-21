@@ -484,6 +484,15 @@ export class App extends Lister {
     return responseObject.model;
   }
 
+  /**
+   * Creates a module for the app.
+   *
+   * @param moduleId - The module ID for the module to create.
+   * @param description - The description of the module to create.
+   * @returns A Module object for the specified module ID.
+   *
+   * @includeExample examples/app/createModule.ts
+   */
   async createModule({
     moduleId,
     description,
@@ -510,6 +519,16 @@ export class App extends Lister {
     return responseObject.modulesList?.[0];
   }
 
+  /**
+   * Creates a workflow for the app.
+   *
+   * @param configFilePath - The path to the yaml workflow config file.
+   * @param generateNewId - If true, generate a new workflow ID.
+   * @param display - If true, display the workflow nodes tree.
+   * @returns A Workflow object for the specified workflow config.
+   *
+   * @includeExample examples/app/createWorkflow.ts
+   */
   async createWorkflow({
     configFilePath,
     generateNewId = false,
@@ -654,17 +673,26 @@ export class App extends Lister {
     return responseObject.workflowsList?.[0];
   }
 
+  /**
+   * Returns a Model object for the existing model ID.
+   *
+   * @param modelId - The model ID for the existing model.
+   * @param modelVersionId - Specific version id of the model.
+   * @returns A model object for the specified model ID.
+   *
+   * @includeExample examples/app/model.ts
+   */
   async model({
     modelId,
     modelVersionId,
   }: {
     modelId: string;
-    modelVersionId: string;
+    modelVersionId?: string;
   }): Promise<SingleModelResponse.AsObject["model"]> {
     const request = new GetModelRequest();
     request.setUserAppId(this.userAppId);
     request.setModelId(modelId);
-    request.setVersionId(modelVersionId);
+    if (modelVersionId) request.setVersionId(modelVersionId);
 
     const getModel = promisifyGrpcCall(
       this.STUB.client.getModel,
@@ -679,6 +707,14 @@ export class App extends Lister {
     return responseObject.model;
   }
 
+  /**
+   * Returns a Workflow object for the existing workflow ID.
+   *
+   * @param workflowId - The workflow ID for a existing workflow.
+   * @returns A workflow object for the specified workflow ID.
+   *
+   * @includeExample examples/app/workflow.ts
+   */
   async workflow({
     workflowId,
   }: {
@@ -699,6 +735,14 @@ export class App extends Lister {
     return responseObject.workflow;
   }
 
+  /**
+   * Returns a Dataset object for the existing dataset ID.
+   *
+   * @param dataset_id - The dataset ID for the dataset to interact with.
+   * @returns A Dataset object for the existing dataset ID.
+   *
+   * @includeExample examples/app/dataset.ts
+   */
   async dataset({
     datasetId,
   }: {
@@ -719,6 +763,13 @@ export class App extends Lister {
     return responseObject.dataset;
   }
 
+  /**
+   * Deletes a dataset for the user.
+   *
+   * @param datasetId - The dataset ID for the app to delete.
+   *
+   * @includeExample examples/app/deleteDataset.ts
+   */
   async deleteDataset({ datasetId }: { datasetId: string }): Promise<void> {
     const request = new DeleteDatasetsRequest();
     request.setUserAppId(this.userAppId);
@@ -735,6 +786,13 @@ export class App extends Lister {
     console.info("\nDataset Deleted\n%s", responseObject.status?.description);
   }
 
+  /**
+   * Deletes a model for the user.
+   *
+   * @param modelId - The model ID for the model to delete.
+   *
+   * @includeExample examples/app/deleteModel.ts
+   */
   async deleteModel({ modelId }: { modelId: string }): Promise<void> {
     const request = new DeleteModelsRequest();
     request.setUserAppId(this.userAppId);
@@ -751,6 +809,13 @@ export class App extends Lister {
     console.info("\nModel Deleted\n%s", responseObject.status?.description);
   }
 
+  /**
+   * Deletes a workflow for the user.
+   *
+   * @param workflowId - The workflow ID for the workflow to delete.
+   *
+   * @includeExample examples/app/deleteWorkflow.ts
+   */
   async deleteWorkflow({ workflowId }: { workflowId: string }): Promise<void> {
     const request = new DeleteWorkflowsRequest();
     request.setUserAppId(this.userAppId);
@@ -767,6 +832,13 @@ export class App extends Lister {
     console.info("\nWorkflow Deleted\n%s", responseObject.status?.description);
   }
 
+  /**
+   * Deletes a module for the user.
+   *
+   * @param moduleId - The module ID for the module to delete.
+   *
+   * @includeExample examples/app/deleteModule.ts
+   */
   async deleteModule({ moduleId }: { moduleId: string }): Promise<void> {
     const request = new DeleteModulesRequest();
     request.setUserAppId(this.userAppId);

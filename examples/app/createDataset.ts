@@ -1,4 +1,4 @@
-import { Input, App } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
+import { Input, App } from "../../src/index";
 
 const app = new App({
   authConfig: {

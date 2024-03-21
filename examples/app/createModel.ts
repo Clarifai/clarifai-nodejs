@@ -1,4 +1,4 @@
-import { Model, App } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
+import { Model, App } from "../../src/index";
 import { OutputInfo } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { Struct } from "google-protobuf/google/protobuf/struct_pb";
 
