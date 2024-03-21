@@ -1,9 +1,12 @@
-import { app } from "./index";
+import { App } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
 
-app
-  .listModels()
-  .next()
-  .then((list) => {
-    const models = list.value;
-    console.log(models);
-  });
+const app = new App({
+  authConfig: {
+    pat: process.env.CLARIFAI_PAT!,
+    userId: process.env.CLARIFAI_USER_ID!,
+    appId: process.env.CLARIFAI_APP_ID!,
+  },
+});
+const list = await app.listModels().next();
+const models = list.value;
+console.log(models);

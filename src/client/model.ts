@@ -7,7 +7,6 @@ import {
   MultiOutputResponse,
   PostModelOutputsRequest,
   PostModelVersionsRequest,
-  SingleModelResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
@@ -356,7 +355,7 @@ export class Model extends Lister {
 
   async createVersion(
     args: Partial<ModelVersion.AsObject>,
-  ): Promise<SingleModelResponse.AsObject> {
+  ): Promise<GrpcModel.AsObject | undefined> {
     if (this.modelInfo.getModelTypeId() in TRAINABLE_MODEL_TYPES) {
       throw new UserError(
         `${this.modelInfo.getModelTypeId()} is a trainable model type. Use 'model.train()' to train the model`,
@@ -382,7 +381,7 @@ export class Model extends Lister {
       throw new Error(responseObject.status?.description);
     }
 
-    return responseObject;
+    return responseObject.model;
   }
 
   async *listVersions({

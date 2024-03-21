@@ -1,9 +1,12 @@
-import { app } from "./index";
+import { App } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
 
-app
-  .listDataSets()
-  .next()
-  .then((list) => {
-    const datasets = list.value;
-    console.log(datasets);
-  });
+const app = new App({
+  authConfig: {
+    pat: process.env.CLARIFAI_PAT!,
+    userId: process.env.CLARIFAI_USER_ID!,
+    appId: process.env.CLARIFAI_APP_ID!,
+  },
+});
+const list = await app.listDataSets().next();
+const datasets = list.value;
+console.log(datasets);

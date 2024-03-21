@@ -1,6 +1,6 @@
-import { App } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
+import { Input } from "../../src/index"; // Replace this import with "clarifai-nodejs" package
 
-export const app = new App({
+export const input = new Input({
   authConfig: {
     pat: process.env.CLARIFAI_PAT!,
     userId: process.env.CLARIFAI_USER_ID!,

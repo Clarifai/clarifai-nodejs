@@ -75,6 +75,7 @@ export type CreateModelParam = Omit<Partial<Model.AsObject>, "id">;
 
 /**
  * App is a class that provides access to Clarifai API endpoints related to App information.
+ * @noInheritDoc
  */
 export class App extends Lister {
   private appInfo: GrpcApp;
@@ -117,8 +118,7 @@ export class App extends Lister {
    * @includeExample examples/app/listDatasets.ts
    *
    * @remarks
-   * Defaults to 16 per page if pageNo is specified and perPage is not specified.
-   * If both pageNo and perPage are undefined, then lists all the resources.
+   * Defaults to 16 per page
    */
   async *listDataSets({
     params = {},
@@ -161,6 +161,9 @@ export class App extends Lister {
    * @param perPage - The number of items per page.
    *
    * @includeExample examples/app/listModels.ts
+   *
+   * @remarks
+   * Defaults to 16 per page
    */
   async *listModels({
     params = {},
@@ -219,8 +222,7 @@ export class App extends Lister {
    * @includeExample examples/app/listWorkflows.ts
    *
    * @remarks
-   * Defaults to 16 per page if page_no is specified and per_page is not specified.
-   * If both page_no and per_page are undefined, then lists all the resources.
+   * Defaults to 16 per page
    */
   async *listWorkflows({
     params = {},
@@ -261,6 +263,21 @@ export class App extends Lister {
     }
   }
 
+  /**
+   * Lists all the available modules for the user.
+   *
+   * @param params - An object of filters to apply to the list of modules.
+   * @param onlyInApp - If true, only return modules that are in the app.
+   * @param pageNo - The page number to list.
+   * @param perPage - The number of items per page.
+   *
+   * @yields Module - Module objects for the modules in the app.
+   *
+   * @includeExample examples/app/listModules.ts
+   *
+   * @remarks
+   * Defaults to 16 per page
+   */
   async *listModules({
     params = {},
     onlyInApp,
@@ -299,6 +316,20 @@ export class App extends Lister {
     }
   }
 
+  /**
+   * Lists all installed module versions in the app.
+   *
+   * @param params - A dictionary of filters to apply to the list of installed module versions.
+   * @param pageNo - The page number to list.
+   * @param perPage - The number of items per page.
+   *
+   * @yields Module - Module objects for the installed module versions in the app.
+   *
+   * @includeExample examples/app/listInstalledModuleVersions.ts
+   *
+   * @remarks
+   * Defaults to 16 per page
+   */
   async *listInstalledModuleVersions({
     params = {},
     pageNo,
@@ -307,7 +338,7 @@ export class App extends Lister {
     params?: ListInstalledModuleVersionsParam;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<InstalledModuleVersion.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<InstalledModuleVersion.AsObject[], void, unknown> {
     const listInstalledModuleVersions = promisifyGrpcCall(
       this.STUB.client.listInstalledModuleVersions,
       this.STUB.client,
@@ -334,13 +365,21 @@ export class App extends Lister {
     }
   }
 
+  /**
+   * Lists all the concepts for the app.
+   * @param page_no - The page number to list.
+   * @param per_page - The number of items per page.
+   * @yields Concepts in the app.
+   *
+   * @includeExample examples/app/listConcepts.ts
+   */
   async *listConcepts({
     pageNo,
     perPage,
   }: {
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<Concept.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<Concept.AsObject[], void, unknown> {
     const listConcepts = promisifyGrpcCall(
       this.STUB.client.listConcepts,
       this.STUB.client,
@@ -362,6 +401,16 @@ export class App extends Lister {
     return TRAINABLE_MODEL_TYPES;
   }
 
+  /**
+   * Creates a dataset for the app.
+   *
+   * @param datasetId - The dataset ID for the dataset to create.
+   * @param params - Additional parameters to be passed to the Dataset.
+   *
+   * @returns A Dataset object for the specified dataset ID.
+   *
+   * @includeExample examples/app/createDataset.ts
+   */
   async createDataset({
     datasetId,
     params = {},
@@ -395,6 +444,16 @@ export class App extends Lister {
     return responseObject.datasetsList?.[0];
   }
 
+  /**
+   * Creates a model for the app.
+   *
+   * @param modelId - The model ID for the model to create.
+   * @param params - Additional parameters to be passed to the Model.
+   *
+   * @returns A Model object for the specified model ID.
+   *
+   * @includeExample examples/app/createModel.ts
+   */
   async createModel({
     modelId,
     params = {},
@@ -506,11 +565,11 @@ export class App extends Lister {
               userId: this.userAppId.getUserId(),
             },
           });
-          const modelVersion = await model.createVersion({
+          const modelWithVersion = await model.createVersion({
             outputInfo: outputInfo.toObject(),
           });
-          if (modelVersion.model) {
-            allModels.push(modelVersion.model);
+          if (modelWithVersion) {
+            allModels.push(modelWithVersion);
             continue;
           }
         }
@@ -531,11 +590,11 @@ export class App extends Lister {
       //       userId: this.userAppId.getUserId(),
       //     },
       //   });
-      //   const modelVersion = await model.createVersion({
+      //   const modelWithVersion = await model.createVersion({
       //     outputInfo: outputInfo.toObject(),
       //   });
-      //   if (modelVersion.model) {
-      //     allModels.push(modelVersion.model);
+      //   if (modelWithVersion) {
+      //     allModels.push(modelWithVersion);
       //   }
       // }
     }
