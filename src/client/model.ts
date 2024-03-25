@@ -38,7 +38,7 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
-import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
+import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 export class Model extends Lister {
   // @ts-expect-error - Variable yet to be used

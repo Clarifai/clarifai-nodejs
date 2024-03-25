@@ -45,7 +45,7 @@ import { getYamlOutputInfoProto } from "../workflows/utils";
 import { Model as ModelConstructor } from "./model";
 import { uuid } from "uuidv4";
 import { fromProtobufObject } from "from-protobuf-object";
-import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
+import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 export type AppConfig =
   | {
