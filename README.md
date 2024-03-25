@@ -1,4 +1,4 @@
-![Clarifai logo](docs/logo.png)
+![Clarifai logo](https://www.clarifai.com/hubfs/Clarifai-logo-dark.svg)
 
 # Clarifai Node.js SDK
 
