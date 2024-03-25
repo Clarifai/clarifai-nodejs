@@ -6,6 +6,12 @@
   "main": "dist/main.js",
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
+  "engines" : { 
+    "npm" : ">=10.2.4 <11",
+    "node" : "20.11.0",
+    "yarn": "please-use-npm",
+    "pnpm": "please-use-npm"
+  },
   "scripts": {
     "test": "vitest",
     "test:unit": "vitest unit.test",
