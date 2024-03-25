@@ -68,7 +68,7 @@ describe("App", () => {
       authConfig: {
         pat: CLARIFAI_PAT,
         userId: MAIN_APP_USER_ID,
-        appId: appObject.app?.id ?? "",
+        appId: appObject?.id ?? "",
       },
     });
     const model = await app.model({

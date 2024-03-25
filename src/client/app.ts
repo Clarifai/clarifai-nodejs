@@ -84,6 +84,12 @@ export class App extends Lister {
    * Initializes an App object.
    * @param config - The configuration object for the App.
    * @param config.url - The URL of the app.
+   * @param config.authConfig.userId The user ID for the user to interact with.
+   * @param config.authConfig.appId The application ID associated with the user. Not required if the URL is provided.
+   * @param config.authConfig.pat A personal access token for authentication. Can also be set as an environment variable CLARIFAI_PAT.
+   * @param config.authConfig.token A session token for authentication. Accepts either a session token or a personal access token (pat). Can also be set as an environment variable CLARIFAI_SESSION_TOKEN.
+   * @param config.authConfig.base Optional. The base API URL. Defaults to "https://api.clarifai.com".
+   * @param config.authConfig.ui Optional. Additional UI configurations.
    *
    * @includeExample examples/app/index.ts
    */

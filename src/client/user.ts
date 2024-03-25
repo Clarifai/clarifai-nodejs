@@ -23,6 +23,12 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
+export type UserConfig = AuthConfig;
+export type ListAppsRequestParams =
+  PaginationRequestParams<ListAppsRequest.AsObject>;
+export type ListRunnersRequestParams =
+  PaginationRequestParams<ListRunnersRequest.AsObject>;
+
 /**
  * User is a class that provides access to Clarifai API endpoints related to user information.
  * @noInheritDoc
@@ -38,9 +44,10 @@ export class User extends Lister {
    * @param authConfig.token A session token for authentication. Accepts either a session token or a personal access token (pat). Can also be set as an environment variable CLARIFAI_SESSION_TOKEN.
    * @param authConfig.base Optional. The base API URL. Defaults to "https://api.clarifai.com".
    * @param authConfig.ui Optional. Additional UI configurations.
-   * @param [authConfig] Additional keyword arguments can be passed to configure the User object.
+   *
+   * @includeExample examples/user/index.ts
    */
-  constructor(authConfig: AuthConfig = {}) {
+  constructor(authConfig: UserConfig = {}) {
     super({ authConfig });
   }
 
@@ -52,19 +59,7 @@ export class User extends Lister {
    * @param perPage The number of items per page.
    * @yields App objects for the user.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const appsGenerator = user.listApps({
-   *   pageNo: 1,
-   *   perPage: 20,
-   *   params: {
-   *     sortAscending: true,
-   *   },
-   * });
-   * const apps = (await appsGenerator.next()).value;
-   * ```
+   * @includeExample examples/user/listApps.ts
    *
    * @note Defaults to 16 per page if pageNo is specified and perPage is not specified.
    * If both pageNo and perPage are None, then lists all the resources.
@@ -74,7 +69,7 @@ export class User extends Lister {
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListAppsRequest.AsObject>;
+    params?: ListAppsRequestParams;
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<
@@ -107,32 +102,19 @@ export class User extends Lister {
    * @param perPage The number of items per page.
    * @yields Runner objects for the user.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const runnersGenerator = user.listRunners({
-   *   pageNo: 1,
-   *   perPage: 20,
-   *   params: {
-   *     sortAscending: true,
-   *   },
-   * });
-   * const runners = (await runnersGenerator.next()).value;
-   * ```
+   * @includeExample examples/user/listRunners.ts
    *
-   * @note Defaults to 16 per page if pageNo is specified and perPage is not specified.
-   * If both pageNo and perPage are None, then lists all the resources.
+   * @note Defaults to 16 per page if perPage is not specified.
    */
   async *listRunners({
     params = {},
     pageNo,
     perPage,
   }: {
-    params?: PaginationRequestParams<ListRunnersRequest.AsObject>;
+    params?: ListRunnersRequestParams;
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {
+  } = {}): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {
     const listRunners = promisifyGrpcCall(
       this.STUB.client.listRunners,
       this.STUB.client,
@@ -157,15 +139,7 @@ export class User extends Lister {
    * @param baseWorkflow The base workflow to use for the app. Examples: 'Universal', 'Language-Understanding', 'General'
    * @returns An App object for the specified app ID.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const app = await user.createApp({
-   *   appId: "app_id",
-   *   baseWorkflow: "Universal",
-   * });
-   * ```
+   * @includeExample examples/user/createApp.ts
    */
   async createApp({
     appId,
@@ -213,16 +187,7 @@ export class User extends Lister {
    * @param description Description of Runner.
    * @returns A runner object for the specified Runner ID.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const runner = await user.createRunner({
-   *   runnerId: "runner_id",
-   *   labels: ["label to link runner"],
-   *   description: "laptop runner",
-   * });
-   * ```
+   * @includeExample examples/user/createRunner.ts
    */
   async createRunner({
     runnerId,
@@ -267,14 +232,13 @@ export class User extends Lister {
    * @param appId The app ID for the app to interact with.
    * @returns An App object for the specified app ID.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const app = await user.app({ appId: 'app_id' });
-   * ```
+   * @includeExample examples/user/app.ts
    */
-  async app({ appId }: { appId: string }): Promise<SingleAppResponse.AsObject> {
+  async app({
+    appId,
+  }: {
+    appId: string;
+  }): Promise<SingleAppResponse.AsObject["app"]> {
     const request = new GetAppRequest();
     const appIdSet = new UserAppIDSet();
     appIdSet.setUserId(this.userAppId.getUserId());
@@ -288,7 +252,7 @@ export class User extends Lister {
         `Failed to retrieve app: ${responseObject.status?.description}`,
       );
     }
-    return responseObject;
+    return responseObject["app"];
   }
 
   /**
@@ -297,18 +261,13 @@ export class User extends Lister {
    * @param runnerId The runner ID to interact with.
    * @returns A Runner object for the existing runner ID.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * const runner = await user.runner({ runnerId: 'runner_id' });
-   * ```
+   * @includeExample examples/user/runner.ts
    */
   async runner({
     runnerId,
   }: {
     runnerId: string;
-  }): Promise<SingleRunnerResponse.AsObject> {
+  }): Promise<SingleRunnerResponse.AsObject["runner"]> {
     const request = new GetRunnerRequest();
     request.setUserAppId(this.userAppId);
     request.setRunnerId(runnerId);
@@ -323,7 +282,7 @@ export class User extends Lister {
         `Failed to retrieve runner: ${responseObject.status?.description}`,
       );
     }
-    return responseObject;
+    return responseObject.runner;
   }
 
   /**
@@ -331,12 +290,7 @@ export class User extends Lister {
    *
    * @param appId The app ID for the app to delete.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * await user.deleteApp({ appId: 'app_id' });
-   * ```
+   * @example examples/user/deleteApp.ts
    */
   async deleteApp({ appId }: { appId: string }): Promise<void> {
     const request = new DeleteAppRequest();
@@ -361,12 +315,7 @@ export class User extends Lister {
    *
    * @param runnerId The runner ID to delete.
    *
-   * @example
-   * ```typescript
-   * import { User } from 'clarifai-nodejs';
-   * const user = new User(authConfig);
-   * await user.deleteRunner({ runnerId: 'runner_id' });
-   * ```
+   * @includeExample examples/user/deleteRunner.ts
    */
   async deleteRunner({ runnerId }: { runnerId: string }): Promise<void> {
     const request = new DeleteRunnersRequest();
