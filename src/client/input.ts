@@ -52,12 +52,14 @@ export class Input extends Lister {
   /**
    * Initializes an input object.
    *
-   * @param {Object} params - The parameters for the Input object.
-   * @param {string} params.userId - A user ID for authentication.
-   * @param {string} params.appId - An app ID for the application to interact with.
-   * @param {string} params.baseUrl - Base API url. Default "https://api.clarifai.com"
-   * @param {string} params.pat - A personal access token for authentication. Can be set as env var CLARIFAI_PAT
-   * @param {string} params.token - A session token for authentication. Accepts either a session token or a pat. Can be set as env var CLARIFAI_SESSION_TOKEN
+   * @param params - The parameters for the Input object.
+   * @param params.userId - A user ID for authentication.
+   * @param params.appId - An app ID for the application to interact with.
+   * @param params.baseUrl - Base API url. Default "https://api.clarifai.com"
+   * @param params.pat - A personal access token for authentication. Can be set as env var CLARIFAI_PAT
+   * @param params.token - A session token for authentication. Accepts either a session token or a pat. Can be set as env var CLARIFAI_SESSION_TOKEN
+   *
+   * @includeExample examples/input/index.ts
    */
   constructor({ authConfig }: { authConfig?: AuthConfig }) {
     super({ authConfig });
@@ -187,18 +189,7 @@ export class Input extends Lister {
    * @param datasetId - The dataset ID for the dataset to add the input to, can be `null`.
    * @returns An `Input` object for the specified input ID.
    *
-   * @example
-   * ```typescript
-   * import { Input } from 'clarifai-nodejs';
-   *
-   * const image = new Uint8Array(fs.readFileSync('demo.jpg'));
-   * const video = new Uint8Array(fs.readFileSync('demo.mp4'));
-   * const inputProto = Inputs.getInputFromBytes({
-   *   inputId: 'demo',
-   *   imageBytes: image,
-   *   videoBytes: video,
-   * });
-   * ```
+   * @includeExample examples/input/getInputFromBytes.ts
    */
   static getInputFromBytes({
     inputId,
@@ -262,15 +253,7 @@ export class Input extends Lister {
    * @param datasetId - The dataset ID for the dataset to add the input to.
    * @returns - An Input object for the specified input ID.
    *
-   * @example
-   * ```typescript
-   * import { Input } from 'clarifai-nodejs';
-   *
-   * const inputProto = Input.getInputFromFile({
-   *   inputId: 'demo',
-   *   imageFile: 'file_path',
-   * });
-   * ```
+   * @includeExample examples/input/getInputFromFile.ts
    */
   static getInputFromFile({
     inputId,
@@ -334,15 +317,7 @@ export class Input extends Lister {
    * @param datasetId - The dataset ID for the dataset to add the input to.
    * @returns - Job ID for the upload request.
    *
-   * @example
-   * ```typescript
-   * import { Input } from 'clarifai-nodejs';
-   *
-   * const inputJobId = Input.uploadFromUrl({
-   *   inputId: 'demo',
-   *   imageUrl: 'https://samples.clarifai.com/metro-north.jpg',
-   * });
-   * ```
+   * @includeExample examples/input/getInputFromUrl.ts
    */
   static getInputFromUrl({
     inputId,
@@ -409,6 +384,15 @@ export class Input extends Lister {
     return input;
   }
 
+  /**
+   * Upload image inputs from folder.
+   *
+   * @param folderPath - The path to the folder containing the images.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @param labels - A boolean indicating whether to use the folder name as a label.
+   *
+   * @includeExample examples/input/getImageInputsFromFolder.ts
+   */
   static getImageInputsFromFolder({
     folderPath,
     datasetId = null,
