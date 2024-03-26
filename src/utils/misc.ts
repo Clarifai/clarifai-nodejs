@@ -31,24 +31,6 @@ function getFromEnv(key: string, envKey: string): string {
   }
 }
 
-export function mapParamsToRequest<T>(
-  params: Record<string, unknown>,
-  request: T,
-) {
-  Object.entries(params).forEach(([key, value]) => {
-    // Assuming direct mapping for simplicity
-    const methodName = `set${key.charAt(0).toUpperCase()}${key.slice(1)}`;
-    // @ts-expect-error - TS doesn't know that the method exists
-    if (typeof request[methodName] === "function") {
-      // @ts-expect-error - TS doesn't know that the method exists
-      request[methodName](value);
-    } else {
-      // Log or handle the absence of a setter method
-      console.warn(`Method ${methodName} does not exist on ListAppsRequest`);
-    }
-  });
-}
-
 export function promisifyGrpcCall<TRequest, TResponse>(
   func: GrpcWithCallback<TRequest, TResponse>,
   client: V2Client,

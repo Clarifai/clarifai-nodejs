@@ -15,14 +15,11 @@ import {
   PostWorkflowResultsRequest,
   PostWorkflowResultsResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import {
-  BackoffIterator,
-  mapParamsToRequest,
-  promisifyGrpcCall,
-} from "../utils/misc";
+import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Input } from "./input";
 import { Exporter } from "../workflows/export";
+import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 type OutputConfig = { minValue: number };
 
@@ -97,10 +94,10 @@ export class Workflow extends Lister {
     request.setWorkflowId(this.id);
     request.setVersionId(this.versionId);
     request.setInputsList(inputs);
-
-    const outputConfig = new GrpcOutputConfig();
-    mapParamsToRequest(this.outputConfig, outputConfig);
-
+    const outputConfig = fromPartialProtobufObject(
+      GrpcOutputConfig,
+      this.outputConfig,
+    );
     request.setOutputConfig(outputConfig);
 
     if (workflowStateId) {

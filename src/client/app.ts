@@ -23,7 +23,7 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { UserError } from "../errors";
 import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
-import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
+import { promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import { Lister } from "./lister";
 import {
@@ -144,9 +144,8 @@ export class App extends Lister {
       this.STUB.client,
     );
 
-    const request = new ListDatasetsRequest();
+    const request = fromPartialProtobufObject(ListDatasetsRequest, params);
     request.setUserAppId(this.userAppId);
-    mapParamsToRequest(params, request);
 
     for await (const item of this.listPagesGenerator(
       listDataSets,
@@ -187,9 +186,8 @@ export class App extends Lister {
       this.STUB.client,
     );
 
-    const request = new ListModelsRequest();
+    const request = fromPartialProtobufObject(ListModelsRequest, params);
     request.setUserAppId(this.userAppId);
-    mapParamsToRequest(params, request);
 
     for await (const item of this.listPagesGenerator(
       listModels,
@@ -241,8 +239,7 @@ export class App extends Lister {
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<Workflow.AsObject[], void, unknown> {
-    const request = new ListWorkflowsRequest();
-    mapParamsToRequest(params, request);
+    const request = fromPartialProtobufObject(ListWorkflowsRequest, params);
 
     const listWorkflows = promisifyGrpcCall(
       this.STUB.client.listWorkflows,
@@ -300,9 +297,8 @@ export class App extends Lister {
       this.STUB.client,
     );
 
-    const request = new ListModulesRequest();
+    const request = fromPartialProtobufObject(ListModulesRequest, params);
     request.setUserAppId(this.userAppId);
-    mapParamsToRequest(params, request);
 
     for await (const item of this.listPagesGenerator(
       listModules,
@@ -349,9 +345,11 @@ export class App extends Lister {
       this.STUB.client.listInstalledModuleVersions,
       this.STUB.client,
     );
-    const request = new ListInstalledModuleVersionsRequest();
+    const request = fromPartialProtobufObject(
+      ListInstalledModuleVersionsRequest,
+      params,
+    );
     request.setUserAppId(this.userAppId);
-    mapParamsToRequest(params, request);
     for await (const item of this.listPagesGenerator(
       listInstalledModuleVersions,
       request,
@@ -427,9 +425,8 @@ export class App extends Lister {
     const request = new PostDatasetsRequest();
     request.setUserAppId(this.userAppId);
 
-    const newDataSet = new Dataset();
+    const newDataSet = fromPartialProtobufObject(Dataset, params);
     newDataSet.setId(datasetId);
-    mapParamsToRequest(params, newDataSet);
 
     request.setDatasetsList([newDataSet]);
 

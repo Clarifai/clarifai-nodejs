@@ -14,7 +14,7 @@ import {
   SingleAppResponse,
   SingleRunnerResponse,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
+import { promisifyGrpcCall } from "../utils/misc";
 import {
   App,
   Runner,
@@ -22,6 +22,7 @@ import {
   Workflow,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 export type UserConfig = AuthConfig;
 export type ListAppsRequestParams =
@@ -81,8 +82,7 @@ export class User extends Lister {
       this.STUB.client.listApps,
       this.STUB.client,
     );
-    const request = new ListAppsRequest();
-    mapParamsToRequest(params, request);
+    const request = fromPartialProtobufObject(ListAppsRequest, params);
 
     for await (const item of this.listPagesGenerator(
       listApps,
@@ -119,8 +119,7 @@ export class User extends Lister {
       this.STUB.client.listRunners,
       this.STUB.client,
     );
-    const request = new ListRunnersRequest();
-    mapParamsToRequest(params, request);
+    const request = fromPartialProtobufObject(ListRunnersRequest, params);
 
     for await (const item of this.listPagesGenerator(
       listRunners,

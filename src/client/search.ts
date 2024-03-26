@@ -22,8 +22,11 @@ import { Input } from "./input";
 import { UserError } from "../errors";
 import { getSchema } from "../schema/search";
 import { z } from "zod";
-import { Struct } from "google-protobuf/google/protobuf/struct_pb";
-import { mapParamsToRequest, promisifyGrpcCall } from "../utils/misc";
+import {
+  JavaScriptValue,
+  Struct,
+} from "google-protobuf/google/protobuf/struct_pb";
+import { promisifyGrpcCall } from "../utils/misc";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 import { grpc } from "clarifai-nodejs-grpc";
 import {
@@ -116,8 +119,9 @@ export class Search extends Lister {
           ?.getText();
         this.dataProto.setText(textProto);
       } else if (key === "metadata") {
-        const metadataStruct = new Struct();
-        mapParamsToRequest(value as Record<string, unknown>, metadataStruct);
+        const metadataStruct = Struct.fromJavaScript(
+          value as Record<string, JavaScriptValue>,
+        );
         this.dataProto.setMetadata(metadataStruct);
       } else if (key === "geoPoint") {
         if (value) {
