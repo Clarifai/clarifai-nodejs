@@ -4,6 +4,16 @@ type MessageConstructor<T extends Message> = new () => T;
 
 type AsObject<T extends Message> = ReturnType<T["toObject"]>;
 
+export type Subset<K> = {
+  [attr in keyof K]?: K[attr] extends object
+    ? Subset<K[attr]>
+    : K[attr] extends object | null
+      ? Subset<K[attr]> | null
+      : K[attr] extends object | null | undefined
+        ? Subset<K[attr]> | null | undefined
+        : K[attr];
+};
+
 const enum PREFIX {
   SET = "set",
   GET = "get",
@@ -15,10 +25,11 @@ const enum PREFIX {
  */
 export function fromPartialProtobufObject<T extends Message>(
   MessageType: MessageConstructor<T>,
-  data: Partial<AsObject<T>>,
+  data: Subset<AsObject<T>>,
 ): T {
   const instance = new MessageType();
-  validateMissingProps(instance, data);
+  // Validate Missing props removed - not needed if we are targeting to convert partial objects to protobuf objects
+  // validateMissingProps(instance, data);
   for (const [prop, value] of Object.entries(
     filterExtraProps(instance, data),
   )) {
@@ -115,34 +126,16 @@ function isProtobufMap<T extends Message>(instance: T, prop: string): boolean {
   );
 }
 
-function isOptional<T extends Message>(instance: T, prop: string): boolean {
-  const clearMethod = getMethod(prop, PREFIX.CLEAR);
-  return clearMethod in instance;
-}
-
-function validateMissingProps<T extends Message>(
-  instance: T,
-  data: Partial<AsObject<T>>,
-): void {
-  const instanceProps = getInstanceProps(instance);
-  const dataProps = Object.keys(data);
-  for (const prop of instanceProps) {
-    if (!dataProps.includes(prop) && !isOptional(instance, prop)) {
-      //   throw new Error(`Missing property '${prop}'`);
-    }
-  }
-}
-
 function filterExtraProps<T extends Message>(
   instance: T,
-  data: Partial<AsObject<T>>,
-): Partial<AsObject<T>> {
+  data: Subset<AsObject<T>>,
+): Subset<AsObject<T>> {
   const instanceProps = getInstanceProps(instance);
   return Object.fromEntries(
     Object.entries(data).filter(
       ([key, value]) => instanceProps.includes(key) && value !== undefined,
     ),
-  ) as Partial<AsObject<T>>;
+  ) as Subset<AsObject<T>>;
 }
 
 function isObject(value: unknown, prop: string): boolean {
