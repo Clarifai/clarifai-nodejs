@@ -434,15 +434,7 @@ export class Input extends Lister {
    * @param datasetId - The dataset ID for the dataset to add the input to.
    * @returns - An Input object for the specified input ID.
    *
-   * @example
-   * ```typescript
-   * import { Input } from 'clarifai-nodejs';
-   *
-   * const inputProto = Input.getTextInput({
-   *   inputId: 'demo',
-   *   rawText: 'This is a test',
-   * });
-   * ```
+   * @includeExample examples/input/getTextInput.ts
    */
   static getTextInput({
     inputId,
@@ -470,6 +462,17 @@ export class Input extends Lister {
     });
   }
 
+  /**
+   * Create input proto for text and image from bytes or url
+   *
+   * @param inputId - The input ID for the input to create.
+   * @param rawText - The raw text input.
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @param textBytes - The bytes for the text as `Uint8Array` or `Buffer`.
+   * @param imageUrl - The URL for the image.
+   * @param imageBytes - The bytes for the image as `Uint8Array` or `Buffer`.
+   * @returns - An Input object for the specified input ID.
+   */
   static getMultimodalInput({
     inputId,
     rawText = null,
@@ -515,6 +518,18 @@ export class Input extends Lister {
     });
   }
 
+  /**
+   * Create Input proto from CSV File. Supported columns are:
+   * 'inputid', 'input', 'concepts', 'metadata', 'geopoints'
+   *
+   * @param csvPath - The path to the CSV file.
+   * @param inputType - The type of input to create. Can be "text", "image", "video", or "audio".
+   * @param csvType - The type of CSV file. Can be "raw", "url", or "file".
+   * @param datasetId - The dataset ID for the dataset to add the input to.
+   * @param labels - A boolean indicating whether to generate labels from concepts list.
+   *
+   * @returns - An array of Input objects for the specified input ID.
+   */
   static async getInputsFromCsv({
     csvPath,
     inputType = "text",
@@ -523,8 +538,8 @@ export class Input extends Lister {
     labels = true,
   }: {
     csvPath: string;
-    inputType: string;
-    csvType: string;
+    inputType: "image" | "text" | "video" | "audio";
+    csvType: "raw" | "url" | "file";
     datasetId?: string | null;
     labels: boolean;
   }): Promise<GrpcInput[]> {
