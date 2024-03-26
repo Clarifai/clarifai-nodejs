@@ -27,6 +27,9 @@ jobs:
         run: npm install
       - name: "Test"
         run: npx vitest --coverage.enabled true
+        env:
+          VITE_CLARIFAI_USER_ID: ${{ secrets.VITE_CLARIFAI_USER_ID }}
+          VITE_CLARIFAI_PAT:  ${{ secrets.VITE_CLARIFAI_PAT }}
       - name: "Upload Coverage"
         uses: actions/upload-artifact@v4
         with:
