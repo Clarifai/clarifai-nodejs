@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { App, User } from "../../src/index";
 
-const NOW = "test-app-100"; // Date.now().toString();
+const NOW = Date.now().toString();
 const MAIN_APP_ID = "main";
 const MAIN_APP_USER_ID = "clarifai";
 const GENERAL_MODEL_ID = "general-image-recognition";
