@@ -66,6 +66,7 @@
     "from-protobuf-object": "^1.0.2",
     "google-protobuf": "^3.21.2",
     "js-yaml": "^4.1.0",
+    "safe-flat": "^2.1.0",
     "uuidv4": "^6.2.13",
     "winston": "^3.11.0",
     "zod": "^3.22.4"

@@ -59,14 +59,12 @@ describe("Workflow CRUD", () => {
   it(
     "should create workflow",
     {
-      timeout: 20000,
+      timeout: 50000,
     },
     async () => {
       for (let i = 0; i < workflowFixtureFiles.length; i++) {
         const file = workflowFixtureFiles[i];
         console.log("Testing file: ", file);
-        // TODO: remove this condition once the test case failure in custom_cropper models are fixed
-        if (file.includes("custom_cropper")) continue;
         const generateNewId = file.endsWith("general.yml") ? false : true;
         const workflow = await app.createWorkflow({
           configFilePath: file,

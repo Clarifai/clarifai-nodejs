@@ -1,5 +1,8 @@
 import { Model, App } from "../../src/index";
-import { OutputInfo } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import {
+  ModelVersion,
+  OutputInfo,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { Struct } from "google-protobuf/google/protobuf/struct_pb";
 
 const app = new App({
@@ -33,11 +36,12 @@ const model = new Model({
 const outputInfo = new OutputInfo().setParams(
   Struct.fromJavaScript({ margin: 1.5 }),
 );
+// GRPC compatible ModelVersion object with previously created output info config
+const modelVersion = new ModelVersion()
+  .setDescription("Setting output info margin parameters to 1.5")
+  .setOutputInfo(outputInfo);
 
 // Creating a new version of the model with previously created output info config
-const modelObjectWithVersion = await model.createVersion({
-  description: "Setting output info margin parameters to 1.5",
-  outputInfo: outputInfo.toObject(),
-});
+const modelObjectWithVersion = await model.createVersion(modelVersion);
 
 console.log(modelObjectWithVersion);

@@ -35,6 +35,7 @@ import {
   Concept,
   Dataset,
   WorkflowNode,
+  ModelVersion,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
@@ -46,6 +47,7 @@ import { Model as ModelConstructor } from "./model";
 import { uuid } from "uuidv4";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
+import { flatten } from "safe-flat";
 
 export type AppConfig =
   | {
@@ -587,38 +589,14 @@ export class App extends Lister {
               userId: this.userAppId.getUserId(),
             },
           });
-          const modelWithVersion = await model.createVersion({
-            outputInfo: outputInfo.toObject(),
-          });
+          const modelVersion = new ModelVersion().setOutputInfo(outputInfo);
+          const modelWithVersion = await model.createVersion(modelVersion);
           if (modelWithVersion) {
             allModels.push(modelWithVersion);
             continue;
           }
         }
       }
-
-      // If the model version ID is specified, or if the yaml model is the same as the one in the api
-      // if (
-      //   (node.model.modelVersionId ?? "") ||
-      //   (modelObject && isSameYamlModel(modelObject, node.model))
-      // ) {
-      //   allModels.push(modelObject!);
-      // } else if (modelObject && outputInfo) {
-      //   const model = new ModelConstructor({
-      //     modelId: modelObject.id,
-      //     authConfig: {
-      //       pat: this.pat,
-      //       appId: this.userAppId.getAppId(),
-      //       userId: this.userAppId.getUserId(),
-      //     },
-      //   });
-      //   const modelWithVersion = await model.createVersion({
-      //     outputInfo: outputInfo.toObject(),
-      //   });
-      //   if (modelWithVersion) {
-      //     allModels.push(modelWithVersion);
-      //   }
-      // }
     }
 
     // Convert nodes to resources_pb2.WorkflowNodes.
@@ -671,7 +649,7 @@ export class App extends Lister {
 
     // Display the workflow nodes tree.
     if (display) {
-      console.table(responseObject.workflowsList?.[0]?.nodesList);
+      console.table(flatten(responseObject.workflowsList?.[0]?.nodesList));
     }
     return responseObject.workflowsList?.[0];
   }

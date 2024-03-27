@@ -354,7 +354,7 @@ export class Model extends Lister {
   }
 
   async createVersion(
-    args: Partial<ModelVersion.AsObject>,
+    modelVersion: ModelVersion,
   ): Promise<GrpcModel.AsObject | undefined> {
     if (this.modelInfo.getModelTypeId() in TRAINABLE_MODEL_TYPES) {
       throw new UserError(
@@ -365,7 +365,6 @@ export class Model extends Lister {
     const request = new PostModelVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setModelId(this.id);
-    const modelVersion = fromPartialProtobufObject(ModelVersion, args);
     request.setModelVersionsList([modelVersion]);
 
     const postModelVersions = promisifyGrpcCall(
