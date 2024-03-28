@@ -39,19 +39,29 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
 
+/**
+ * Model is a class that provides access to Clarifai API endpoints related to Model information.
+ */
 export class Model extends Lister {
-  // @ts-expect-error - Variable yet to be used
-  private userId: string;
   private appId: string;
-  // @ts-expect-error - Variable yet to be used
-  private token: string | undefined;
-  // @ts-expect-error - Variable yet to be used
-  private ui: string | undefined;
   private id: string;
   private modelVersion: { id: string } | undefined;
   private modelInfo: GrpcModel;
   private trainingParams: Record<string, unknown>;
 
+  /**
+   * Initializes a Model object.
+   *
+   * @param url - The URL to initialize the model object.
+   * @param modelId - The Model ID to interact with.
+   * @param modelVersion - The Model Version to interact with.
+   * @param authConfig - Authentication configuration options.
+   * @param authConfig.baseURL - Base API URL. Default is "https://api.clarifai.com".
+   * @param authConfig.pat - A personal access token for authentication. Can be set as env var CLARIFAI_PAT.
+   * @param authConfig.token - A session token for authentication. Accepts either a session token or a pat. Can be set as env var CLARIFAI_SESSION_TOKEN.
+   *
+   * @includeExample examples/model/index.ts
+   */
   constructor({
     url,
     modelId,
@@ -92,10 +102,7 @@ export class Model extends Lister {
     }
 
     super({ authConfig: authConfig });
-    this.userId = authConfig.userId;
     this.appId = authConfig.appId;
-    this.token = authConfig.token;
-    this.ui = authConfig.ui;
     this.modelVersion = modelVersion;
     this.id = (modelIdFromUrl || modelId) as string;
     this.modelInfo = new GrpcModel();
@@ -109,6 +116,10 @@ export class Model extends Lister {
     this.trainingParams = {};
   }
 
+  /**
+   * Loads the current model info.
+   * Usually called internally by other methods, to ensure the model info is loaded with latest data.
+   */
   async loadInfo() {
     const getModel = promisifyGrpcCall(
       this.STUB.client.getModel,
@@ -142,6 +153,12 @@ export class Model extends Lister {
     this.modelInfo.setModelVersion(grpcModelVersion);
   }
 
+  /**
+   * Lists all the training templates for the model type.
+   * @returns - A promise that resolves to a list of training templates for the model type.
+   *
+   * @includeExample examples/model/listTrainingTemplates.ts
+   */
   async listTrainingTemplates(): Promise<string[]> {
     if (!this.modelInfo.getModelTypeId()) {
       await this.loadInfo();
@@ -175,6 +192,14 @@ export class Model extends Lister {
     return templates;
   }
 
+  /**
+   * Returns the model params for the model type as object & also writes to a yaml file
+   * @param template - The training template to use for the model type.
+   * @param saveTo - The file path to save the yaml file.
+   * @returns - A promise that resolves to the model params for the model type.
+   *
+   * @includeExample examples/model/getParams.ts
+   */
   async getParams(
     template: string | null = null,
     saveTo: string = "params.yaml",
@@ -242,6 +267,12 @@ export class Model extends Lister {
     return params;
   }
 
+  /**
+   * Updates the model params for the model.
+   * @param modelParams - The model params to update.
+   *
+   * @includeExample examples/model/updateParams.ts
+   */
   updateParams(modelParams: Record<string, unknown>): void {
     if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
       throw new UserError(
@@ -267,6 +298,11 @@ export class Model extends Lister {
     }
   }
 
+  /**
+   * Returns the param info for the model.
+   *
+   * @includeExample examples/model/getParamInfo.ts
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getParamInfo(param: string): Promise<Record<string, any>> {
     if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
@@ -328,9 +364,7 @@ export class Model extends Lister {
    *
    * @param versionId - The version ID to delete.
    *
-   * @example
-   * const model = new Model({ modelId: 'model_id', userId: 'user_id', appId: 'app_id' });
-   * model.deleteVersion('version_id');
+   * @includeExample examples/model/deleteVersion.ts
    */
   async deleteVersion(versionId: string): Promise<void> {
     const request = new DeleteModelVersionRequest();
@@ -352,6 +386,11 @@ export class Model extends Lister {
     }
   }
 
+  /**
+   * Creates a model version for the Model.
+   *
+   * @includeExample examples/model/createVersion.ts
+   */
   async createVersion(
     modelVersion: ModelVersion,
   ): Promise<GrpcModel.AsObject | undefined> {
@@ -382,13 +421,25 @@ export class Model extends Lister {
     return responseObject.model;
   }
 
+  /**
+   * Lists all the versions for the model.
+   *
+   * @includeExample examples/model/listVersions.ts
+   *
+   * @remarks
+   * Defaults to 16 per page if pageNo is not specified
+   */
   async *listVersions({
     pageNo,
     perPage,
   }: {
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiModelVersionResponse.AsObject, void, void> {
+  } = {}): AsyncGenerator<
+    MultiModelVersionResponse.AsObject["modelVersionsList"],
+    void,
+    void
+  > {
     const request = new ListModelVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setModelId(this.id);
@@ -406,10 +457,25 @@ export class Model extends Lister {
     );
 
     for await (const modelVersionInfo of allModelVersionsInfo) {
-      yield modelVersionInfo.toObject();
+      yield modelVersionInfo.toObject().modelVersionsList;
     }
   }
 
+  /**
+   * Predicts the model based on the given inputs.
+   * Use the `Input` module to create the input objects.
+   *
+   * @param inputs - The inputs to predict, must be less than 128.
+   * @param inferenceParams - The inference params to override.
+   * @param outputConfig - The output config to override.
+   *  min_value (number) - The minimum value of the prediction confidence to filter.
+   *  max_concepts (number) - The maximum number of concepts to return.
+   *  select_concepts (Concept[]) - The concepts to select.
+   *  sample_ms (number) - The number of milliseconds to sample.
+   * @returns - A promise that resolves to the model prediction.
+   *
+   * @includeExample examples/model/predict.ts
+   */
   async predict({
     inputs,
     inferenceParams,
@@ -418,7 +484,7 @@ export class Model extends Lister {
     inputs: GrpcInput[];
     inferenceParams?: Record<string, JavaScriptValue>;
     outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject> {
+  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!Array.isArray(inputs)) {
       throw new Error(
         "Invalid inputs, inputs must be an array of Input objects.",
@@ -444,43 +510,54 @@ export class Model extends Lister {
 
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
-    return new Promise<MultiOutputResponse.AsObject>((resolve, reject) => {
-      const makeRequest = () => {
-        const postModelOutputs = promisifyGrpcCall(
-          this.STUB.client.postModelOutputs,
-          this.STUB.client,
-        );
-        this.grpcRequest(postModelOutputs, request)
-          .then((response) => {
-            const responseObject = response.toObject();
-            if (
-              responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
-              Date.now() - startTime < 600000
-            ) {
-              console.log(
-                `${this.id} model is still deploying, please wait...`,
-              );
-              setTimeout(makeRequest, backoffIterator.next().value * 1000);
-            } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
+    return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
+      (resolve, reject) => {
+        const makeRequest = () => {
+          const postModelOutputs = promisifyGrpcCall(
+            this.STUB.client.postModelOutputs,
+            this.STUB.client,
+          );
+          this.grpcRequest(postModelOutputs, request)
+            .then((response) => {
+              const responseObject = response.toObject();
+              if (
+                responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
+                Date.now() - startTime < 600000
+              ) {
+                console.log(
+                  `${this.id} model is still deploying, please wait...`,
+                );
+                setTimeout(makeRequest, backoffIterator.next().value * 1000);
+              } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
+                reject(
+                  new Error(
+                    `Model Predict failed with response ${responseObject.status?.toString()}`,
+                  ),
+                );
+              } else {
+                resolve(response.toObject().outputsList);
+              }
+            })
+            .catch((error) => {
               reject(
-                new Error(
-                  `Model Predict failed with response ${responseObject.status?.toString()}`,
-                ),
+                new Error(`Model Predict failed with error: ${error.message}`),
               );
-            } else {
-              resolve(response.toObject());
-            }
-          })
-          .catch((error) => {
-            reject(
-              new Error(`Model Predict failed with error: ${error.message}`),
-            );
-          });
-      };
-      makeRequest();
-    });
+            });
+        };
+        makeRequest();
+      },
+    );
   }
 
+  /**
+   * Predicts the model based on the given inputs.
+   * Inputs can be provided as a URL.
+   * @param url - The URL of the input.
+   * @param inputType - The type of the input. Can be "image", "text", "video", or "audio".
+   * @param inferenceParams - The inference params to override.
+   * @param outputConfig - The output config to override.
+   * @returns - A promise that resolves to the model prediction.
+   */
   predictByUrl({
     url,
     inputType,
@@ -491,7 +568,7 @@ export class Model extends Lister {
     inputType: "image" | "text" | "video" | "audio";
     inferenceParams?: Record<string, JavaScriptValue>;
     outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject> {
+  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     let inputProto: GrpcInput;
     if (inputType === "image") {
       inputProto = Input.getInputFromUrl({ inputId: "", imageUrl: url });
@@ -514,6 +591,15 @@ export class Model extends Lister {
     });
   }
 
+  /**
+   * Predicts the model based on the given inputs.
+   * Inputs can be provided as a filepath which can be read.
+   * @param filepath - The filepath of the input.
+   * @param inputType - The type of the input. Can be "image", "text", "video", or "audio".
+   * @param inferenceParams - The inference params to override.
+   * @param outputConfig - The output config to override.
+   * @returns - A promise that resolves to the model prediction.
+   */
   predictByFilepath({
     filepath,
     inputType,
@@ -524,7 +610,7 @@ export class Model extends Lister {
     inputType: "image" | "text" | "video" | "audio";
     inferenceParams?: Record<string, JavaScriptValue>;
     outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject> {
+  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!fs.existsSync(filepath)) {
       throw new Error("Invalid filepath.");
     }
@@ -539,6 +625,15 @@ export class Model extends Lister {
     });
   }
 
+  /**
+   * Predicts the model based on the given inputs.
+   * Inputs can be provided as a Buffer.
+   * @param inputBytes - Input as a buffer.
+   * @param inputType - The type of the input. Can be "image", "text", "video", or "audio".
+   * @param inferenceParams - The inference params to override.
+   * @param outputConfig - The output config to override.
+   * @returns - A promise that resolves to the model prediction.
+   */
   predictByBytes({
     inputBytes,
     inputType,
@@ -549,7 +644,7 @@ export class Model extends Lister {
     inputType: "image" | "text" | "video" | "audio";
     inferenceParams?: Record<string, JavaScriptValue>;
     outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject> {
+  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!(inputBytes instanceof Buffer)) {
       throw new Error("Invalid bytes.");
     }

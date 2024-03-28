@@ -24,8 +24,10 @@ const CLIP_EMBED_MODEL_ID = "multimodal-clip-embed";
 
 const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
 
-function validateConceptsLength(response: MultiOutputResponse.AsObject): void {
-  if ((response?.outputsList?.[0]?.data?.conceptsList?.length ?? 0) > 0) {
+function validateConceptsLength(
+  response: MultiOutputResponse.AsObject["outputsList"],
+): void {
+  if ((response?.[0]?.data?.conceptsList?.length ?? 0) > 0) {
     return;
   }
   throw Error("Concepts length is 0");
@@ -50,7 +52,6 @@ describe(
         url: DOG_IMAGE_URL,
         inputType: "image",
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
     });
 
@@ -67,7 +68,6 @@ describe(
         filepath: RED_TRUCK_IMAGE_FILE_PATH,
         inputType: "image",
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
     });
 
@@ -85,7 +85,6 @@ describe(
         inputBytes: fileBuffer,
         inputType: "image",
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
     });
 
@@ -110,9 +109,8 @@ describe(
         inputType: "image",
         outputConfig: outputConfig,
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
-      const concepts = prediction?.outputsList?.[0]?.data?.conceptsList;
+      const concepts = prediction?.[0]?.data?.conceptsList;
       expect(concepts?.length).toBe(selectedConcepts.length);
       const dogConcept = concepts?.find((c) => c.name === "dog");
       const catConcept = concepts?.find((c) => c.name === "cat");
@@ -134,9 +132,8 @@ describe(
         inputType: "image",
         outputConfig: outputConfig,
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
-      const concepts = prediction?.outputsList?.[0]?.data?.conceptsList;
+      const concepts = prediction?.[0]?.data?.conceptsList;
       expect(concepts?.length).toBeGreaterThan(0);
       const concept = concepts?.[0];
       expect(concept?.value).toBeGreaterThan(0.95);
@@ -157,9 +154,8 @@ describe(
         inputType: "image",
         outputConfig: outputConfig,
       });
-      expect(prediction.status?.code).toBe(10000);
       expect(() => validateConceptsLength(prediction)).not.toThrow();
-      const concepts = prediction?.outputsList?.[0]?.data?.conceptsList;
+      const concepts = prediction?.[0]?.data?.conceptsList;
       expect(concepts?.length).toBe(1);
     });
 
@@ -230,9 +226,8 @@ describe(
         inputType: "video",
         outputConfig: outputConfig,
       });
-      expect(prediction.status?.code).toBe(10000);
       let expectedTime = 1000;
-      for (const frame of (prediction.outputsList?.[0].data?.framesList ??
+      for (const frame of (prediction?.[0].data?.framesList ??
         []) as Frame.AsObject[]) {
         expect(frame.frameInfo?.time).toBe(expectedTime);
         expectedTime += 2000;
@@ -256,10 +251,9 @@ describe(
       const prediction = await model.predict({
         inputs: [input],
       });
-      expect(prediction.status?.code).toBe(10000);
-      expect(
-        prediction.outputsList?.[0].data?.embeddingsList?.[0]?.numDimensions,
-      ).toBe(clipDim);
+      expect(prediction?.[0].data?.embeddingsList?.[0]?.numDimensions).toBe(
+        clipDim,
+      );
     });
   },
 );
