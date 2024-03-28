@@ -353,7 +353,6 @@ $RECYCLE.BIN/
 *.tgz
 example/*
 .vscode
-docs/*
 
 # Test outputs
 tests/client/workflow/export_general.yml

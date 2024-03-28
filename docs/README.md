@@ -1,9 +1,9 @@
+clarifai-nodejs / [Exports](modules.md)
+
 ![Clarifai logo](https://www.clarifai.com/hubfs/Clarifai-logo-dark.svg)
 
 [![npm](https://img.shields.io/npm/v/clarifai-nodejs)](https://www.npmjs.com/package/clarifai-nodejs)
 [![Build](https://github.com/Clarifai/clarifai-nodejs/workflows/Run%20tests/badge.svg)](https://github.com/Clarifai/clarifai-nodejs/actions)
-
-> This library is currently in beta, any improvements & feedback welcome!
 
 # Clarifai Node.js SDK
 
@@ -60,7 +60,7 @@ const apps = list.value;
 console.log(apps);
 ```
 
-For full usage details, checkout our [API Reference docs](https://docs.clarifai.com/nodejs-sdk/api-reference)
+For full usage details, checkout API Reference: 
 
 ## Versioning
 
