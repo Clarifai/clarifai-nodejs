@@ -62,7 +62,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/user.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L51)
+[client/user.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L51)
 
 ## Methods
 
@@ -102,7 +102,7 @@ An App object for the specified app ID.
 
 #### Defined in
 
-[client/user.ts:236](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L236)
+[client/user.ts:236](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L236)
 
 ___
 
@@ -144,7 +144,7 @@ An App object for the specified app ID.
 
 #### Defined in
 
-[client/user.ts:143](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L143)
+[client/user.ts:143](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L143)
 
 ___
 
@@ -188,7 +188,7 @@ A runner object for the specified Runner ID.
 
 #### Defined in
 
-[client/user.ts:191](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L191)
+[client/user.ts:191](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L191)
 
 ___
 
@@ -217,7 +217,7 @@ examples/user/deleteApp.ts
 
 #### Defined in
 
-[client/user.ts:294](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L294)
+[client/user.ts:294](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L294)
 
 ___
 
@@ -252,7 +252,7 @@ await user.deleteRunner({ runnerId: "runner_id" });
 
 #### Defined in
 
-[client/user.ts:319](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L319)
+[client/user.ts:319](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L319)
 
 ___
 
@@ -308,7 +308,7 @@ If both pageNo and perPage are None, then lists all the resources.
 
 #### Defined in
 
-[client/user.ts:68](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L68)
+[client/user.ts:68](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L68)
 
 ___
 
@@ -355,7 +355,7 @@ Defaults to 16 per page if perPage is not specified.
 
 #### Defined in
 
-[client/user.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L109)
+[client/user.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L109)
 
 ___
 
@@ -393,4 +393,4 @@ A Runner object for the existing runner ID.
 
 #### Defined in
 
-[client/user.ts:265](https://github.com/Clarifai/clarifai-nodejs/blob/2a2dac0/src/client/user.ts#L265)
+[client/user.ts:265](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/user.ts#L265)
