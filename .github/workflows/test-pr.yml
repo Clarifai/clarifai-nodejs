@@ -25,6 +25,8 @@ jobs:
           node-version: "20.11.0"
       - name: "Install Deps"
         run: npm ci
+      - name: "Lint"
+        run: npm run lint
       - name: "Test"
         run: npx vitest --coverage.enabled true
         env:
