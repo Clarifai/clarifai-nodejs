@@ -1,3 +1,5 @@
+clarifai-nodejs / [Exports](modules.md)
+
 ![Clarifai logo](https://www.clarifai.com/hubfs/Clarifai-logo-dark.svg)
 
 [![npm](https://img.shields.io/npm/v/clarifai-nodejs)](https://www.npmjs.com/package/clarifai-nodejs)
