@@ -16,24 +16,13 @@
 
 ### Properties
 
-- [STUB](Workflow.md#stub)
-- [authHelper](Workflow.md#authhelper)
-- [base](Workflow.md#base)
-- [defaultPageSize](Workflow.md#defaultpagesize)
 - [id](Workflow.md#id)
-- [metadata](Workflow.md#metadata)
 - [outputConfig](Workflow.md#outputconfig)
-- [pat](Workflow.md#pat)
-- [userAppId](Workflow.md#userappid)
 - [versionId](Workflow.md#versionid)
 
 ### Methods
 
-- [convertStringToTimestamp](Workflow.md#convertstringtotimestamp)
 - [exportWorkflow](Workflow.md#exportworkflow)
-- [grpcRequest](Workflow.md#grpcrequest)
-- [listPagesData](Workflow.md#listpagesdata)
-- [listPagesGenerator](Workflow.md#listpagesgenerator)
 - [listVersions](Workflow.md#listversions)
 - [predict](Workflow.md#predict)
 - [predictByBytes](Workflow.md#predictbybytes)
@@ -61,65 +50,9 @@ Lister.constructor
 
 #### Defined in
 
-[client/workflow.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L50)
+[client/workflow.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L53)
 
 ## Properties
-
-### STUB
-
-• `Protected` **STUB**: `V2Stub`
-
-#### Inherited from
-
-Lister.STUB
-
-#### Defined in
-
-[client/base.ts:26](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L26)
-
-___
-
-### authHelper
-
-• `Protected` **authHelper**: `ClarifaiAuthHelper`
-
-#### Inherited from
-
-Lister.authHelper
-
-#### Defined in
-
-[client/base.ts:25](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L25)
-
-___
-
-### base
-
-• `Protected` **base**: `string`
-
-#### Inherited from
-
-Lister.base
-
-#### Defined in
-
-[client/base.ts:30](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L30)
-
-___
-
-### defaultPageSize
-
-• **defaultPageSize**: `number`
-
-#### Inherited from
-
-Lister.defaultPageSize
-
-#### Defined in
-
-[client/lister.ts:9](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L9)
-
-___
 
 ### id
 
@@ -127,21 +60,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:47](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L47)
-
-___
-
-### metadata
-
-• `Protected` **metadata**: [`string`, `string`][]
-
-#### Inherited from
-
-Lister.metadata
-
-#### Defined in
-
-[client/base.ts:27](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L27)
+[client/workflow.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L50)
 
 ___
 
@@ -151,35 +70,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L48)
-
-___
-
-### pat
-
-• `Protected` **pat**: `string`
-
-#### Inherited from
-
-Lister.pat
-
-#### Defined in
-
-[client/base.ts:28](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L28)
-
-___
-
-### userAppId
-
-• `Protected` **userAppId**: `UserAppIDSet`
-
-#### Inherited from
-
-Lister.userAppId
-
-#### Defined in
-
-[client/base.ts:29](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L29)
+[client/workflow.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L51)
 
 ___
 
@@ -189,37 +80,9 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:46](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L46)
+[client/workflow.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L49)
 
 ## Methods
-
-### convertStringToTimestamp
-
-▸ **convertStringToTimestamp**(`dateStr`): `Timestamp`
-
-Converts a string to a Timestamp object.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `dateStr` | `string` | The string to convert. |
-
-#### Returns
-
-`Timestamp`
-
-A Timestamp object representing the given date string.
-
-#### Inherited from
-
-Lister.convertStringToTimestamp
-
-#### Defined in
-
-[client/base.ts:95](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L95)
-
-___
 
 ### exportWorkflow
 
@@ -248,114 +111,7 @@ await workflow.export("out_path.yml");
 
 #### Defined in
 
-[client/workflow.ts:253](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L253)
-
-___
-
-### grpcRequest
-
-▸ **grpcRequest**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`): `Promise`\<`TResponse`\>
-
-Makes a gRPC request to the API.
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> |
-| `requestData` | `TRequest` |
-
-#### Returns
-
-`Promise`\<`TResponse`\>
-
-A Promise resolving to the result of the gRPC method call.
-
-#### Inherited from
-
-Lister.grpcRequest
-
-#### Defined in
-
-[client/base.ts:72](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L72)
-
-___
-
-### listPagesData
-
-▸ **listPagesData**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`, `pageNo?`, `perPage?`): `Promise`\<`TResponse`\>
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> | `undefined` |
-| `requestData` | `TRequest` | `undefined` |
-| `pageNo` | `number` | `1` |
-| `perPage` | `number` | `undefined` |
-
-#### Returns
-
-`Promise`\<`TResponse`\>
-
-#### Inherited from
-
-Lister.listPagesData
-
-#### Defined in
-
-[client/lister.ts:86](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L86)
-
-___
-
-### listPagesGenerator
-
-▸ **listPagesGenerator**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`, `pageNo?`, `perPage?`): `AsyncGenerator`\<`TResponse`, `void`, `unknown`\>
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> | `undefined` |
-| `requestData` | `TRequest` | `undefined` |
-| `pageNo` | `number` | `1` |
-| `perPage` | `number` | `undefined` |
-
-#### Returns
-
-`AsyncGenerator`\<`TResponse`, `void`, `unknown`\>
-
-#### Inherited from
-
-Lister.listPagesGenerator
-
-#### Defined in
-
-[client/lister.ts:22](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L22)
+[client/workflow.ts:256](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L256)
 
 ___
 
@@ -377,7 +133,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:211](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L211)
+[client/workflow.ts:214](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L214)
 
 ___
 
@@ -399,7 +155,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:79](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L79)
+[client/workflow.ts:82](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L82)
 
 ___
 
@@ -420,7 +176,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:150](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L150)
+[client/workflow.ts:153](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L153)
 
 ___
 
@@ -441,4 +197,4 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:189](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/workflow.ts#L189)
+[client/workflow.ts:192](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L192)
