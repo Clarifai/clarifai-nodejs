@@ -138,4 +138,4 @@ const apps = list.value;
 console.log(apps);
 ```
 
-For full usage details, checkout our [API Reference docs](https://docs.clarifai.com/nodejs-sdk/api-reference)
+For full usage details, checkout our [API Reference docs](https://docs.clarifai.com/nodejs-sdk/installation-guide/modules)
