@@ -42,6 +42,9 @@ type WorkflowConfig =
       authConfig?: AuthConfig;
     };
 
+/**
+ * @noInheritDoc
+ */
 export class Workflow extends Lister {
   private versionId: string;
   private id: string;
