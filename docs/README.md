@@ -3,7 +3,8 @@ clarifai-nodejs / [Exports](modules.md)
 ![Clarifai logo](https://www.clarifai.com/hubfs/Clarifai-logo-dark.svg)
 
 [![npm](https://img.shields.io/npm/v/clarifai-nodejs)](https://www.npmjs.com/package/clarifai-nodejs)
-[![Build](https://github.com/Clarifai/clarifai-nodejs/workflows/Run%20tests/badge.svg)](https://github.com/Clarifai/clarifai-nodejs/actions)
+[![Build](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml/badge.svg)](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml)
+[![Discord](https://img.shields.io/discord/1145701543228735582)](https://discord.com/invite/26upV8Y4Nd)
 
 > This library is currently in beta, any improvements & feedback welcome!
 
