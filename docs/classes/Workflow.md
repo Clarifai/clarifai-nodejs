@@ -50,7 +50,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/workflow.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L53)
+[client/workflow.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L53)
 
 ## Properties
 
@@ -60,7 +60,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/workflow.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L50)
+[client/workflow.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L50)
 
 ___
 
@@ -70,7 +70,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L51)
+[client/workflow.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L51)
 
 ___
 
@@ -80,7 +80,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L49)
+[client/workflow.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L49)
 
 ## Methods
 
@@ -111,7 +111,7 @@ await workflow.export("out_path.yml");
 
 #### Defined in
 
-[client/workflow.ts:256](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L256)
+[client/workflow.ts:256](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L256)
 
 ___
 
@@ -133,7 +133,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:214](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L214)
+[client/workflow.ts:214](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L214)
 
 ___
 
@@ -155,7 +155,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:82](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L82)
+[client/workflow.ts:82](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L82)
 
 ___
 
@@ -176,7 +176,7 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:153](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L153)
+[client/workflow.ts:153](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L153)
 
 ___
 
@@ -197,4 +197,4 @@ ___
 
 #### Defined in
 
-[client/workflow.ts:192](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/workflow.ts#L192)
+[client/workflow.ts:192](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/workflow.ts#L192)

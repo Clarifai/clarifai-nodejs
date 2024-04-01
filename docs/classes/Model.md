@@ -78,7 +78,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/model.ts:66](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L66)
+[client/model.ts:66](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L66)
 
 ## Properties
 
@@ -88,7 +88,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/model.ts:47](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L47)
+[client/model.ts:47](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L47)
 
 ___
 
@@ -98,7 +98,7 @@ ___
 
 #### Defined in
 
-[client/model.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L48)
+[client/model.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L48)
 
 ___
 
@@ -108,7 +108,7 @@ ___
 
 #### Defined in
 
-[client/model.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L50)
+[client/model.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L50)
 
 ___
 
@@ -118,7 +118,7 @@ ___
 
 #### Defined in
 
-[client/model.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L49)
+[client/model.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L49)
 
 ___
 
@@ -128,7 +128,7 @@ ___
 
 #### Defined in
 
-[client/model.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L51)
+[client/model.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L51)
 
 ## Methods
 
@@ -183,7 +183,7 @@ console.log(modelObjectWithVersion);
 
 #### Defined in
 
-[client/model.ts:395](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L395)
+[client/model.ts:395](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L395)
 
 ___
 
@@ -221,7 +221,7 @@ model.deleteVersion("version_id");
 
 #### Defined in
 
-[client/model.ts:370](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L370)
+[client/model.ts:370](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L370)
 
 ___
 
@@ -259,7 +259,7 @@ model.getParamInfo("template");
 
 #### Defined in
 
-[client/model.ts:308](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L308)
+[client/model.ts:308](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L308)
 
 ___
 
@@ -301,7 +301,7 @@ console.log(modelParams);
 
 #### Defined in
 
-[client/model.ts:204](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L204)
+[client/model.ts:204](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L204)
 
 ___
 
@@ -336,7 +336,7 @@ console.log(trainingTemplates);
 
 #### Defined in
 
-[client/model.ts:163](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L163)
+[client/model.ts:163](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L163)
 
 ___
 
@@ -381,7 +381,7 @@ Defaults to 16 per page if pageNo is not specified
 
 #### Defined in
 
-[client/model.ts:433](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L433)
+[client/model.ts:433](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L433)
 
 ___
 
@@ -398,7 +398,7 @@ Usually called internally by other methods, to ensure the model info is loaded w
 
 #### Defined in
 
-[client/model.ts:124](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L124)
+[client/model.ts:124](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L124)
 
 ___
 
@@ -422,7 +422,7 @@ Overrides the model version.
 
 #### Defined in
 
-[client/model.ts:697](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L697)
+[client/model.ts:697](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L697)
 
 ___
 
@@ -487,7 +487,7 @@ console.log(imagePrediction);
 
 #### Defined in
 
-[client/model.ts:480](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L480)
+[client/model.ts:480](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L480)
 
 ___
 
@@ -516,7 +516,7 @@ Inputs can be provided as a Buffer.
 
 #### Defined in
 
-[client/model.ts:638](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L638)
+[client/model.ts:638](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L638)
 
 ___
 
@@ -545,7 +545,7 @@ Inputs can be provided as a filepath which can be read.
 
 #### Defined in
 
-[client/model.ts:604](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L604)
+[client/model.ts:604](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L604)
 
 ___
 
@@ -574,7 +574,7 @@ Inputs can be provided as a URL.
 
 #### Defined in
 
-[client/model.ts:562](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L562)
+[client/model.ts:562](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L562)
 
 ___
 
@@ -615,4 +615,4 @@ model.updateParams({
 
 #### Defined in
 
-[client/model.ts:277](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/model.ts#L277)
+[client/model.ts:277](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/model.ts#L277)
