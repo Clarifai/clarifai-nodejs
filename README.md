@@ -29,7 +29,7 @@ To use Clarifai Node.js in Next.js App Directory with server components, you wil
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ['@acme/ui'],
+    serverComponentsExternalPackages: ['clarifai-nodejs-grpc'],
   },
 }
 
