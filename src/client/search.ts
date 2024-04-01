@@ -39,6 +39,9 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 
 type FilterType = z.infer<ReturnType<typeof getSchema>>;
 
+/**
+ * @noInheritDoc
+ */
 export class Search extends Lister {
   private topK: number;
   private metricDistance: "COSINE_DISTANCE" | "EUCLIDEAN_DISTANCE";

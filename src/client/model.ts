@@ -41,6 +41,7 @@ import {
 
 /**
  * Model is a class that provides access to Clarifai API endpoints related to Model information.
+ * @noInheritDoc
  */
 export class Model extends Lister {
   private appId: string;

@@ -16,28 +16,17 @@
 
 ### Properties
 
-- [STUB](Search.md#stub)
-- [authHelper](Search.md#authhelper)
-- [base](Search.md#base)
 - [dataProto](Search.md#dataproto)
-- [defaultPageSize](Search.md#defaultpagesize)
 - [inputProto](Search.md#inputproto)
-- [metadata](Search.md#metadata)
 - [metricDistance](Search.md#metricdistance)
-- [pat](Search.md#pat)
 - [topK](Search.md#topk)
-- [userAppId](Search.md#userappid)
 
 ### Methods
 
-- [convertStringToTimestamp](Search.md#convertstringtotimestamp)
 - [getAnnotProto](Search.md#getannotproto)
 - [getGeoPointProto](Search.md#getgeopointproto)
 - [getInputProto](Search.md#getinputproto)
-- [grpcRequest](Search.md#grpcrequest)
 - [listAllPagesGenerator](Search.md#listallpagesgenerator)
-- [listPagesData](Search.md#listpagesdata)
-- [listPagesGenerator](Search.md#listpagesgenerator)
 - [query](Search.md#query)
 
 ## Constructors
@@ -65,51 +54,9 @@ Lister.constructor
 
 #### Defined in
 
-[client/search.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L48)
+[client/search.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L51)
 
 ## Properties
-
-### STUB
-
-• `Protected` **STUB**: `V2Stub`
-
-#### Inherited from
-
-Lister.STUB
-
-#### Defined in
-
-[client/base.ts:26](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L26)
-
-___
-
-### authHelper
-
-• `Protected` **authHelper**: `ClarifaiAuthHelper`
-
-#### Inherited from
-
-Lister.authHelper
-
-#### Defined in
-
-[client/base.ts:25](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L25)
-
-___
-
-### base
-
-• `Protected` **base**: `string`
-
-#### Inherited from
-
-Lister.base
-
-#### Defined in
-
-[client/base.ts:30](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L30)
-
-___
 
 ### dataProto
 
@@ -117,21 +64,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:45](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L45)
-
-___
-
-### defaultPageSize
-
-• **defaultPageSize**: `number`
-
-#### Inherited from
-
-Lister.defaultPageSize
-
-#### Defined in
-
-[client/lister.ts:9](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L9)
+[client/search.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L48)
 
 ___
 
@@ -141,21 +74,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:46](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L46)
-
-___
-
-### metadata
-
-• `Protected` **metadata**: [`string`, `string`][]
-
-#### Inherited from
-
-Lister.metadata
-
-#### Defined in
-
-[client/base.ts:27](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L27)
+[client/search.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L49)
 
 ___
 
@@ -165,21 +84,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:44](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L44)
-
-___
-
-### pat
-
-• `Protected` **pat**: `string`
-
-#### Inherited from
-
-Lister.pat
-
-#### Defined in
-
-[client/base.ts:28](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L28)
+[client/search.ts:47](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L47)
 
 ___
 
@@ -189,51 +94,9 @@ ___
 
 #### Defined in
 
-[client/search.ts:43](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L43)
-
-___
-
-### userAppId
-
-• `Protected` **userAppId**: `UserAppIDSet`
-
-#### Inherited from
-
-Lister.userAppId
-
-#### Defined in
-
-[client/base.ts:29](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L29)
+[client/search.ts:46](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L46)
 
 ## Methods
-
-### convertStringToTimestamp
-
-▸ **convertStringToTimestamp**(`dateStr`): `Timestamp`
-
-Converts a string to a Timestamp object.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `dateStr` | `string` | The string to convert. |
-
-#### Returns
-
-`Timestamp`
-
-A Timestamp object representing the given date string.
-
-#### Inherited from
-
-Lister.convertStringToTimestamp
-
-#### Defined in
-
-[client/base.ts:95](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L95)
-
-___
 
 ### getAnnotProto
 
@@ -263,7 +126,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:74](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L74)
+[client/search.ts:77](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L77)
 
 ___
 
@@ -285,7 +148,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:182](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L182)
+[client/search.ts:185](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L185)
 
 ___
 
@@ -317,44 +180,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:146](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L146)
-
-___
-
-### grpcRequest
-
-▸ **grpcRequest**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`): `Promise`\<`TResponse`\>
-
-Makes a gRPC request to the API.
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> |
-| `requestData` | `TRequest` |
-
-#### Returns
-
-`Promise`\<`TResponse`\>
-
-A Promise resolving to the result of the gRPC method call.
-
-#### Inherited from
-
-Lister.grpcRequest
-
-#### Defined in
-
-[client/base.ts:72](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/base.ts#L72)
+[client/search.ts:149](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L149)
 
 ___
 
@@ -381,77 +207,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:199](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L199)
-
-___
-
-### listPagesData
-
-▸ **listPagesData**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`, `pageNo?`, `perPage?`): `Promise`\<`TResponse`\>
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> | `undefined` |
-| `requestData` | `TRequest` | `undefined` |
-| `pageNo` | `number` | `1` |
-| `perPage` | `number` | `undefined` |
-
-#### Returns
-
-`Promise`\<`TResponse`\>
-
-#### Inherited from
-
-Lister.listPagesData
-
-#### Defined in
-
-[client/lister.ts:86](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L86)
-
-___
-
-### listPagesGenerator
-
-▸ **listPagesGenerator**\<`TRequest`, `TResponseObject`, `TResponse`\>(`endpoint`, `requestData`, `pageNo?`, `perPage?`): `AsyncGenerator`\<`TResponse`, `void`, `unknown`\>
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TRequest` | extends `Message` |
-| `TResponseObject` | extends `Object` |
-| `TResponse` | extends `Object` |
-
-#### Parameters
-
-| Name | Type | Default value |
-| :------ | :------ | :------ |
-| `endpoint` | (`request`: `TRequest`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`TResponse`\> | `undefined` |
-| `requestData` | `TRequest` | `undefined` |
-| `pageNo` | `number` | `1` |
-| `perPage` | `number` | `undefined` |
-
-#### Returns
-
-`AsyncGenerator`\<`TResponse`, `void`, `unknown`\>
-
-#### Inherited from
-
-Lister.listPagesGenerator
-
-#### Defined in
-
-[client/lister.ts:22](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/lister.ts#L22)
+[client/search.ts:202](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L202)
 
 ___
 
@@ -473,4 +229,4 @@ ___
 
 #### Defined in
 
-[client/search.ts:256](https://github.com/Clarifai/clarifai-nodejs/blob/f6de468/src/client/search.ts#L256)
+[client/search.ts:259](https://github.com/Clarifai/clarifai-nodejs/blob/a140e93/src/client/search.ts#L259)
