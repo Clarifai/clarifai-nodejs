@@ -6,6 +6,7 @@ name: Publish package to npm
 on:
   repository_dispatch:
     types: [publish-new-version]
+  workflow_dispatch:
 
 jobs:
   publish:
