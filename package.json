@@ -2,10 +2,18 @@
   "name": "clarifai-nodejs",
   "version": "0.0.1",
   "description": "The official Clarifai Node.js SDK",
+  "type": "module",
   "source": "src/index.ts",
-  "main": "dist/main.js",
+  "main": "dist/main.cjs",
   "module": "dist/module.js",
   "types": "dist/types.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.js",
+      "require": "./dist/main.cjs"
+    },
+    "./dist/types.d.ts": "./dist/types.d.ts"
+  },
   "scripts": {
     "test": "vitest",
     "test:unit": "vitest unit.test",
@@ -15,7 +23,7 @@
     "lint": "tsc --noEmit --pretty && eslint . --ignore-path .gitignore",
     "watch": "parcel watch",
     "build": "parcel build",
-    "generate-docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-plugin-no-inherit --plugin ./typedoc-plugins/expand-object.js --plugin ./typedoc-plugins/include-example --out docs src/"
+    "generate-docs": "typedoc --plugin typedoc-plugin-markdown --plugin typedoc-plugin-no-inherit --plugin ./typedoc-plugins/expand-object.cjs --plugin ./typedoc-plugins/include-example.cjs --out docs src/"
   },
   "files": [
     "dist/"
