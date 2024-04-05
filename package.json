@@ -14,6 +14,11 @@
     },
     "./dist/types.d.ts": "./dist/types.d.ts"
   },
+  "targets": {
+    "module": {
+      "includeNodeModules": ["clarifai-nodejs-grpc", "google-protobuf", "protobufjs"]
+    }
+  },
   "scripts": {
     "test": "vitest",
     "test:unit": "vitest unit.test",
