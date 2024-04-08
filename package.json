@@ -16,7 +16,11 @@
   },
   "targets": {
     "module": {
-      "includeNodeModules": ["clarifai-nodejs-grpc", "google-protobuf", "protobufjs"]
+      "includeNodeModules": [
+        "clarifai-nodejs-grpc",
+        "google-protobuf",
+        "protobufjs"
+      ]
     }
   },
   "scripts": {
