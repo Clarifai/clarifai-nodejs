@@ -1,4 +1,5 @@
 import {
+  Annotation,
   DatasetVersion,
   Dataset as GrpcDataset,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
@@ -19,6 +20,8 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import { parallelLimit } from "async";
+import compact from "lodash/compact";
 
 type DatasetConfig =
   | {
@@ -36,12 +39,12 @@ type DatasetConfig =
 
 export class Dataset extends Lister {
   private info: GrpcDataset = new GrpcDataset();
-  private numOfWorkers: number = os.cpus().length;
+  private numOfWorkers: number = Math.min(os.cpus().length, 10);
   private annotNumOfWorkers: number = 4;
   private maxRetries: number = 10;
   private batchSize: number = 128;
   private task;
-  private inputObject: Input;
+  private input: Input;
 
   constructor({ authConfig, datasetId, url, datasetVersionId }: DatasetConfig) {
     if (url && datasetId) {
@@ -59,7 +62,7 @@ export class Dataset extends Lister {
     super({ authConfig });
     this.info.setId(datasetId!);
     this.info.setVersion(new DatasetVersion().setId(datasetVersionId!));
-    this.inputObject = new Input({ authConfig });
+    this.input = new Input({ authConfig });
   }
 
   async createVersion(
@@ -130,5 +133,40 @@ export class Dataset extends Lister {
     for await (const versions of listDatasetVersionsGenerator) {
       yield versions.toObject().datasetVersionsList;
     }
+  }
+
+  private async concurrentAnnotUpload(
+    annots: Annotation[][],
+  ): Promise<Array<Array<Annotation>>> {
+    const retryAnnotUpload: Array<Array<Annotation> | null> = [];
+
+    const uploadAnnotations = async (
+      inpBatch: Annotation[],
+    ): Promise<Annotation[] | null> => {
+      try {
+        return await this.input.uploadAnnotations({
+          batchAnnot: inpBatch,
+          showLog: false,
+        });
+      } catch {
+        return null;
+      }
+    };
+
+    const maxWorkers = Math.min(this.annotNumOfWorkers, this.numOfWorkers);
+
+    const uploadTasks = annots.map((annotBatch) => {
+      return async () => {
+        const uploadedAnnotation = await uploadAnnotations(annotBatch);
+        if (!uploadedAnnotation) {
+          retryAnnotUpload.push(annotBatch);
+        }
+        return uploadedAnnotation;
+      };
+    });
+
+    await parallelLimit(uploadTasks, maxWorkers);
+
+    return compact(retryAnnotUpload);
   }
 }
