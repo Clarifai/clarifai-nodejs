@@ -22,28 +22,33 @@ export abstract class ClarifaiDataLoader {
   abstract getItem(index: number): OutputFeaturesType;
 }
 
-export abstract class ClarifaiDataset {
-  protected dataGenerator: ClarifaiDataLoader;
+export abstract class ClarifaiDataset<T extends ClarifaiDataLoader> {
+  protected dataGenerator: T;
   protected datasetId: string;
+  protected allInputIds: Record<string, unknown> = {};
 
   constructor({
     dataGenerator,
     datasetId,
   }: {
-    dataGenerator: ClarifaiDataLoader;
+    dataGenerator: T;
     datasetId: string;
   }) {
     this.dataGenerator = dataGenerator;
     this.datasetId = datasetId;
   }
 
-  abstract get length(): number;
+  get length(): number {
+    return this.dataGenerator.length;
+  }
 
-  protected abstract toList(inputProtos: Iterable<unknown>): unknown[];
+  // TODO: Plan for implementation
+  // protected abstract toList(inputProtos: Iterable<unknown>): unknown[];
 
   protected abstract extractProtos(_args: {
     batchInputIds: string[];
   }): [Input[], Annotation[]];
 
-  abstract getProtos(_inputIds: number[]): [Input[], Annotation[]];
+  // TODO: Plan for implementation
+  // abstract getProtos(_inputIds: number[]): [Input[], Annotation[]];
 }

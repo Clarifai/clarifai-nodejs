@@ -717,11 +717,15 @@ export class Input extends Lister {
     return inputAnnotProto;
   }
 
-  static getMaskProto(
-    inputId: string,
-    label: string,
-    polygons: number[][][],
-  ): Annotation {
+  static getMaskProto({
+    inputId,
+    label,
+    polygons,
+  }: {
+    inputId: string;
+    label: string;
+    polygons: number[][][];
+  }): Annotation {
     const polygonsSchema = z.array(z.array(z.array(z.number())));
     try {
       polygonsSchema.parse(polygons);
