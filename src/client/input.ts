@@ -1013,7 +1013,7 @@ export class Input extends Lister {
   }: {
     inputs: GrpcInput[];
     batchSize?: number;
-  }) {
+  }): Promise<void> {
     const batchSize = Math.min(128, providedBatchSize);
     const chunkedInputs = chunk(inputs, batchSize);
 
@@ -1024,32 +1024,35 @@ export class Input extends Lister {
 
     progressBar.start(chunkedInputs.length, 0);
 
-    async.mapLimit(
-      chunkedInputs,
-      this.numOfWorkers,
-      (batchInputs, callback) => {
-        this.uploadBatch({ inputs: batchInputs })
-          .then((failedInputs) => {
-            this.retryUploads({
-              failedInputs,
-            }).finally(() => {
-              progressBar.increment();
-              callback(null, failedInputs);
+    return new Promise<void>((resolve, reject) => {
+      async.mapLimit(
+        chunkedInputs,
+        this.numOfWorkers,
+        (batchInputs, callback) => {
+          this.uploadBatch({ inputs: batchInputs })
+            .then((failedInputs) => {
+              this.retryUploads({
+                failedInputs,
+              }).finally(() => {
+                progressBar.increment();
+                callback(null, failedInputs);
+              });
+            })
+            .catch((err) => {
+              callback(err);
             });
-          })
-          .catch((err) => {
-            callback(err);
-          });
-      },
-      (err) => {
-        if (err) {
-          console.error("Error processing batches", err);
-          return;
-        }
-        progressBar.stop();
-        console.log("All inputs processed");
-      },
-    );
+        },
+        (err) => {
+          if (err) {
+            console.error("Error processing batches", err);
+            reject(err);
+          }
+          progressBar.stop();
+          console.log("All inputs processed");
+          resolve();
+        },
+      );
+    });
   }
 
   private async uploadBatch({

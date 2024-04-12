@@ -66,14 +66,20 @@ export class Dataset extends Lister {
     this.input = new Input({ authConfig });
   }
 
-  async createVersion(
-    description: string,
-    metadata: Record<string, JavaScriptValue>,
-  ): Promise<DatasetVersion.AsObject> {
+  async createVersion({
+    id,
+    description,
+    metadata = {},
+  }: {
+    id: string;
+    description: string;
+    metadata?: Record<string, JavaScriptValue>;
+  }): Promise<DatasetVersion.AsObject> {
     const request = new PostDatasetVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setDatasetId(this.info.getId());
     const datasetVersion = new DatasetVersion();
+    datasetVersion.setId(id);
     datasetVersion.setDescription(description);
     datasetVersion.setMetadata(Struct.fromJavaScript(metadata));
     request.setDatasetVersionsList([datasetVersion]);
@@ -201,6 +207,49 @@ export class Dataset extends Lister {
       });
     }
     this.input.bulkUpload({
+      inputs: inputProtos,
+      batchSize: batchSize,
+    });
+  }
+
+  async uploadFromCSV({
+    csvPath,
+    inputType = "text",
+    csvType,
+    labels = true,
+    batchSize = 128,
+  }: {
+    csvPath: string;
+    inputType?: "image" | "text" | "video" | "audio";
+    csvType: "raw" | "url" | "file";
+    labels?: boolean;
+    batchSize?: number;
+  }): Promise<void> {
+    if (!["image", "text", "video", "audio"].includes(inputType)) {
+      throw new UserError(
+        "Invalid input type, it should be image, text, audio, or video",
+      );
+    }
+    if (!["raw", "url", "file"].includes(csvType)) {
+      throw new UserError(
+        "Invalid csv type, it should be raw, url, or file_path",
+      );
+    }
+    if (!csvPath.endsWith(".csv")) {
+      throw new UserError("csvPath should be a csv file");
+    }
+    if (csvType === "raw" && inputType !== "text") {
+      throw new UserError("Only text input type is supported for raw csv type");
+    }
+    batchSize = Math.min(128, batchSize);
+    const inputProtos = await Input.getInputsFromCsv({
+      csvPath: csvPath,
+      inputType: inputType,
+      csvType: csvType,
+      datasetId: this.info.getId(),
+      labels: labels,
+    });
+    await this.input.bulkUpload({
       inputs: inputProtos,
       batchSize: batchSize,
     });
