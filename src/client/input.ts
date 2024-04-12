@@ -42,6 +42,9 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 import os from "os";
 import chunk from "lodash/chunk";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import cliProgress from "cli-progress";
+import async from "async";
+import { MAX_RETRIES } from "../constants/dataset";
 
 interface CSVRecord {
   inputid: string;
@@ -1013,9 +1016,47 @@ export class Input extends Lister {
   }) {
     const batchSize = Math.min(128, providedBatchSize);
     const chunkedInputs = chunk(inputs, batchSize);
+
+    const progressBar = new cliProgress.SingleBar(
+      {},
+      cliProgress.Presets.shades_classic,
+    );
+
+    progressBar.start(chunkedInputs.length, 0);
+
+    async.mapLimit(
+      chunkedInputs,
+      this.numOfWorkers,
+      (batchInputs, callback) => {
+        this.uploadBatch({ inputs: batchInputs })
+          .then((failedInputs) => {
+            this.retryUploads({
+              failedInputs,
+            }).finally(() => {
+              progressBar.increment();
+              callback(null, failedInputs);
+            });
+          })
+          .catch((err) => {
+            callback(err);
+          });
+      },
+      (err) => {
+        if (err) {
+          console.error("Error processing batches", err);
+          return;
+        }
+        progressBar.stop();
+        console.log("All inputs processed");
+      },
+    );
   }
 
-  private async uploadBatch({ inputs }: { inputs: GrpcInput[] }): GrpcInput[] {
+  private async uploadBatch({
+    inputs,
+  }: {
+    inputs: GrpcInput[];
+  }): Promise<GrpcInput[]> {
     const inputJobId = await this.uploadInputs({ inputs, showLog: false });
     await this.waitForInputs({ inputJobId });
     const failedInputs = await this.deleteFailedInputs({ inputs });
@@ -1127,5 +1168,21 @@ export class Input extends Lister {
     await this.grpcRequest(deleteInputs, deleteInputsRequest);
 
     return failedInputs;
+  }
+
+  private async retryUploads({
+    failedInputs,
+  }: {
+    failedInputs: GrpcInput[];
+  }): Promise<void> {
+    for (let retry = 0; retry < MAX_RETRIES; retry++) {
+      if (failedInputs.length > 0) {
+        console.log(
+          `Retrying upload for ${failedInputs.length} Failed inputs..\n`,
+        );
+        failedInputs = await this.uploadBatch({ inputs: failedInputs });
+      }
+    }
+    console.log(`Failed to upload ${failedInputs.length} inputs..\n`);
   }
 }
