@@ -1012,7 +1012,7 @@ export class Input extends Lister {
     batchSize: providedBatchSize = 128,
   }: {
     inputs: GrpcInput[];
-    batchSize: number;
+    batchSize?: number;
   }) {
     const batchSize = Math.min(128, providedBatchSize);
     const chunkedInputs = chunk(inputs, batchSize);

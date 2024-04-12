@@ -2,6 +2,7 @@ import {
   Annotation,
   DatasetVersion,
   Dataset as GrpcDataset,
+  Input as GrpcInput,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
@@ -168,5 +169,40 @@ export class Dataset extends Lister {
     await parallelLimit(uploadTasks, maxWorkers);
 
     return compact(retryAnnotUpload);
+  }
+
+  uploadFromFolder({
+    folderPath,
+    inputType,
+    labels = false,
+    batchSize = this.batchSize,
+  }: {
+    folderPath: string;
+    inputType: "image" | "text";
+    labels: boolean;
+    batchSize?: number;
+  }): void {
+    if (["image", "text"].indexOf(inputType) === -1) {
+      throw new UserError("Invalid input type");
+    }
+    let inputProtos: GrpcInput[] = [];
+    if (inputType === "image") {
+      inputProtos = Input.getImageInputsFromFolder({
+        folderPath: folderPath,
+        datasetId: this.info.getId(),
+        labels: labels,
+      });
+    }
+    if (inputType === "text") {
+      inputProtos = Input.getTextInputsFromFolder({
+        folderPath: folderPath,
+        datasetId: this.info.getId(),
+        labels: labels,
+      });
+    }
+    this.input.bulkUpload({
+      inputs: inputProtos,
+      batchSize: batchSize,
+    });
   }
 }
