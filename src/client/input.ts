@@ -29,12 +29,19 @@ import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { uuid } from "uuidv4";
 import {
+  CancelInputsAddJobRequest,
+  DeleteInputsRequest,
+  GetInputsAddJobRequest,
+  ListInputsRequest,
   PatchInputsRequest,
   PostAnnotationsRequest,
   PostInputsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { promisifyGrpcCall } from "../utils/misc";
+import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import os from "os";
+import chunk from "lodash/chunk";
+import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 interface CSVRecord {
   inputid: string;
@@ -49,6 +56,8 @@ interface CSVRecord {
  * @noInheritDoc
  */
 export class Input extends Lister {
+  private numOfWorkers: number = Math.min(os.cpus().length, 10);
+
   /**
    * Initializes an input object.
    *
@@ -480,6 +489,7 @@ export class Input extends Lister {
     imageUrl = null,
     imageBytes = null,
     datasetId = null,
+    labels = null,
   }: {
     inputId: string;
     rawText?: string | null;
@@ -487,6 +497,7 @@ export class Input extends Lister {
     imageUrl?: string | null;
     imageBytes?: Uint8Array | null;
     datasetId?: string | null;
+    labels?: string[] | null;
   }): GrpcInput {
     if ((imageBytes && imageUrl) || (!imageBytes && !imageUrl)) {
       throw new Error(
@@ -515,6 +526,7 @@ export class Input extends Lister {
       datasetId,
       imagePb,
       textPb,
+      labels,
     });
   }
 
@@ -990,5 +1002,130 @@ export class Input extends Lister {
       }
     }
     return retryUpload;
+  }
+
+  bulkUpload({
+    inputs,
+    batchSize: providedBatchSize = 128,
+  }: {
+    inputs: GrpcInput[];
+    batchSize: number;
+  }) {
+    const batchSize = Math.min(128, providedBatchSize);
+    const chunkedInputs = chunk(inputs, batchSize);
+  }
+
+  private async uploadBatch({ inputs }: { inputs: GrpcInput[] }): GrpcInput[] {
+    const inputJobId = await this.uploadInputs({ inputs, showLog: false });
+    await this.waitForInputs({ inputJobId });
+    const failedInputs = await this.deleteFailedInputs({ inputs });
+    return failedInputs;
+  }
+
+  private async waitForInputs({
+    inputJobId,
+  }: {
+    inputJobId: string;
+  }): Promise<boolean> {
+    const backoffIterator = new BackoffIterator({
+      count: 10,
+    });
+    let maxRetries = 10;
+    const startTime = Date.now();
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const getInputsAddJobRequest = new GetInputsAddJobRequest()
+        .setUserAppId(this.userAppId)
+        .setId(inputJobId);
+
+      const getInputsAddJob = promisifyGrpcCall(
+        this.STUB.client.getInputsAddJob,
+        this.STUB.client,
+      );
+
+      const response = await this.grpcRequest(
+        getInputsAddJob,
+        getInputsAddJobRequest,
+      );
+
+      if (Date.now() - startTime > 60 * 30 || maxRetries === 0) {
+        const cancelInputsAddJobRequest = new CancelInputsAddJobRequest()
+          .setUserAppId(this.userAppId)
+          .setId(inputJobId);
+
+        const cancelInputsAddJob = promisifyGrpcCall(
+          this.STUB.client.cancelInputsAddJob,
+          this.STUB.client,
+        );
+
+        // 30 minutes timeout
+        await this.grpcRequest(cancelInputsAddJob, cancelInputsAddJobRequest); // Cancel Job
+        return false;
+      }
+
+      const responseObject = response.toObject();
+
+      if (responseObject.status?.code !== StatusCode.SUCCESS) {
+        maxRetries -= 1;
+        console.warn(
+          `Get input job failed, status: ${responseObject.status?.description}\n`,
+        );
+        continue;
+      }
+      if (
+        responseObject.inputsAddJob?.progress?.inProgressCount === 0 &&
+        responseObject.inputsAddJob.progress.pendingCount === 0
+      ) {
+        return true;
+      } else {
+        await new Promise((resolve) =>
+          setTimeout(resolve, backoffIterator.next().value),
+        );
+      }
+    }
+  }
+
+  private async deleteFailedInputs({
+    inputs,
+  }: {
+    inputs: GrpcInput[];
+  }): Promise<GrpcInput[]> {
+    const inputIds = inputs.map((input) => input.getId());
+    const successStatus = new Status().setCode(
+      StatusCode.INPUT_DOWNLOAD_SUCCESS, // Status code for successful download
+    );
+    const request = new ListInputsRequest();
+    request.setIdsList(inputIds);
+    request.setPerPage(inputIds.length);
+    request.setUserAppId(this.userAppId);
+    request.setStatus(successStatus);
+
+    const listInputs = promisifyGrpcCall(
+      this.STUB.client.listInputs,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(listInputs, request);
+    const responseObject = response.toObject();
+    const successInputs = responseObject.inputsList || [];
+
+    const successInputIds = successInputs.map((input) => input.id);
+    const failedInputs = inputs.filter(
+      (input) => !successInputIds.includes(input.getId()),
+    );
+
+    const deleteInputs = promisifyGrpcCall(
+      this.STUB.client.deleteInputs,
+      this.STUB.client,
+    );
+
+    const deleteInputsRequest = new DeleteInputsRequest()
+      .setUserAppId(this.userAppId)
+      .setIdsList(failedInputs.map((input) => input.getId()));
+
+    // Delete failed inputs
+    await this.grpcRequest(deleteInputs, deleteInputsRequest);
+
+    return failedInputs;
   }
 }
