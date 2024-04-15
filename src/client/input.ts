@@ -1076,6 +1076,7 @@ export class Input extends Lister {
     });
     let maxRetries = 10;
     const startTime = Date.now();
+    const thirtyMinutes = 60 * 30 * 1000;
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const getInputsAddJobRequest = new GetInputsAddJobRequest()
@@ -1092,7 +1093,7 @@ export class Input extends Lister {
         getInputsAddJobRequest,
       );
 
-      if (Date.now() - startTime > 60 * 30 || maxRetries === 0) {
+      if (Date.now() - startTime > thirtyMinutes || maxRetries === 0) {
         const cancelInputsAddJobRequest = new CancelInputsAddJobRequest()
           .setUserAppId(this.userAppId)
           .setId(inputJobId);
@@ -1122,9 +1123,9 @@ export class Input extends Lister {
       ) {
         return true;
       } else {
-        await new Promise((resolve) =>
-          setTimeout(resolve, backoffIterator.next().value),
-        );
+        await new Promise((resolve) => {
+          setTimeout(resolve, backoffIterator.next().value * 1000);
+        });
       }
     }
   }

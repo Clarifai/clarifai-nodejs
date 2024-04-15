@@ -177,7 +177,7 @@ export class Dataset extends Lister {
     return compact(retryAnnotUpload);
   }
 
-  uploadFromFolder({
+  async uploadFromFolder({
     folderPath,
     inputType,
     labels = false,
@@ -187,7 +187,7 @@ export class Dataset extends Lister {
     inputType: "image" | "text";
     labels: boolean;
     batchSize?: number;
-  }): void {
+  }): Promise<void> {
     if (["image", "text"].indexOf(inputType) === -1) {
       throw new UserError("Invalid input type");
     }
@@ -206,7 +206,7 @@ export class Dataset extends Lister {
         labels: labels,
       });
     }
-    this.input.bulkUpload({
+    await this.input.bulkUpload({
       inputs: inputProtos,
       batchSize: batchSize,
     });

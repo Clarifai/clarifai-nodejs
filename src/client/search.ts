@@ -138,7 +138,9 @@ export class Search extends Lister {
           this.dataProto.setGeo(geoPointProto);
         }
       } else {
-        throw new UserError(`kwargs contain key that is not supported: ${key}`);
+        throw new UserError(
+          `arguments contain key that is not supported: ${key}`,
+        );
       }
     }
     const annotation = new Annotation();
@@ -208,11 +210,7 @@ export class Search extends Lister {
       options: Partial<grpc.CallOptions>,
     ) => Promise<MultiSearchResponse>,
     requestData: T,
-  ): AsyncGenerator<
-    MultiSearchResponse.AsObject & Record<"hits", unknown>,
-    void,
-    void
-  > {
+  ): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     const maxPages = Math.ceil(this.topK / this.defaultPageSize);
     let totalHits = 0;
     let page = 1;
@@ -247,7 +245,7 @@ export class Search extends Lister {
         }
       }
 
-      if (!("hits" in responseObject)) {
+      if (!("hitsList" in responseObject)) {
         break;
       }
       page += 1;
@@ -262,11 +260,7 @@ export class Search extends Lister {
   }: {
     ranks?: FilterType;
     filters?: FilterType;
-  }): AsyncGenerator<
-    MultiSearchResponse.AsObject & Record<"hits", unknown>,
-    void,
-    void
-  > {
+  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     try {
       getSchema().parse(ranks);
       getSchema().parse(filters);
@@ -286,7 +280,7 @@ export class Search extends Lister {
 
     if (
       filters.length &&
-      Object.prototype.hasOwnProperty.call(filters[0], "input")
+      Object.keys(filters[0]).some((k) => k.includes("input"))
     ) {
       const filtersInputProto: GrpcInput[] = [];
       for (const filterDict of filters) {
