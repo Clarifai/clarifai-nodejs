@@ -208,7 +208,23 @@ describe("Search", () => {
     }
   });
 
+  // it("should get expected hits for ranks", async () => {
+  //   const searchResponseGenerator = search.query({
+  //     ranks: [
+  //       {
+  //         imageUrl: DOG_IMG_URL,
+  //       },
+  //     ],
+  //   });
+  //   let hitsList: Hit.AsObject[] = [];
+  //   for await (const response of searchResponseGenerator) {
+  //     hitsList = hitsList.concat(response.hitsList);
+  //   }
+  //   expect(hitsList.length).toBe(1);
+  //   expect(hitsList[0].input?.id).toBe("dog-tiff");
+  // });
+
   afterAll(async () => {
-    await client.deleteApp({ appId: CREATE_APP_ID });
+    // await client.deleteApp({ appId: CREATE_APP_ID });
   });
 });

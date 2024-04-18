@@ -1124,7 +1124,7 @@ export class Input extends Lister {
         return true;
       } else {
         await new Promise((resolve) => {
-          setTimeout(resolve, backoffIterator.next().value * 1000);
+          setTimeout(resolve, backoffIterator.next().value * 300);
         });
       }
     }
@@ -1187,6 +1187,8 @@ export class Input extends Lister {
         failedInputs = await this.uploadBatch({ inputs: failedInputs });
       }
     }
-    console.log(`Failed to upload ${failedInputs.length} inputs..\n`);
+    if (failedInputs.length > 0) {
+      console.log(`Failed to upload ${failedInputs.length} inputs..\n`);
+    }
   }
 }

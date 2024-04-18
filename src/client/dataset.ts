@@ -44,7 +44,7 @@ export class Dataset extends Lister {
   private annotNumOfWorkers: number = 4;
   private maxRetries: number = 10;
   private batchSize: number = 128;
-  private task;
+  private task: unknown;
   private input: Input;
 
   constructor({ authConfig, datasetId, url, datasetVersionId }: DatasetConfig) {
