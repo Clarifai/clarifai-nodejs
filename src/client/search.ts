@@ -1,4 +1,8 @@
-import { DEFAULT_SEARCH_METRIC, DEFAULT_TOP_K } from "../constants/search";
+import {
+  DEFAULT_SEARCH_ALGORITHM,
+  DEFAULT_SEARCH_METRIC,
+  DEFAULT_TOP_K,
+} from "../constants/search";
 import { Lister } from "./lister";
 import { AuthConfig } from "../utils/types";
 import {
@@ -38,6 +42,8 @@ import {
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
 type FilterType = z.infer<ReturnType<typeof getSchema>>;
+type SupportedAlgorithm = "nearest_neighbor" | "brute_force";
+type SupportedMetric = "cosine" | "euclidean";
 
 /**
  * @noInheritDoc
@@ -47,15 +53,18 @@ export class Search extends Lister {
   private metricDistance: "COSINE_DISTANCE" | "EUCLIDEAN_DISTANCE";
   private dataProto: Data;
   private inputProto: GrpcInput;
+  private algorithm: SupportedAlgorithm;
 
   constructor({
     topK = DEFAULT_TOP_K,
     metric = DEFAULT_SEARCH_METRIC,
     authConfig,
+    algorithm = DEFAULT_SEARCH_ALGORITHM,
   }: {
     topK?: number;
-    metric?: string;
+    metric?: SupportedMetric;
     authConfig?: AuthConfig;
+    algorithm?: SupportedAlgorithm;
   }) {
     super({ pageSize: 1000, authConfig });
 
@@ -63,7 +72,14 @@ export class Search extends Lister {
       throw new UserError("Metric should be either cosine or euclidean");
     }
 
+    if (algorithm !== "nearest_neighbor" && algorithm !== "brute_force") {
+      throw new UserError(
+        "Algorithm should be either nearest_neighbor or brute_force",
+      );
+    }
+
     this.topK = topK;
+    this.algorithm = algorithm;
     this.metricDistance = (
       {
         cosine: "COSINE_DISTANCE",
@@ -298,6 +314,7 @@ export class Search extends Lister {
 
       const search = new GrpcSearch();
       search.setQuery(query);
+      search.setAlgorithm(this.algorithm);
       search.setMetric(GrpcSearch["Metric"][this.metricDistance]);
 
       const postInputsSearches = promisifyGrpcCall(
@@ -327,6 +344,7 @@ export class Search extends Lister {
 
     const search = new GrpcSearch();
     search.setQuery(query);
+    search.setAlgorithm(this.algorithm);
     search.setMetric(GrpcSearch["Metric"][this.metricDistance]);
 
     const postAnnotationsSearches = promisifyGrpcCall(
