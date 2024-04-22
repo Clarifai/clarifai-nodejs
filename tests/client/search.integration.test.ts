@@ -3,7 +3,6 @@ import { getSchema } from "../../src/schema/search";
 import { z } from "zod";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { App, Dataset, Input, Search, User } from "../../src/index";
-import { Hit } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 
 const NOW = "search_integration"; //Date.now().toString();
 const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
@@ -23,7 +22,7 @@ function getFiltersForTest(): [
           geoPoint: {
             longitude: -29.0,
             latitude: 40.0,
-            geoLimit: 10,
+            geoLimit: 100,
           },
         },
       ],
@@ -141,6 +140,7 @@ describe("Search", () => {
       appId: CREATE_APP_ID,
       pat: import.meta.env.VITE_CLARIFAI_PAT,
     },
+    topK: 1,
     metric: "euclidean",
   });
   let app: App;
@@ -200,31 +200,52 @@ describe("Search", () => {
       const searchResponseGenerator = search.query({
         filters,
       });
-      let hitsList: Hit.AsObject[] = [];
-      for await (const response of searchResponseGenerator) {
-        hitsList = hitsList.concat(response.hitsList);
+      const result = (await searchResponseGenerator.next())?.value ?? null;
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.hitsList.length).toBe(expectedHits);
       }
-      expect(hitsList.length).toBe(expectedHits);
+    }
+  }, 10000);
+
+  it("should get expected hits for ranks", async () => {
+    const searchResponseGenerator = search.query({
+      ranks: [
+        {
+          imageUrl: DOG_IMG_URL,
+        },
+      ],
+    });
+    const result = (await searchResponseGenerator.next())?.value ?? null;
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.hitsList.length).toBe(1);
+      expect(result.hitsList[0].input?.id).toBe("dog-tiff");
     }
   });
 
-  // it("should get expected hits for ranks", async () => {
-  //   const searchResponseGenerator = search.query({
-  //     ranks: [
-  //       {
-  //         imageUrl: DOG_IMG_URL,
-  //       },
-  //     ],
-  //   });
-  //   let hitsList: Hit.AsObject[] = [];
-  //   for await (const response of searchResponseGenerator) {
-  //     hitsList = hitsList.concat(response.hitsList);
-  //   }
-  //   expect(hitsList.length).toBe(1);
-  //   expect(hitsList[0].input?.id).toBe("dog-tiff");
-  // });
+  it("should get expected hits for filters and ranks", async () => {
+    const searchResponseGenerator = search.query({
+      ranks: [
+        {
+          imageUrl: DOG_IMG_URL,
+        },
+      ],
+      filters: [
+        {
+          inputTypes: ["image"],
+        },
+      ],
+    });
+    const result = (await searchResponseGenerator.next())?.value ?? null;
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.hitsList.length).toBe(1);
+      expect(result.hitsList[0].input?.id).toBe("dog-tiff");
+    }
+  });
 
   afterAll(async () => {
-    // await client.deleteApp({ appId: CREATE_APP_ID });
+    await client.deleteApp({ appId: CREATE_APP_ID });
   });
 });
