@@ -219,23 +219,30 @@ export class Search extends Lister {
 
   private async *listAllPagesGenerator<
     T extends PostInputsSearchesRequest | PostAnnotationsSearchesRequest,
-  >(
+  >({
+    endpoint,
+    requestData,
+    page = 1,
+    perPage,
+  }: {
     endpoint: (
       request: T,
       metadata: grpc.Metadata,
       options: Partial<grpc.CallOptions>,
-    ) => Promise<MultiSearchResponse>,
-    requestData: T,
-  ): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
+    ) => Promise<MultiSearchResponse>;
+    requestData: T;
+    page?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     const maxPages = Math.ceil(this.topK / this.defaultPageSize);
     let totalHits = 0;
-    let page = 1;
-    while (page <= maxPages) {
-      let perPage;
-      if (page === maxPages) {
-        perPage = this.topK - totalHits;
-      } else {
-        perPage = this.defaultPageSize;
+    while (page) {
+      if (!perPage) {
+        if (page === maxPages) {
+          perPage = this.topK - totalHits;
+        } else {
+          perPage = this.defaultPageSize;
+        }
       }
 
       const pagination = new Pagination();
@@ -261,7 +268,11 @@ export class Search extends Lister {
         }
       }
 
-      if (!("hitsList" in responseObject)) {
+      if (
+        !("hitsList" in responseObject) ||
+        responseObject.hitsList.length === 0
+      ) {
+        yield responseObject;
         break;
       }
       page += 1;
@@ -273,9 +284,13 @@ export class Search extends Lister {
   query({
     ranks = [{}],
     filters = [{}],
+    page,
+    perPage,
   }: {
     ranks?: FilterType;
     filters?: FilterType;
+    page?: number;
+    perPage?: number;
   }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     try {
       getSchema().parse(ranks);
@@ -325,7 +340,12 @@ export class Search extends Lister {
       request.setUserAppId(this.userAppId);
       request.setSearchesList([search]);
 
-      return this.listAllPagesGenerator(postInputsSearches, request);
+      return this.listAllPagesGenerator({
+        endpoint: postInputsSearches,
+        requestData: request,
+        page,
+        perPage,
+      });
     }
 
     const filtersAnnotProto: Annotation[] = [];
@@ -355,6 +375,11 @@ export class Search extends Lister {
     request.setUserAppId(this.userAppId);
     request.setSearchesList([search]);
 
-    return this.listAllPagesGenerator(postAnnotationsSearches, request);
+    return this.listAllPagesGenerator({
+      endpoint: postAnnotationsSearches,
+      requestData: request,
+      page,
+      perPage,
+    });
   }
 }

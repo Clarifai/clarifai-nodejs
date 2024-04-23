@@ -3,8 +3,9 @@ import { getSchema } from "../../src/schema/search";
 import { z } from "zod";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { App, Dataset, Input, Search, User } from "../../src/index";
+import { Hit } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 
-const NOW = "search_integration"; //Date.now().toString();
+const NOW = Date.now().toString() + "-search";
 const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
 const CREATE_APP_ID = `ci_test_app_${NOW}`;
 const CREATE_DATASET_ID = `ci_test_dataset_${NOW}`;
@@ -143,6 +144,15 @@ describe("Search", () => {
     topK: 1,
     metric: "euclidean",
   });
+  // Initialize search without topK value for pagination with custom pages & page sizes
+  const searchWithPagination = new Search({
+    authConfig: {
+      userId: CREATE_APP_USER_ID,
+      appId: CREATE_APP_ID,
+      pat: import.meta.env.VITE_CLARIFAI_PAT,
+    },
+    metric: "euclidean",
+  });
   let app: App;
 
   beforeAll(async () => {
@@ -243,6 +253,114 @@ describe("Search", () => {
       expect(result.hitsList.length).toBe(1);
       expect(result.hitsList[0].input?.id).toBe("dog-tiff");
     }
+  });
+
+  it("should get expected hits with corresponding pagination info", async () => {
+    const searchResponseGenerator = searchWithPagination.query({
+      filters: [
+        {
+          inputTypes: ["image"],
+        },
+      ],
+      page: 1,
+      perPage: 3,
+    });
+    const result = (await searchResponseGenerator.next())?.value ?? null;
+    expect(result).not.toBeNull();
+    if (result) {
+      expect(result.hitsList.length).toBe(3);
+    }
+  });
+
+  it("should paginate through search results", async () => {
+    const searchResponseGenerator = searchWithPagination.query({
+      filters: [{ inputTypes: ["image"] }],
+    });
+    const hitsList: Hit.AsObject[] = [];
+    for await (const searchResponse of searchResponseGenerator) {
+      hitsList.push(...searchResponse.hitsList);
+    }
+    expect(hitsList.length).toBe(11);
+  });
+
+  it("should throw appropriate error for invalid arguments", async () => {
+    const invalidGeoPointFilters = () => {
+      return search.query({
+        filters: [
+          {
+            geoPoint: {
+              longitude: -29.0,
+              latitude: 40.0,
+              geoLimit: 10,
+              // @ts-expect-error - Invalid key
+              extra: 1,
+            },
+          },
+        ],
+      });
+    };
+    expect(invalidGeoPointFilters).toThrowError();
+    const invalidConceptKeys = () => {
+      return search.query({
+        filters: [
+          {
+            concepts: [
+              {
+                value: 1,
+                // @ts-expect-error - Missing required key
+                conceptId: "deer",
+              },
+              {
+                name: "dog",
+                value: 1,
+              },
+            ],
+          },
+        ],
+      });
+    };
+    expect(invalidConceptKeys).toThrowError();
+    const invalidConceptValues = () => {
+      return search.query({
+        filters: [
+          {
+            concepts: [
+              {
+                name: "deer",
+                value: 2,
+              },
+              {
+                name: "dog",
+                value: 1,
+              },
+            ],
+          },
+        ],
+      });
+    };
+    expect(invalidConceptValues).toThrowError();
+    const incorrectInputTypes = () => {
+      return search.query({
+        filters: [
+          {
+            // @ts-expect-error - Invalid input type
+            inputTypes: ["imaage"],
+          },
+        ],
+      });
+    };
+    expect(incorrectInputTypes).toThrowError();
+    const invalidSearchFilterKey = () => {
+      return search.query({
+        filters: [
+          {
+            // @ts-expect-error - Invalid key
+            inputId: "test",
+          },
+        ],
+      });
+    };
+    expect(invalidSearchFilterKey).toThrowError();
   });
 
   afterAll(async () => {

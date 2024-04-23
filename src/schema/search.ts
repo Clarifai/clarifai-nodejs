@@ -46,37 +46,44 @@ export function getSchema(): z.ZodSchema<
   }>
 > {
   // Schema for a single concept
-  const conceptSchema = z.object({
-    value: z.number().min(0).max(1).optional(),
-    id: z.string().min(1).optional(),
-    language: z.string().min(1).optional(),
-    name: z
-      .string()
-      .min(1)
-      .regex(/^[0-9A-Za-z]+([-_][0-9A-Za-z]+)*$/) // Non-empty string with dashes/underscores
-      .optional(),
-  });
+  const conceptSchema = z
+    .object({
+      value: z.number().min(0).max(1).optional(),
+      id: z.string().min(1).optional(),
+      language: z.string().min(1).optional(),
+      name: z
+        .string()
+        .min(1)
+        .regex(/^[0-9A-Za-z]+([-_][0-9A-Za-z]+)*$/) // Non-empty string with dashes/underscores
+        .optional(),
+    })
+    .strict();
 
   // Schema for a rank or filter item
-  const rankFilterItemSchema = z.object({
-    imageUrl: z.string().url().optional(),
-    textRaw: z.string().min(1).optional(),
-    metadata: z.record(z.unknown()).optional(),
-    imageBytes: z.unknown().optional(),
-    geoPoint: z
-      .object({
-        longitude: z.number(),
-        latitude: z.number(),
-        geoLimit: z.number().int(),
-      })
-      .optional(),
-    concepts: z.array(conceptSchema).min(1).optional(),
+  const rankFilterItemSchema = z
+    .object({
+      imageUrl: z.string().url().optional(),
+      textRaw: z.string().min(1).optional(),
+      metadata: z.record(z.unknown()).optional(),
+      imageBytes: z.unknown().optional(),
+      geoPoint: z
+        .object({
+          longitude: z.number(),
+          latitude: z.number(),
+          geoLimit: z.number().int(),
+        })
+        .strict()
+        .optional(),
+      concepts: z.array(conceptSchema).min(1).optional(),
 
-    // input filters
-    inputTypes: z.array(z.enum(["image", "video", "text", "audio"])).optional(),
-    inputDatasetIds: z.array(z.string()).optional(),
-    inputStatusCode: z.number().optional(),
-  });
+      // input filters
+      inputTypes: z
+        .array(z.enum(["image", "video", "text", "audio"]))
+        .optional(),
+      inputDatasetIds: z.array(z.string()).optional(),
+      inputStatusCode: z.number().optional(),
+    })
+    .strict();
 
   // Schema for rank and filter args
   return z.array(rankFilterItemSchema);
