@@ -7,7 +7,7 @@ import * as fs from "fs";
 const NOW = Date.now().toString() + "-workflow";
 const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
 const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
-const CREATE_APP_ID = `test_workflow_create_delete_app_${NOW}`;
+const CREATE_APP_ID = `test_create_delete_app_${NOW}`;
 const MAIN_APP_ID = "main";
 
 const workflowFile = path.resolve(__dirname, "./fixtures/general.yml");
