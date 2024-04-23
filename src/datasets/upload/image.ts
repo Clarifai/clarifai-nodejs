@@ -4,7 +4,7 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiDataLoader, ClarifaiDataset } from "./base";
 import path from "path";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { Input } from "../../client/input";
 import {
   VisualClassificationFeatures,

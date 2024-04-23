@@ -44,7 +44,7 @@ import * as yaml from "js-yaml";
 import { validateWorkflow } from "../workflows/validate";
 import { getYamlOutputInfoProto } from "../workflows/utils";
 import { Model as ModelConstructor } from "./model";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";

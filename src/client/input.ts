@@ -27,7 +27,7 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import {
   CancelInputsAddJobRequest,
   DeleteInputsRequest,
