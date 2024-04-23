@@ -1,5 +1,4 @@
 import {
-  Annotation,
   DatasetVersion,
   Dataset as GrpcDataset,
   Input as GrpcInput,
@@ -8,7 +7,6 @@ import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
-import os from "os";
 import { Input } from "./input";
 import {
   DeleteDatasetVersionsRequest,
@@ -21,8 +19,6 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
-import { parallelLimit } from "async";
-import compact from "lodash/compact";
 
 type DatasetConfig =
   | {
@@ -40,11 +36,7 @@ type DatasetConfig =
 
 export class Dataset extends Lister {
   private info: GrpcDataset = new GrpcDataset();
-  private numOfWorkers: number = Math.min(os.cpus().length, 10);
-  private annotNumOfWorkers: number = 4;
-  private maxRetries: number = 10;
   private batchSize: number = 128;
-  private task: unknown;
   private input: Input;
 
   constructor({ authConfig, datasetId, url, datasetVersionId }: DatasetConfig) {
@@ -140,41 +132,6 @@ export class Dataset extends Lister {
     for await (const versions of listDatasetVersionsGenerator) {
       yield versions.toObject().datasetVersionsList;
     }
-  }
-
-  private async concurrentAnnotUpload(
-    annots: Annotation[][],
-  ): Promise<Array<Array<Annotation>>> {
-    const retryAnnotUpload: Array<Array<Annotation> | null> = [];
-
-    const uploadAnnotations = async (
-      inpBatch: Annotation[],
-    ): Promise<Annotation[] | null> => {
-      try {
-        return await this.input.uploadAnnotations({
-          batchAnnot: inpBatch,
-          showLog: false,
-        });
-      } catch {
-        return null;
-      }
-    };
-
-    const maxWorkers = Math.min(this.annotNumOfWorkers, this.numOfWorkers);
-
-    const uploadTasks = annots.map((annotBatch) => {
-      return async () => {
-        const uploadedAnnotation = await uploadAnnotations(annotBatch);
-        if (!uploadedAnnotation) {
-          retryAnnotUpload.push(annotBatch);
-        }
-        return uploadedAnnotation;
-      };
-    });
-
-    await parallelLimit(uploadTasks, maxWorkers);
-
-    return compact(retryAnnotUpload);
   }
 
   async uploadFromFolder({
