@@ -7,7 +7,7 @@ import axios from "axios";
 import tmp from "tmp";
 import * as fs from "fs";
 
-interface Message {
+export interface Message {
   role: string;
   content: string;
 }
@@ -71,10 +71,6 @@ export function formatAssistantMessage(rawText: string): Message {
   return { role: "assistant", content: rawText };
 }
 
-interface DocumentType {
-  text: string;
-}
-
 export async function loadDocuments({
   filePath,
   folderPath,
@@ -83,7 +79,7 @@ export async function loadDocuments({
   filePath?: string;
   folderPath?: string;
   url?: string;
-}): Promise<DocumentType[]> {
+}) {
   if (!filePath && !folderPath && !url) {
     throw new Error("No input source provided.");
   }

@@ -3,20 +3,14 @@ import { App, AuthAppConfig } from "./app";
 import { Workflow } from "./workflow";
 import * as fs from "fs";
 import yaml from "js-yaml";
-import { resources_pb2 } from "clarifai_grpc";
 import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
-import { Inputs } from "clarifai";
 import { Model } from "./model";
 import { User } from "./user";
 import { MAX_UPLOAD_BATCH_SIZE } from "../constants/rag";
 import { UserError } from "../errors";
-import { convert_messages_to_str } from "clarifai";
-import { format_assistant_message } from "clarifai";
-import { load_documents } from "clarifai";
-import { split_document } from "clarifai";
 import { AuthConfig } from "../utils/types";
 import { ClarifaiAppUrl, ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import {
@@ -24,6 +18,14 @@ import {
   OutputInfo,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { validateWorkflow } from "../workflows/validate";
+import {
+  Message,
+  convertMessagesToStr,
+  formatAssistantMessage,
+  loadDocuments,
+  splitDocument,
+} from "../rag/utils";
+import { Input } from "./input";
 
 const DEFAULT_RAG_PROMPT_TEMPLATE =
   "Context information is below:\n{data.hits}\nGiven the context information and not prior knowledge, answer the query.\nQuery: {data.text.raw}\nAnswer: ";
@@ -50,6 +52,7 @@ type workflowSchema = ReturnType<typeof validateWorkflow>;
 export class RAG {
   private promptWorkflow: Workflow;
   private app: App;
+  private authConfig: AuthConfig;
 
   private chatStateId: string;
 
@@ -58,6 +61,9 @@ export class RAG {
       throw new UserError(
         "Only one of workflowUrl or workflow can be specified.",
       );
+    }
+    if (!workflowUrl && !workflow) {
+      throw new UserError("One of workflowUrl or workflow must be specified.");
     }
     if (workflowUrl) {
       if (authConfig.userId || authConfig.appId) {
@@ -72,13 +78,11 @@ export class RAG {
         url: workflowUrl,
         authConfig: authConfig as UrlAuthConfig,
       });
+      authConfig.appId = appId;
+      authConfig.userId = userId;
       this.promptWorkflow = w;
       this.app = new App({
-        authConfig: {
-          ...authConfig,
-          userId,
-          appId,
-        } as AuthConfig,
+        authConfig: authConfig as AuthConfig,
       });
     } else if (workflow) {
       this.promptWorkflow = workflow;
@@ -86,6 +90,7 @@ export class RAG {
         authConfig: authConfig as AuthConfig,
       });
     }
+    this.authConfig = authConfig as AuthConfig;
   }
 
   static async setup({
@@ -241,7 +246,7 @@ export class RAG {
     return new RAG({ workflow });
   }
 
-  upload({
+  async upload({
     filePath,
     folderPath,
     url,
@@ -259,7 +264,7 @@ export class RAG {
     chunkOverlap?: number;
     datasetId?: string;
     metadata?: Record<string, JavaScriptValue>;
-  }): void {
+  }): Promise<void> {
     if (batchSize > MAX_UPLOAD_BATCH_SIZE) {
       throw new UserError(
         `batch_size cannot be greater than ${MAX_UPLOAD_BATCH_SIZE}`,
@@ -276,122 +281,132 @@ export class RAG {
       );
     }
 
-    const documents = load_documents({
-      file_path: filePath,
-      folder_path: folderPath,
+    const documents = await loadDocuments({
+      filePath,
+      folderPath,
       url,
     });
 
-    const text_chunks: string[] = [];
-    const metadata_list: object[] = [];
+    const textChunks: string[] = [];
+    const metadataList: Array<Record<string, JavaScriptValue>> = [];
+    let docI = 0;
 
     for (const doc of documents) {
-      let doc_i = 0;
-      const cur_text_chunks = split_document({
+      const curTextChunks = splitDocument({
         text: doc.text,
-        chunk_size: chunkSize,
-        chunk_overlap: chunkOverlap,
-        ...kwargs,
+        chunkSize,
+        chunkOverlap,
       });
-      text_chunks.push(...cur_text_chunks);
-      metadata_list.push(...Array(cur_text_chunks.length).fill(doc.metadata));
-      if (text_chunks.length > batchSize) {
-        for (let idx = 0; idx < text_chunks.length; idx += batchSize) {
-          if (idx + batchSize > text_chunks.length) {
+      textChunks.push(...curTextChunks);
+      metadataList.push(...Array(curTextChunks.length).fill(doc.metadata));
+      if (textChunks.length > batchSize) {
+        for (let idx = 0; idx < textChunks.length; idx += batchSize) {
+          if (idx + batchSize > textChunks.length) {
             continue;
           }
-          const batch_texts = text_chunks.slice(idx, idx + batchSize);
-          const batch_ids = Array(batchSize)
+          const batchTexts = textChunks.slice(idx, idx + batchSize);
+          const batchIds = Array(batchSize)
             .fill(null)
             .map(() => uuidv4());
-          const batch_metadatas = metadata_list.slice(idx, idx + batchSize);
-          const meta_list = batch_metadatas.map((meta: any) => {
-            const meta_struct = new Struct();
-            meta_struct.update(meta);
-            meta_struct.update({ doc_chunk_no: doc_i });
-            if (metadata && typeof metadata === "object") {
-              meta_struct.update(metadata);
-            }
-            doc_i += 1;
-            return meta_struct;
+          const batchMetadatas = metadataList.slice(idx, idx + batchSize);
+          const metaList = batchMetadatas.map((meta) => {
+            const metaStruct = {
+              ...(meta ? meta : {}),
+              ...(metadata && typeof metadata === "object" ? metadata : {}),
+              docChunkNo: docI,
+            };
+            docI += 1;
+            return metaStruct;
           });
-          const input_batch = batch_texts.map((text: string, i: number) => {
-            return this.app.inputs().get_text_input({
-              input_id: batch_ids[i],
-              raw_text: text,
-              dataset_id: datasetId,
-              metadata: meta_list[i],
+          const inputBatch = batchTexts.map((text: string, i: number) => {
+            return Input.getTextInput({
+              inputId: batchIds[i],
+              rawText: text,
+              datasetId: datasetId,
+              metadata: metaList[i],
             });
           });
-          this.app.inputs().upload_inputs({ inputs: input_batch });
-          text_chunks.splice(idx, batchSize);
-          metadata_list.splice(idx, batchSize);
+          await new Input({ authConfig: this.authConfig }).uploadInputs({
+            inputs: inputBatch,
+          });
+          textChunks.splice(idx, batchSize);
+          metadataList.splice(idx, batchSize);
         }
       }
     }
 
-    if (text_chunks.length > 0) {
-      const batch_size = text_chunks.length;
-      const batch_ids = Array(batch_size)
+    if (textChunks.length > 0) {
+      const batchSize = textChunks.length;
+      const batchIds = Array(batchSize)
         .fill(null)
         .map(() => uuidv4());
-      const batch_metadatas = metadata_list.slice(0, batch_size);
-      const meta_list = batch_metadatas.map((meta: any) => {
-        const meta_struct = new Struct();
-        meta_struct.update(meta);
-        meta_struct.update({ doc_chunk_no: doc_i });
-        if (metadata && typeof metadata === "object") {
-          meta_struct.update(metadata);
-        }
-        doc_i += 1;
-        return meta_struct;
+      const batchMetadatas = metadataList.slice(0, batchSize);
+      const metaList = batchMetadatas.map((meta) => {
+        const metaStruct = {
+          ...meta,
+          ...(metadata && typeof metadata === "object" ? metadata : {}),
+          docChunkNo: docI,
+        };
+        docI += 1;
+        return metaStruct;
       });
-      const input_batch = text_chunks.map((text: string, i: number) => {
-        return this.app.inputs().get_text_input({
-          input_id: batch_ids[i],
-          raw_text: text,
-          dataset_id: datasetId,
-          metadata: meta_list[i],
+      const input_batch = textChunks.map((text: string, i: number) => {
+        return Input.getTextInput({
+          inputId: batchIds[i],
+          rawText: text,
+          datasetId: datasetId,
+          metadata: metaList[i],
         });
       });
-      this.app.inputs().upload_inputs({ inputs: input_batch });
-      text_chunks.splice(0, batch_size);
-      metadata_list.splice(0, batch_size);
+      await new Input({ authConfig: this.authConfig }).uploadInputs({
+        inputs: input_batch,
+      });
+      textChunks.splice(0, batchSize);
+      metadataList.splice(0, batchSize);
     }
   }
 
-  chat(
-    messages: { role: string; content: string }[],
-    client_manage_state: boolean = false,
-  ): { role: string; content: string }[] {
-    if (client_manage_state) {
-      const single_prompt = convert_messages_to_str(messages);
-      const input_proto = Inputs._get_proto("", "", {
-        text_pb: new resources_pb2.Text({ raw: single_prompt }),
+  async chat({
+    messages,
+    clientManageState = false,
+  }: {
+    messages: Message[];
+    clientManageState?: boolean;
+  }): Promise<Message[]> {
+    if (clientManageState) {
+      const singlePrompt = convertMessagesToStr(messages);
+      const inputProto = Input.getTextInput({
+        inputId: uuidv4(),
+        rawText: singlePrompt,
       });
-      const response = this.promptWorkflow.predict([input_proto]);
-      messages.push(
-        format_assistant_message(response.results[0].outputs[-1].data.text.raw),
-      );
+      const response = await this.promptWorkflow.predict({
+        inputs: [inputProto],
+      });
+      const outputsList = response.resultsList?.[0]?.outputsList;
+      const output = outputsList[outputsList.length - 1];
+      messages.push(formatAssistantMessage(output?.data?.text?.raw ?? ""));
       return messages;
     }
 
+    // Server side chat state management
     const message = messages[messages.length - 1].content;
-    if (message.length === 0) {
+    if (!message.length) {
       throw new UserError("Empty message supplied.");
     }
 
-    const chat_state_id = RAG.chatStateId !== null ? RAG.chatStateId : "init";
-    const input_proto = Inputs._get_proto("", "", {
-      text_pb: new resources_pb2.Text({ raw: message }),
+    const chatStateId = this.chatStateId !== null ? this.chatStateId : "init";
+    const inputProto = Input.getTextInput({
+      inputId: uuidv4(),
+      rawText: message,
     });
-    const response = this.promptWorkflow.predict([input_proto], {
-      workflow_state_id: chat_state_id,
+    const response = await this.promptWorkflow.predict({
+      inputs: [inputProto],
+      workflowStateId: chatStateId,
     });
 
-    RAG.chatStateId = response.workflow_state.id;
-    return [
-      format_assistant_message(response.results[0].outputs[-1].data.text.raw),
-    ];
+    this.chatStateId = response.workflowState?.id ?? "";
+    const outputsList = response.resultsList?.[0]?.outputsList;
+    const output = outputsList[outputsList.length - 1];
+    return [formatAssistantMessage(output?.data?.text?.raw ?? "")];
   }
 }
