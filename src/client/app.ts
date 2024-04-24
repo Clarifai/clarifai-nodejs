@@ -49,13 +49,15 @@ import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
 
+export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
+  appId?: undefined;
+  userId?: undefined;
+};
+
 export type AppConfig =
   | {
       url: ClarifaiAppUrl;
-      authConfig: Omit<AuthConfig, "appId" | "userId"> & {
-        appId?: undefined;
-        userId?: undefined;
-      };
+      authConfig: AuthAppConfig;
     }
   | {
       url?: undefined;
