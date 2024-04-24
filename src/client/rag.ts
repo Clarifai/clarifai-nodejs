@@ -50,11 +50,12 @@ type RAGConfig =
 type workflowSchema = ReturnType<typeof validateWorkflow>;
 
 export class RAG {
-  private promptWorkflow: Workflow;
-  private app: App;
   private authConfig: AuthConfig;
 
-  private chatStateId: string;
+  private chatStateId: string = "";
+
+  // @ts-expect-error - prompt workflow is definitely assigned in the constructor
+  private promptWorkflow: Workflow;
 
   constructor({ workflowUrl, workflow, authConfig = {} }: RAGConfig) {
     if (workflowUrl && workflow) {
@@ -67,7 +68,7 @@ export class RAG {
     }
     if (workflowUrl) {
       if (authConfig.userId || authConfig.appId) {
-        throw UserError(
+        throw new UserError(
           "userId and appId should not be specified in authConfig when using workflowUrl.",
         );
       }
@@ -81,14 +82,8 @@ export class RAG {
       authConfig.appId = appId;
       authConfig.userId = userId;
       this.promptWorkflow = w;
-      this.app = new App({
-        authConfig: authConfig as AuthConfig,
-      });
     } else if (workflow) {
       this.promptWorkflow = workflow;
-      this.app = new App({
-        authConfig: authConfig as AuthConfig,
-      });
     }
     this.authConfig = authConfig as AuthConfig;
   }
