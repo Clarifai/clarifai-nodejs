@@ -131,7 +131,7 @@ export class ClarifaiUrlHelper {
    */
   static splitClarifaiAppUrl(url: ClarifaiAppUrl): [string, string] {
     const o = new URL(url);
-    const [parts] = o.pathname.split("/").filter((part) => part.length > 0);
+    const parts = o.pathname.split("/").filter((part) => part.length > 0);
     if (parts.length !== 2) {
       throw new Error(
         `Provided url must have 2 parts after the domain name. The current parts are: ${parts}`,
