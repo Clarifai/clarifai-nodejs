@@ -26,6 +26,7 @@ import {
   splitDocument,
 } from "../rag/utils";
 import { Input } from "./input";
+import compact from "lodash/compact";
 
 const DEFAULT_RAG_PROMPT_TEMPLATE =
   "Context information is below:\n{data.hits}\nGiven the context information and not prior knowledge, answer the query.\nQuery: {data.text.raw}\nAnswer: ";
@@ -54,10 +55,11 @@ export class RAG {
 
   private chatStateId: string = "";
 
-  // @ts-expect-error - prompt workflow is definitely assigned in the constructor
-  private promptWorkflow: Workflow;
+  public promptWorkflow: Workflow;
 
-  constructor({ workflowUrl, workflow, authConfig = {} }: RAGConfig) {
+  public app: App;
+
+  constructor({ workflowUrl, workflow, authConfig }: RAGConfig) {
     if (workflowUrl && workflow) {
       throw new UserError(
         "Only one of workflowUrl or workflow can be specified.",
@@ -66,8 +68,9 @@ export class RAG {
     if (!workflowUrl && !workflow) {
       throw new UserError("One of workflowUrl or workflow must be specified.");
     }
+    const targetAuthConfig: AuthConfig = (authConfig as AuthConfig) ?? {};
     if (workflowUrl) {
-      if (authConfig.userId || authConfig.appId) {
+      if (authConfig?.userId || authConfig?.appId) {
         throw new UserError(
           "userId and appId should not be specified in authConfig when using workflowUrl.",
         );
@@ -79,13 +82,14 @@ export class RAG {
         url: workflowUrl,
         authConfig: authConfig as UrlAuthConfig,
       });
-      authConfig.appId = appId;
-      authConfig.userId = userId;
+      targetAuthConfig.appId = appId;
+      targetAuthConfig.userId = userId;
       this.promptWorkflow = w;
-    } else if (workflow) {
+    } else {
       this.promptWorkflow = workflow;
     }
-    this.authConfig = authConfig as AuthConfig;
+    this.authConfig = targetAuthConfig;
+    this.app = new App({ authConfig: this.authConfig });
   }
 
   static async setup({
@@ -99,7 +103,9 @@ export class RAG {
     minScore = 0.95,
     maxResults = 5,
   }: {
-    authConfig?: AuthConfig | AuthAppConfig;
+    authConfig?:
+      | (Omit<AuthConfig, "appId"> & { appId?: undefined })
+      | AuthAppConfig;
     appUrl?: ClarifaiAppUrl;
     llmUrl?: ClarifaiUrl;
     baseWorkflow?: string;
@@ -108,50 +114,18 @@ export class RAG {
     workflowId?: string;
     minScore?: number;
     maxResults?: number;
-  }) {
-    const { userId, appId } = authConfig ?? {};
-    const nowTs = Date.now().toString();
-    const [, , resourceType, resourceId] =
-      ClarifaiUrlHelper.splitClarifaiUrl(llmUrl);
-    if (resourceType !== "models") {
-      throw new UserError("llmUrl must be a model URL.");
-    }
-    let app: App;
-    if (userId && !appUrl) {
-      const user = new User(authConfig as AuthConfig);
-      const appId = `rag_app_${nowTs}`;
-      const appObj = await user.createApp({
-        appId: appId,
-        baseWorkflow: baseWorkflow,
-      });
-      if (authConfig && !authConfig?.appId) authConfig.appId = appObj.id;
-      if (authConfig && !authConfig?.userId) authConfig.userId = userId;
-      app = new App({
-        authConfig: authConfig as AuthConfig,
-      });
-    }
+  }): Promise<RAG> {
+    const { userId, appId: appIdFromConfig } = authConfig ?? {};
 
-    if (!userId && appUrl) {
-      app = new App({
-        url: appUrl,
-        authConfig: authConfig as AuthAppConfig,
-      });
-      const [userIdFromUrl, appIdFromUrl] =
-        ClarifaiUrlHelper.splitClarifaiAppUrl(appUrl);
-      if (authConfig && !authConfig?.appId) authConfig.appId = appIdFromUrl;
-      if (authConfig && !authConfig?.userId) authConfig.userId = userIdFromUrl;
-      // const user = new User({
-      //   ...(authConfig as AuthAppConfig),
-      //   userId: userIdFromUrl,
-      //   appId: appIdFromUrl,
-      // });
-    }
+    // Since user ID & App ID can be generated in different ways, we need to keep track of the generated ones
+    let targetAppId: string = "",
+      targetUserId: string = "";
 
     if (userId && appUrl) {
       throw new UserError("Must provide one of userId or appUrl, not both.");
     }
 
-    if (appId && appUrl) {
+    if (appIdFromConfig && appUrl) {
       throw new UserError("Must provide one of appId or appUrl, not both.");
     }
 
@@ -161,25 +135,77 @@ export class RAG {
       );
     }
 
-    // @ts-expect-error - app has been assigned but not picked up by typescript
-    const llmObject = await app.model({ modelId: resourceId });
+    const [llmUserId, llmAppId, resourceType, llmId] =
+      ClarifaiUrlHelper.splitClarifaiUrl(llmUrl);
 
-    if (!llmObject) {
-      throw new UserError("LLM model not found.");
+    if (resourceType !== "models") {
+      throw new UserError("llmUrl must be a model URL.");
+    }
+
+    const nowTs = Date.now().toString();
+
+    let app: App;
+
+    if (userId && !appUrl) {
+      const generatedAppId = `rag_app_${nowTs}`;
+
+      // User ID is present, construct the authconfig using the generated APP ID
+      const userAuthConfig: AuthConfig = {
+        ...(authConfig as Omit<AuthConfig, "appId"> & { appId?: undefined }),
+        appId: generatedAppId,
+      };
+
+      const user = new User(userAuthConfig);
+      await user.createApp({
+        appId: generatedAppId,
+        baseWorkflow: baseWorkflow,
+      });
+      app = new App({
+        authConfig: userAuthConfig,
+      });
+
+      targetAppId = generatedAppId;
+      targetUserId = userId;
+    }
+
+    if (!userId && appUrl) {
+      app = new App({
+        url: appUrl,
+        authConfig: authConfig as AuthAppConfig,
+      });
+      const [userIdFromAppUrl, appIdFromAppUrl] =
+        ClarifaiUrlHelper.splitClarifaiAppUrl(appUrl);
+      targetAppId = appIdFromAppUrl;
+      targetUserId = userIdFromAppUrl;
+    }
+
+    let targetAuthConfig: AuthConfig;
+
+    if (authConfig) {
+      targetAuthConfig = {
+        ...authConfig,
+        appId: targetAppId,
+        userId: targetUserId,
+      };
+    } else {
+      targetAuthConfig = {
+        appId: targetAppId,
+        userId: targetUserId,
+        pat: process.env.CLARIFAI_PAT!,
+      };
     }
 
     const params = Struct.fromJavaScript({
-      minScore,
-      maxResults,
-      promptTemplate,
+      min_score: minScore,
+      max_results: maxResults,
+      prompt_template: promptTemplate,
     });
 
     const outputInfo = new OutputInfo().setParams(params);
 
-    const modelId =
-      workflowId !== null
-        ? `prompter-${workflowId}-${nowTs}`
-        : `rag-prompter-${nowTs}`;
+    const modelId = workflowId
+      ? `prompter-${workflowId}-${nowTs}`
+      : `rag-prompter-${nowTs}`;
 
     // @ts-expect-error - app has been assigned but not picked up by typescript
     const prompterModelObj = await app.createModel({
@@ -189,14 +215,13 @@ export class RAG {
       },
     });
     const prompterModel = new Model({
-      authConfig: authConfig as AuthConfig,
+      authConfig: targetAuthConfig,
       modelId: prompterModelObj.id,
     });
-    const prompterModelVersion = await prompterModel.createVersion(
+    const prompterModelWithVersion = await prompterModel.createVersion(
       new ModelVersion().setOutputInfo(outputInfo),
     );
-
-    if (!prompterModelVersion?.id) {
+    if (!prompterModelWithVersion?.id) {
       throw new Error("Prompter model version creation failed.");
     }
 
@@ -208,16 +233,16 @@ export class RAG {
           {
             id: "rag-prompter",
             model: {
-              modelId: prompterModelObj.id,
-              modelVersionId: prompterModelVersion.id,
+              modelId: prompterModelWithVersion.id,
+              modelVersionId: prompterModelWithVersion?.modelVersion?.id,
             },
           },
           {
             id: "llm",
             model: {
-              modelId: llmObject.id,
-              userId: llmObject.userId,
-              appId: llmObject.appId,
+              modelId: llmId,
+              userId: llmUserId,
+              appId: llmAppId,
             },
             nodeInputs: [
               {
@@ -236,9 +261,9 @@ export class RAG {
     });
     const workflow = new Workflow({
       workflowId: wf.id,
-      authConfig: authConfig as AuthConfig,
+      authConfig: targetAuthConfig,
     });
-    return new RAG({ workflow });
+    return new RAG({ workflow, authConfig: targetAuthConfig });
   }
 
   async upload({
@@ -287,11 +312,13 @@ export class RAG {
     let docI = 0;
 
     for (const doc of documents) {
-      const curTextChunks = splitDocument({
-        text: doc.text,
-        chunkSize,
-        chunkOverlap,
-      });
+      const curTextChunks = compact(
+        splitDocument({
+          text: doc.text,
+          chunkSize,
+          chunkOverlap,
+        }),
+      );
       textChunks.push(...curTextChunks);
       metadataList.push(...Array(curTextChunks.length).fill(doc.metadata));
       if (textChunks.length > batchSize) {
@@ -345,7 +372,7 @@ export class RAG {
         docI += 1;
         return metaStruct;
       });
-      const input_batch = textChunks.map((text: string, i: number) => {
+      const inputBatch = textChunks.map((text: string, i: number) => {
         return Input.getTextInput({
           inputId: batchIds[i],
           rawText: text,
@@ -354,7 +381,7 @@ export class RAG {
         });
       });
       await new Input({ authConfig: this.authConfig }).uploadInputs({
-        inputs: input_batch,
+        inputs: inputBatch,
       });
       textChunks.splice(0, batchSize);
       metadataList.splice(0, batchSize);
@@ -363,11 +390,17 @@ export class RAG {
 
   async chat({
     messages,
-    clientManageState = false,
+    clientManageState = true, // TODO: change to false once Server Side state management is implemented
   }: {
     messages: Message[];
     clientManageState?: boolean;
   }): Promise<Message[]> {
+    if (!clientManageState) {
+      throw new Error(
+        "Server side state management is not supported yet - work in progress",
+      );
+    }
+
     if (clientManageState) {
       const singlePrompt = convertMessagesToStr(messages);
       const inputProto = Input.getTextInput({

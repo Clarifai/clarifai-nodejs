@@ -19,6 +19,7 @@ import {
   ModelVersion,
   OutputConfig,
   OutputInfo,
+  UserAppIDSet,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -39,6 +40,28 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
 
+interface BaseModelConfig {
+  modelVersion?: { id: string };
+  modelUserAppId?: {
+    userId: string;
+    appId: string;
+  };
+}
+
+interface ModelConfigWithUrl extends BaseModelConfig {
+  url: ClarifaiUrl;
+  modelId?: undefined;
+  authConfig?: Omit<AuthConfig, "userId" | "appId">;
+}
+
+interface ModelConfigWithModelId extends BaseModelConfig {
+  url?: undefined;
+  modelId: string;
+  authConfig?: AuthConfig;
+}
+
+type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
+
 /**
  * Model is a class that provides access to Clarifai API endpoints related to Model information.
  * @noInheritDoc
@@ -46,8 +69,9 @@ import {
 export class Model extends Lister {
   private appId: string;
   private id: string;
+  private modelUserAppId: UserAppIDSet | undefined;
   private modelVersion: { id: string } | undefined;
-  private modelInfo: GrpcModel;
+  public modelInfo: GrpcModel;
   private trainingParams: Record<string, unknown>;
 
   /**
@@ -68,19 +92,8 @@ export class Model extends Lister {
     modelId,
     modelVersion,
     authConfig = {},
-  }:
-    | {
-        url: ClarifaiUrl;
-        modelId?: undefined;
-        modelVersion?: { id: string };
-        authConfig?: AuthConfig;
-      }
-    | {
-        url?: undefined;
-        modelId: string;
-        modelVersion?: { id: string };
-        authConfig?: AuthConfig;
-      }) {
+    modelUserAppId,
+  }: ModelConfig) {
     if (url && modelId) {
       throw new UserError("You can only specify one of url or model_id.");
     }
@@ -89,6 +102,7 @@ export class Model extends Lister {
     }
     let modelIdFromUrl;
 
+    let authConfigFromUrl: AuthConfig | undefined;
     if (url) {
       const [userId, appId, destructuredModelId, modelVersionId] =
         ClarifaiUrlHelper.splitClarifaiUrl(url);
@@ -98,12 +112,15 @@ export class Model extends Lister {
       } else {
         modelVersion = { id: modelVersionId };
       }
-      authConfig.userId = userId;
-      authConfig.appId = appId;
+      authConfigFromUrl = {
+        ...(authConfig as Omit<AuthConfig, "userId" | "appId">),
+        userId,
+        appId,
+      };
     }
 
-    super({ authConfig: authConfig });
-    this.appId = authConfig.appId;
+    super({ authConfig: authConfigFromUrl || (authConfig as AuthConfig) });
+    this.appId = authConfigFromUrl?.appId ?? (authConfig as AuthConfig)?.appId;
     this.modelVersion = modelVersion;
     this.id = (modelIdFromUrl || modelId) as string;
     this.modelInfo = new GrpcModel();
@@ -115,6 +132,11 @@ export class Model extends Lister {
     if (this.id) this.modelInfo.setId(this.id);
     if (this.modelVersion) this.modelInfo.setModelVersion(grpcModelVersion);
     this.trainingParams = {};
+    if (modelUserAppId) {
+      this.modelUserAppId = new UserAppIDSet()
+        .setAppId(modelUserAppId.appId)
+        .setUserId(modelUserAppId.userId);
+    }
   }
 
   /**
@@ -127,7 +149,11 @@ export class Model extends Lister {
       this.STUB.client,
     );
     const request = new GetModelRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     if (this.modelVersion?.id) request.setVersionId(this.modelVersion.id);
 
@@ -171,7 +197,11 @@ export class Model extends Lister {
     }
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -236,7 +266,11 @@ export class Model extends Lister {
     }
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -333,7 +367,11 @@ export class Model extends Lister {
       this.trainingParams?.["train_params"]?.["template"] ?? null;
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -369,7 +407,11 @@ export class Model extends Lister {
    */
   async deleteVersion(versionId: string): Promise<void> {
     const request = new DeleteModelVersionRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     request.setVersionId(versionId);
 
@@ -402,7 +444,11 @@ export class Model extends Lister {
     }
 
     const request = new PostModelVersionsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     request.setModelVersionsList([modelVersion]);
 
@@ -442,7 +488,11 @@ export class Model extends Lister {
     void
   > {
     const request = new ListModelVersionsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
 
     const listModelVersions = promisifyGrpcCall(
@@ -502,7 +552,11 @@ export class Model extends Lister {
     }
 
     const request = new PostModelOutputsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     if (this.modelVersion && this.modelVersion.id)
       request.setVersionId(this.modelVersion.id);

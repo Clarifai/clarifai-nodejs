@@ -11,6 +11,16 @@ export interface Cache {
 const DEFAULT_BASE = "https://api.clarifai.com";
 const DEFAULT_UI = "https://clarifai.com";
 
+const validResourceTypes = [
+  "modules",
+  "models",
+  "concepts",
+  "inputs",
+  "workflows",
+  "tasks",
+  "installed_module_versions",
+] as const;
+
 // Map from base domain to True / False for whether the base has https or http.
 const baseHttpsCache: Cache = {};
 const uiHttpsCache: Cache = {};
@@ -328,5 +338,25 @@ export class ClarifaiAuthHelper {
     }
     // Assuming all non-present keys have non-empty values.
     return true;
+  }
+
+  clarifaiUrl({
+    resourceType,
+    resourceId,
+    versionId,
+  }: {
+    resourceType: (typeof validResourceTypes)[number];
+    resourceId: string;
+    versionId?: string;
+  }): string {
+    if (!validResourceTypes.includes(resourceType)) {
+      throw new Error(
+        `resourceType must be one of ${validResourceTypes.join(", ")} but was ${resourceType}`,
+      );
+    }
+    if (!versionId) {
+      return `${this.base}/${this.userId}/${this.appId}/${resourceType}/${resourceId}`;
+    }
+    return `${this.base}/${this.userId}/${this.appId}/${resourceType}/${resourceId}/versions/${versionId}`;
   }
 }

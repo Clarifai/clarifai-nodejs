@@ -47,7 +47,8 @@ type WorkflowConfig =
  */
 export class Workflow extends Lister {
   private versionId: string;
-  private id: string;
+  public id: string;
+  public appId: string;
   private outputConfig: OutputConfig;
 
   constructor({
@@ -73,10 +74,10 @@ export class Workflow extends Lister {
     }
 
     super({ authConfig: authConfig as AuthConfig });
-    this.id = "";
-    if (workflowId) this.id = workflowId;
+    this.id = workflowId || "";
     this.versionId = workflowVersion.id;
     this.outputConfig = outputConfig;
+    this.appId = authConfig.appId || process.env.CLARIFAI_APP_ID!;
   }
 
   async predict({
