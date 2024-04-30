@@ -1,8 +1,10 @@
-import { SimpleDirectoryReader } from "@llamaindex/edge/readers/SimpleDirectoryReader";
-import { DocxReader } from "@llamaindex/edge/readers/DocxReader";
-import { PDFReader } from "@llamaindex/edge/readers/PdfReader";
-import { TextFileReader } from "@llamaindex/edge/readers/TextFileReader";
-import { SentenceSplitter } from "@llamaindex/edge";
+import {
+  SimpleDirectoryReader,
+  DocxReader,
+  PDFReader,
+  TextFileReader,
+  SentenceSplitter,
+} from "llamaindex";
 import axios from "axios";
 import tmp from "tmp";
 import * as fs from "fs";
