@@ -87,7 +87,8 @@ export class AuthorizedStub {
           reject(err);
         } else {
           // TODO - Fix the type issue with the response
-          // @ts-expect-error - Response type is not fully inferred
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - @ts-expect-error directive not working here
           resolve(response);
         }
       });
