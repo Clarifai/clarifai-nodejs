@@ -49,6 +49,7 @@ import { v4 as uuid } from "uuid";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
+import { logger } from "../utils/logging";
 
 export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
   appId?: undefined;
@@ -449,7 +450,7 @@ export class App extends Lister {
       throw new Error(responseObject.status?.description);
     }
 
-    console.info("\nDataset created\n%s", responseObject.status.description);
+    logger.info(`\nDataset created\n${responseObject.status.description}`);
 
     return responseObject.datasetsList?.[0];
   }
