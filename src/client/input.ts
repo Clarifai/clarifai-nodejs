@@ -45,6 +45,7 @@ import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb
 import cliProgress from "cli-progress";
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";
+import { GRPCError, UserError } from "../errors";
 
 interface CSVRecord {
   inputid: string;
@@ -131,19 +132,19 @@ export class Input extends Lister {
     try {
       geoInfoSchema.parse(geoInfo);
     } catch {
-      throw new Error("geoInfo must be a list of longitude and latitude");
+      throw new UserError("geoInfo must be a list of longitude and latitude");
     }
 
     try {
       labelsSchema.parse(labels);
     } catch {
-      throw new Error("labels must be a list of strings");
+      throw new UserError("labels must be a list of strings");
     }
 
     try {
       metaDataSchema.parse(metadata);
     } catch {
-      throw new Error("metadata must be a valid object");
+      throw new UserError("metadata must be a valid object");
     }
 
     const metadataStruct = metadata
@@ -225,7 +226,7 @@ export class Input extends Lister {
     metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageBytes || videoBytes || audioBytes || textBytes)) {
-      throw new Error(
+      throw new UserError(
         "At least one of image_bytes, video_bytes, audio_bytes, text_bytes must be provided.",
       );
     }
@@ -289,7 +290,7 @@ export class Input extends Lister {
     metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageFile || videoFile || audioFile || textFile)) {
-      throw new Error(
+      throw new UserError(
         "At least one of imageFile, videoFile, audioFile, textFile must be provided.",
       );
     }
@@ -353,7 +354,7 @@ export class Input extends Lister {
     metadata?: Record<string, JavaScriptValue> | null;
   }): GrpcInput {
     if (!(imageUrl || videoUrl || audioUrl || textUrl)) {
-      throw new Error(
+      throw new UserError(
         "At least one of imageUrl, videoUrl, audioUrl, textUrl must be provided.",
       );
     }
@@ -503,12 +504,12 @@ export class Input extends Lister {
     labels?: string[] | null;
   }): GrpcInput {
     if ((imageBytes && imageUrl) || (!imageBytes && !imageUrl)) {
-      throw new Error(
+      throw new UserError(
         "Please supply only one of imageBytes or imageUrl, and not both.",
       );
     }
     if ((textBytes && rawText) || (!textBytes && !rawText)) {
-      throw new Error(
+      throw new UserError(
         "Please supply only one of textBytes or rawText, and not both.",
       );
     }
@@ -576,7 +577,7 @@ export class Input extends Lister {
         record;
 
       if (Object.keys(otherColumns).length > 0) {
-        throw new Error(
+        throw new UserError(
           `CSV file may have 'inputid', 'input', 'concepts', 'metadata', 'geopoints' columns. Does not support: '${Object.keys(otherColumns).join(", ")}'`,
         );
       }
@@ -590,7 +591,9 @@ export class Input extends Lister {
           const metadataDict = JSON.parse(metadata.replace(/'/g, '"'));
           inputMetadata = { fields: metadataDict };
         } catch (error) {
-          throw new Error("metadata column in CSV file should be a valid JSON");
+          throw new UserError(
+            "metadata column in CSV file should be a valid JSON",
+          );
         }
       }
 
@@ -603,7 +606,7 @@ export class Input extends Lister {
             longitude: parseFloat(geoPoints[1]),
           };
         } else {
-          throw new Error(
+          throw new UserError(
             "geopoints column in CSV file should have longitude,latitude",
           );
         }
@@ -704,7 +707,7 @@ export class Input extends Lister {
     try {
       bboxSchema.parse(bbox);
     } catch {
-      throw new Error("bbox must be an array of coordinates");
+      throw new UserError("bbox must be an array of coordinates");
     }
     const [xMin, yMin, xMax, yMax] = bbox;
     const inputAnnotProto = new Annotation().setInputId(inputId).setData(
@@ -745,7 +748,7 @@ export class Input extends Lister {
     try {
       polygonsSchema.parse(polygons);
     } catch {
-      throw new Error("polygons must be a list of points");
+      throw new UserError("polygons must be a list of points");
     }
     const regions = polygons.map((points) => {
       return new Region()
@@ -784,7 +787,7 @@ export class Input extends Lister {
     showLog?: boolean;
   }): Promise<string> {
     if (!Array.isArray(inputs)) {
-      throw new Error("inputs must be an array of Input objects");
+      throw new UserError("inputs must be an array of Input objects");
     }
     const inputJobId = uuid(); // generate a unique id for this job
     const request = new PostInputsRequest()
@@ -803,9 +806,7 @@ export class Input extends Lister {
       if (showLog) {
         console.warn(responseObject.status?.description);
       }
-      throw new Error(
-        `Inputs upload failed with response ${responseObject.status?.description}`,
-      );
+      throw new GRPCError(`Inputs upload failed with response`, responseObject);
     } else {
       if (showLog) {
         console.info(
@@ -947,7 +948,7 @@ export class Input extends Lister {
     action?: string;
   }): Promise<string> {
     if (!Array.isArray(inputs)) {
-      throw new Error("inputs must be an array of Input objects");
+      throw new UserError("inputs must be an array of Input objects");
     }
     const requestId = uuid(); // generate a unique id for this job
     const request = new PatchInputsRequest()
@@ -964,9 +965,7 @@ export class Input extends Lister {
       console.warn(
         `Patch inputs failed, status: ${responseObject.status?.description}`,
       );
-      throw Error(
-        `Patch inputs failed, status: ${responseObject.status?.description}`,
-      );
+      throw new GRPCError(`Patch inputs failed, status`, responseObject);
     }
     console.info(
       "\nPatch Inputs Successful\n%s",

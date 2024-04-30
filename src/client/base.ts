@@ -8,6 +8,7 @@ import { AuthConfig } from "../utils/types";
 import * as jspb from "google-protobuf";
 import { grpc } from "clarifai-nodejs-grpc";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import { UserError } from "../errors";
 
 /**
  * BaseClient is the base class for all the classes interacting with Clarifai endpoints.
@@ -100,7 +101,7 @@ export class BaseClient {
 
     // Check if the date is valid
     if (isNaN(datetimeObj.getTime())) {
-      throw new Error("Invalid date string");
+      throw new UserError("Invalid date string");
     }
 
     // Convert the Date object to a Timestamp

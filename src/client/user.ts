@@ -23,6 +23,7 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
+import { UserError } from "../errors";
 
 export type UserConfig = AuthConfig;
 export type ListAppsRequestParams =
@@ -198,7 +199,7 @@ export class User extends Lister {
     description: string;
   }): Promise<MultiRunnerResponse.AsObject["runnersList"][0]> {
     if (!Array.isArray(labels)) {
-      throw new Error("Labels must be an array of strings");
+      throw new UserError("Labels must be an array of strings");
     }
 
     const request = new PostRunnersRequest();

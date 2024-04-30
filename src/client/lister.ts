@@ -4,6 +4,7 @@ import { AuthConfig } from "../utils/types";
 import { BaseClient } from "./base";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import { GRPCError } from "../errors";
 
 export class Lister extends BaseClient {
   defaultPageSize: number;
@@ -52,7 +53,7 @@ export class Lister extends BaseClient {
 
       // Check response status
       if (responseObject.status?.code !== StatusCode.SUCCESS) {
-        throw new Error(`Listing failed with response ${response}`);
+        throw new GRPCError(`Listing failed with response`, responseObject);
       }
 
       const dataListEntries = Object.entries(responseObject).find(
@@ -113,7 +114,7 @@ export class Lister extends BaseClient {
 
     // Check response status
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(`Listing failed with response ${response}`);
+      throw new GRPCError(`Listing failed with response`, responseObject);
     }
 
     return response;
