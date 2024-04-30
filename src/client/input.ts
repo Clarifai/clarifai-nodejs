@@ -805,11 +805,13 @@ export class Input extends Lister {
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       if (showLog) {
+        // eslint-disable-next-line no-console -- essential log message hence console is used
         console.warn(responseObject.status?.description);
       }
       throw new GRPCError(`Inputs upload failed with response`, responseObject);
     } else {
       if (showLog) {
+        // eslint-disable-next-line no-console -- essential log message hence console is used
         console.info(
           `\nInputs Uploaded\n${responseObject.status?.description}`,
         );
@@ -999,6 +1001,7 @@ export class Input extends Lister {
       retryUpload.push(...batchAnnot);
     } else {
       if (showLog) {
+        // eslint-disable-next-line no-console -- essential log message hence console is used
         console.info(
           `\nAnnotations Uploaded\n${responseObject.status?.description}`,
         );

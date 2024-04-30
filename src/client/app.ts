@@ -664,6 +664,7 @@ export class App extends Lister {
 
     // Display the workflow nodes tree.
     if (display) {
+      // eslint-disable-next-line no-console -- console.table is used for displaying the workflow info
       console.table(flatten(responseObject.workflowsList?.[0]?.nodesList));
     }
     return responseObject.workflowsList?.[0];
