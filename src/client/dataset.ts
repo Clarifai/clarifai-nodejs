@@ -19,6 +19,7 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import { logger } from "../utils/logging";
 
 type DatasetConfig =
   | {
@@ -86,7 +87,9 @@ export class Dataset extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nDataset Version created\n%s", response.getStatus());
+    logger.info(
+      `\nDataset Version created\n${responseObject.status.description}`,
+    );
 
     return responseObject.datasetVersionsList[0];
   }
@@ -106,7 +109,9 @@ export class Dataset extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nDataset Version Deleted\n%s", response.getStatus());
+    logger.info(
+      `\nDataset Version Deleted\n${responseObject.status.description}`,
+    );
   }
 
   async *listVersions(

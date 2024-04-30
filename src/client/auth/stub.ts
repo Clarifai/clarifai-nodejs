@@ -6,6 +6,7 @@ import { V2Stub } from "./register";
 import { grpc } from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import { logger } from "../../utils/logging";
 
 const throttleStatusCodes = new Set([
   StatusCode.CONN_THROTTLED,
@@ -148,7 +149,7 @@ export class RetryStub extends AuthorizedStub {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (err as any).status?.code in throttleStatusCodes
         ) {
-          console.log(`Attempt ${attempt} failed, retrying...`);
+          logger.warn(`Attempt ${attempt} failed, retrying...`);
           if (attempt < this.maxAttempts) {
             await new Promise((resolve) =>
               setTimeout(resolve, this.backoffTime * 1000),
@@ -187,7 +188,7 @@ export class RetryStub extends AuthorizedStub {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (err as any).status?.code in throttleStatusCodes
         ) {
-          console.log(`Attempt ${attempt} failed, retrying...`);
+          logger.warn(`Attempt ${attempt} failed, retrying...`);
           if (attempt < this.maxAttempts) {
             await new Promise((resolve) =>
               setTimeout(resolve, this.backoffTime * 1000),

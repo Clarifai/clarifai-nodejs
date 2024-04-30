@@ -27,6 +27,7 @@ import {
 } from "../rag/utils";
 import { Input } from "./input";
 import compact from "lodash/compact";
+import { logger } from "../utils/logging";
 
 const DEFAULT_RAG_PROMPT_TEMPLATE =
   "Context information is below:\n{data.hits}\nGiven the context information and not prior knowledge, answer the query.\nQuery: {data.text.raw}\nAnswer: ";
@@ -75,7 +76,7 @@ export class RAG {
           "userId and appId should not be specified in authConfig when using workflowUrl.",
         );
       }
-      console.info("workflow_url:%s", workflowUrl);
+      logger.info(`workflow_url: ${workflowUrl}`);
       const [userId, appId, , ,] =
         ClarifaiUrlHelper.splitClarifaiUrl(workflowUrl);
       const w = new Workflow({

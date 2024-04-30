@@ -39,6 +39,7 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
+import { logger } from "../utils/logging";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -579,7 +580,7 @@ export class Model extends Lister {
                 responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
                 Date.now() - startTime < 600000
               ) {
-                console.log(
+                logger.info(
                   `${this.id} model is still deploying, please wait...`,
                 );
                 setTimeout(makeRequest, backoffIterator.next().value * 1000);

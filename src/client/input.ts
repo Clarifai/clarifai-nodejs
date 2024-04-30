@@ -46,6 +46,7 @@ import cliProgress from "cli-progress";
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";
 import { GRPCError, UserError } from "../errors";
+import { logger } from "../utils/logging";
 
 interface CSVRecord {
   inputid: string;
@@ -810,8 +811,7 @@ export class Input extends Lister {
     } else {
       if (showLog) {
         console.info(
-          "\nInputs Uploaded\n%s",
-          responseObject.status?.description,
+          `\nInputs Uploaded\n${responseObject.status?.description}`,
         );
       }
     }
@@ -962,14 +962,13 @@ export class Input extends Lister {
     const response = await this.grpcRequest(patchInputs, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      console.warn(
+      logger.warn(
         `Patch inputs failed, status: ${responseObject.status?.description}`,
       );
       throw new GRPCError(`Patch inputs failed, status`, responseObject);
     }
-    console.info(
-      "\nPatch Inputs Successful\n%s",
-      responseObject.status?.description,
+    logger.info(
+      `\nPatch Inputs Successful\n${responseObject.status?.description}`,
     );
     return requestId;
   }
@@ -994,13 +993,15 @@ export class Input extends Lister {
     const response = await this.grpcRequest(postAnnotations, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      console.warn(
+      logger.warn(
         `Post annotations failed, status: ${responseObject.status?.description}`,
       );
       retryUpload.push(...batchAnnot);
     } else {
       if (showLog) {
-        console.info("\nAnnotations Uploaded\n%s", responseObject.status);
+        console.info(
+          `\nAnnotations Uploaded\n${responseObject.status?.description}`,
+        );
       }
     }
     return retryUpload;
@@ -1043,11 +1044,11 @@ export class Input extends Lister {
         },
         (err) => {
           if (err) {
-            console.error("Error processing batches", err);
+            logger.error(`Error processing batches ${err.message}`);
             reject(err);
           }
           progressBar.stop();
-          console.log("All inputs processed");
+          logger.info("All inputs processed");
           resolve();
         },
       );
@@ -1111,7 +1112,7 @@ export class Input extends Lister {
 
       if (responseObject.status?.code !== StatusCode.SUCCESS) {
         maxRetries -= 1;
-        console.warn(
+        logger.warn(
           `Get input job failed, status: ${responseObject.status?.description}\n`,
         );
         continue;
@@ -1180,14 +1181,14 @@ export class Input extends Lister {
   }): Promise<void> {
     for (let retry = 0; retry < MAX_RETRIES; retry++) {
       if (failedInputs.length > 0) {
-        console.log(
+        logger.warn(
           `Retrying upload for ${failedInputs.length} Failed inputs..\n`,
         );
         failedInputs = await this.uploadBatch({ inputs: failedInputs });
       }
     }
     if (failedInputs.length > 0) {
-      console.log(`Failed to upload ${failedInputs.length} inputs..\n`);
+      logger.error(`Failed to upload ${failedInputs.length} inputs..\n`);
     }
   }
 }

@@ -20,6 +20,7 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 import { Input } from "./input";
 import { Exporter } from "../workflows/export";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
+import { logger } from "../utils/logging";
 
 type OutputConfig = { minValue: number };
 
@@ -126,7 +127,7 @@ export class Workflow extends Lister {
               responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
               Date.now() - startTime < 600000
             ) {
-              console.log(
+              logger.info(
                 `${this.id} Workflow is still deploying, please wait...`,
               );
               setTimeout(makeRequest, backoffIterator.next().value * 1000);

@@ -491,7 +491,7 @@ export class App extends Lister {
     ) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nModel created\n%s", responseObject.status.description);
+    logger.info(`\nModel created\n${responseObject.status.description}`);
     return responseObject.model;
   }
 
@@ -526,7 +526,7 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nModule created\n%s", responseObject.status.description);
+    logger.info(`\nModule created\n${responseObject.status.description}`);
     return responseObject.modulesList?.[0];
   }
 
@@ -660,7 +660,7 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nWorkflow created\n%s", responseObject.status?.description);
+    logger.info(`\nWorkflow created\n${responseObject.status?.description}`);
 
     // Display the workflow nodes tree.
     if (display) {
@@ -793,7 +793,7 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nDataset Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nDataset Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -816,7 +816,7 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nModel Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nModel Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -839,7 +839,7 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nWorkflow Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nWorkflow Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -862,6 +862,6 @@ export class App extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nModule Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nModule Deleted\n${responseObject.status?.description}`);
   }
 }

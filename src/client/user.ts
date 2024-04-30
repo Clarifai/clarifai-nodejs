@@ -24,6 +24,7 @@ import {
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { UserError } from "../errors";
+import { logger } from "../utils/logging";
 
 export type UserConfig = AuthConfig;
 export type ListAppsRequestParams =
@@ -221,7 +222,7 @@ export class User extends Lister {
         `Failed to create runner: ${responseObject.status?.description}`,
       );
     }
-    console.info("\nRunner created\n%s", responseObject.status.description);
+    logger.info(`\nRunner created\n${responseObject.status.description}`);
 
     return responseObject.runnersList?.[0];
   }
@@ -307,7 +308,7 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nApp Deleted\n%s", responseObject.status.description);
+    logger.info(`\nApp Deleted\n${responseObject.status.description}`);
   }
 
   /**
@@ -330,6 +331,6 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(responseObject.status?.description);
     }
-    console.info("\nRunner Deleted\n%s", responseObject.status.description);
+    logger.info(`\nRunner Deleted\n${responseObject.status.description}`);
   }
 }
