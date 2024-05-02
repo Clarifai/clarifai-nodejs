@@ -72,7 +72,7 @@ interface ErrorEvent {
 
 type BulkUploadEventEmitter<T> = EventEmitter & {
   emit<K extends keyof T>(event: K, payload: T[K]): boolean;
-  on<K extends keyof T>(event: K, listener: (payload: T[K]) => void): this;
+  on<K extends keyof T>(event: K, listener: (payload: T[K]) => void): void;
 };
 
 export type InputBulkUpload = BulkUploadEventEmitter<UploadEvents>;
