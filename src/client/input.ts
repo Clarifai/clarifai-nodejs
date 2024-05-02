@@ -15,7 +15,7 @@ import {
   Text,
   Video,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { AuthConfig } from "../utils/types";
+import { AuthConfig, Polygon as PolygonType } from "../utils/types";
 import { Lister } from "./lister";
 import { Buffer } from "buffer";
 import fs from "fs";
@@ -27,14 +27,24 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import {
+  CancelInputsAddJobRequest,
+  DeleteInputsRequest,
+  GetInputsAddJobRequest,
+  ListInputsRequest,
   PatchInputsRequest,
   PostAnnotationsRequest,
   PostInputsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { promisifyGrpcCall } from "../utils/misc";
+import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import os from "os";
+import chunk from "lodash/chunk";
+import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import async from "async";
+import { MAX_RETRIES } from "../constants/dataset";
+import { EventEmitter } from "events";
 
 interface CSVRecord {
   inputid: string;
@@ -44,11 +54,36 @@ interface CSVRecord {
   geopoints: string;
 }
 
+interface UploadEvents {
+  start: ProgressEvent;
+  progress: ProgressEvent;
+  error: ErrorEvent;
+  end: ProgressEvent;
+}
+
+interface ProgressEvent {
+  current: number;
+  total: number;
+}
+
+interface ErrorEvent {
+  error: Error;
+}
+
+type BulkUploadEventEmitter<T> = EventEmitter & {
+  emit<K extends keyof T>(event: K, payload: T[K]): boolean;
+  on<K extends keyof T>(event: K, listener: (payload: T[K]) => void): void;
+};
+
+export type InputBulkUpload = BulkUploadEventEmitter<UploadEvents>;
+
 /**
  * Inputs is a class that provides access to Clarifai API endpoints related to Input information.
  * @noInheritDoc
  */
 export class Input extends Lister {
+  private numOfWorkers: number = Math.min(os.cpus().length, 10);
+
   /**
    * Initializes an input object.
    *
@@ -480,6 +515,7 @@ export class Input extends Lister {
     imageUrl = null,
     imageBytes = null,
     datasetId = null,
+    labels = null,
   }: {
     inputId: string;
     rawText?: string | null;
@@ -487,6 +523,7 @@ export class Input extends Lister {
     imageUrl?: string | null;
     imageBytes?: Uint8Array | null;
     datasetId?: string | null;
+    labels?: string[] | null;
   }): GrpcInput {
     if ((imageBytes && imageUrl) || (!imageBytes && !imageUrl)) {
       throw new Error(
@@ -515,6 +552,7 @@ export class Input extends Lister {
       datasetId,
       imagePb,
       textPb,
+      labels,
     });
   }
 
@@ -717,12 +755,16 @@ export class Input extends Lister {
     return inputAnnotProto;
   }
 
-  static getMaskProto(
-    inputId: string,
-    label: string,
-    polygons: number[][][],
-  ): Annotation {
-    const polygonsSchema = z.array(z.array(z.array(z.number())));
+  static getMaskProto({
+    inputId,
+    label,
+    polygons,
+  }: {
+    inputId: string;
+    label: string;
+    polygons: PolygonType[];
+  }): Annotation {
+    const polygonsSchema = z.array(z.array(z.tuple([z.number(), z.number()])));
     try {
       polygonsSchema.parse(polygons);
     } catch {
@@ -986,5 +1028,194 @@ export class Input extends Lister {
       }
     }
     return retryUpload;
+  }
+
+  bulkUpload({
+    inputs,
+    batchSize: providedBatchSize = 128,
+    uploadProgressEmitter,
+  }: {
+    inputs: GrpcInput[];
+    batchSize?: number;
+    uploadProgressEmitter?: InputBulkUpload;
+  }): Promise<void> {
+    const batchSize = Math.min(128, providedBatchSize);
+    const chunkedInputs = chunk(inputs, batchSize);
+
+    let currentProgress = 0;
+    const total = chunkedInputs.length;
+    uploadProgressEmitter?.emit("start", { current: currentProgress, total });
+
+    return new Promise<void>((resolve, reject) => {
+      async.mapLimit(
+        chunkedInputs,
+        this.numOfWorkers,
+        (batchInputs, callback) => {
+          this.uploadBatch({ inputs: batchInputs })
+            .then((failedInputs) => {
+              this.retryUploads({
+                failedInputs,
+              }).finally(() => {
+                currentProgress++;
+                uploadProgressEmitter?.emit("progress", {
+                  current: currentProgress,
+                  total,
+                });
+                callback(null, failedInputs);
+              });
+            })
+            .catch((err) => {
+              callback(err);
+            });
+        },
+        (err) => {
+          if (err) {
+            console.error("Error processing batches", err);
+            uploadProgressEmitter?.emit("error");
+            reject(err);
+          }
+          uploadProgressEmitter?.emit("end", { current: total, total });
+          console.log("All inputs processed");
+          resolve();
+        },
+      );
+    });
+  }
+
+  private async uploadBatch({
+    inputs,
+  }: {
+    inputs: GrpcInput[];
+  }): Promise<GrpcInput[]> {
+    const inputJobId = await this.uploadInputs({ inputs, showLog: false });
+    await this.waitForInputs({ inputJobId });
+    const failedInputs = await this.deleteFailedInputs({ inputs });
+    return failedInputs;
+  }
+
+  private async waitForInputs({
+    inputJobId,
+  }: {
+    inputJobId: string;
+  }): Promise<boolean> {
+    const backoffIterator = new BackoffIterator({
+      count: 10,
+    });
+    let maxRetries = 10;
+    const startTime = Date.now();
+    const thirtyMinutes = 60 * 30 * 1000;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const getInputsAddJobRequest = new GetInputsAddJobRequest()
+        .setUserAppId(this.userAppId)
+        .setId(inputJobId);
+
+      const getInputsAddJob = promisifyGrpcCall(
+        this.STUB.client.getInputsAddJob,
+        this.STUB.client,
+      );
+
+      const response = await this.grpcRequest(
+        getInputsAddJob,
+        getInputsAddJobRequest,
+      );
+
+      if (Date.now() - startTime > thirtyMinutes || maxRetries === 0) {
+        const cancelInputsAddJobRequest = new CancelInputsAddJobRequest()
+          .setUserAppId(this.userAppId)
+          .setId(inputJobId);
+
+        const cancelInputsAddJob = promisifyGrpcCall(
+          this.STUB.client.cancelInputsAddJob,
+          this.STUB.client,
+        );
+
+        // 30 minutes timeout
+        await this.grpcRequest(cancelInputsAddJob, cancelInputsAddJobRequest); // Cancel Job
+        return false;
+      }
+
+      const responseObject = response.toObject();
+
+      if (responseObject.status?.code !== StatusCode.SUCCESS) {
+        maxRetries -= 1;
+        console.warn(
+          `Get input job failed, status: ${responseObject.status?.description}\n`,
+        );
+        continue;
+      }
+      if (
+        responseObject.inputsAddJob?.progress?.inProgressCount === 0 &&
+        responseObject.inputsAddJob.progress.pendingCount === 0
+      ) {
+        return true;
+      } else {
+        await new Promise((resolve) => {
+          setTimeout(resolve, backoffIterator.next().value * 300);
+        });
+      }
+    }
+  }
+
+  private async deleteFailedInputs({
+    inputs,
+  }: {
+    inputs: GrpcInput[];
+  }): Promise<GrpcInput[]> {
+    const inputIds = inputs.map((input) => input.getId());
+    const successStatus = new Status().setCode(
+      StatusCode.INPUT_DOWNLOAD_SUCCESS, // Status code for successful download
+    );
+    const request = new ListInputsRequest();
+    request.setIdsList(inputIds);
+    request.setPerPage(inputIds.length);
+    request.setUserAppId(this.userAppId);
+    request.setStatus(successStatus);
+
+    const listInputs = promisifyGrpcCall(
+      this.STUB.client.listInputs,
+      this.STUB.client,
+    );
+
+    const response = await this.grpcRequest(listInputs, request);
+    const responseObject = response.toObject();
+    const successInputs = responseObject.inputsList || [];
+
+    const successInputIds = successInputs.map((input) => input.id);
+    const failedInputs = inputs.filter(
+      (input) => !successInputIds.includes(input.getId()),
+    );
+
+    const deleteInputs = promisifyGrpcCall(
+      this.STUB.client.deleteInputs,
+      this.STUB.client,
+    );
+
+    const deleteInputsRequest = new DeleteInputsRequest()
+      .setUserAppId(this.userAppId)
+      .setIdsList(failedInputs.map((input) => input.getId()));
+
+    // Delete failed inputs
+    await this.grpcRequest(deleteInputs, deleteInputsRequest);
+
+    return failedInputs;
+  }
+
+  private async retryUploads({
+    failedInputs,
+  }: {
+    failedInputs: GrpcInput[];
+  }): Promise<void> {
+    for (let retry = 0; retry < MAX_RETRIES; retry++) {
+      if (failedInputs.length > 0) {
+        console.log(
+          `Retrying upload for ${failedInputs.length} Failed inputs..\n`,
+        );
+        failedInputs = await this.uploadBatch({ inputs: failedInputs });
+      }
+    }
+    if (failedInputs.length > 0) {
+      console.log(`Failed to upload ${failedInputs.length} inputs..\n`);
+    }
   }
 }

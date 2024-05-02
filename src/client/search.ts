@@ -1,4 +1,8 @@
-import { DEFAULT_SEARCH_METRIC, DEFAULT_TOP_K } from "../constants/search";
+import {
+  DEFAULT_SEARCH_ALGORITHM,
+  DEFAULT_SEARCH_METRIC,
+  DEFAULT_TOP_K,
+} from "../constants/search";
 import { Lister } from "./lister";
 import { AuthConfig } from "../utils/types";
 import {
@@ -38,6 +42,8 @@ import {
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 
 type FilterType = z.infer<ReturnType<typeof getSchema>>;
+type SupportedAlgorithm = "nearest_neighbor" | "brute_force";
+type SupportedMetric = "cosine" | "euclidean";
 
 /**
  * @noInheritDoc
@@ -47,15 +53,18 @@ export class Search extends Lister {
   private metricDistance: "COSINE_DISTANCE" | "EUCLIDEAN_DISTANCE";
   private dataProto: Data;
   private inputProto: GrpcInput;
+  private algorithm: SupportedAlgorithm;
 
   constructor({
     topK = DEFAULT_TOP_K,
     metric = DEFAULT_SEARCH_METRIC,
     authConfig,
+    algorithm = DEFAULT_SEARCH_ALGORITHM,
   }: {
     topK?: number;
-    metric?: string;
+    metric?: SupportedMetric;
     authConfig?: AuthConfig;
+    algorithm?: SupportedAlgorithm;
   }) {
     super({ pageSize: 1000, authConfig });
 
@@ -63,7 +72,14 @@ export class Search extends Lister {
       throw new UserError("Metric should be either cosine or euclidean");
     }
 
+    if (algorithm !== "nearest_neighbor" && algorithm !== "brute_force") {
+      throw new UserError(
+        "Algorithm should be either nearest_neighbor or brute_force",
+      );
+    }
+
     this.topK = topK;
+    this.algorithm = algorithm;
     this.metricDistance = (
       {
         cosine: "COSINE_DISTANCE",
@@ -138,7 +154,9 @@ export class Search extends Lister {
           this.dataProto.setGeo(geoPointProto);
         }
       } else {
-        throw new UserError(`kwargs contain key that is not supported: ${key}`);
+        throw new UserError(
+          `arguments contain key that is not supported: ${key}`,
+        );
       }
     }
     const annotation = new Annotation();
@@ -201,27 +219,30 @@ export class Search extends Lister {
 
   private async *listAllPagesGenerator<
     T extends PostInputsSearchesRequest | PostAnnotationsSearchesRequest,
-  >(
+  >({
+    endpoint,
+    requestData,
+    page = 1,
+    perPage,
+  }: {
     endpoint: (
       request: T,
       metadata: grpc.Metadata,
       options: Partial<grpc.CallOptions>,
-    ) => Promise<MultiSearchResponse>,
-    requestData: T,
-  ): AsyncGenerator<
-    MultiSearchResponse.AsObject & Record<"hits", unknown>,
-    void,
-    void
-  > {
+    ) => Promise<MultiSearchResponse>;
+    requestData: T;
+    page?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     const maxPages = Math.ceil(this.topK / this.defaultPageSize);
     let totalHits = 0;
-    let page = 1;
-    while (page <= maxPages) {
-      let perPage;
-      if (page === maxPages) {
-        perPage = this.topK - totalHits;
-      } else {
-        perPage = this.defaultPageSize;
+    while (page) {
+      if (!perPage) {
+        if (page === maxPages) {
+          perPage = this.topK - totalHits;
+        } else {
+          perPage = this.defaultPageSize;
+        }
       }
 
       const pagination = new Pagination();
@@ -247,7 +268,11 @@ export class Search extends Lister {
         }
       }
 
-      if (!("hits" in responseObject)) {
+      if (
+        !("hitsList" in responseObject) ||
+        responseObject.hitsList.length === 0
+      ) {
+        yield responseObject;
         break;
       }
       page += 1;
@@ -259,14 +284,14 @@ export class Search extends Lister {
   query({
     ranks = [{}],
     filters = [{}],
+    page,
+    perPage,
   }: {
     ranks?: FilterType;
     filters?: FilterType;
-  }): AsyncGenerator<
-    MultiSearchResponse.AsObject & Record<"hits", unknown>,
-    void,
-    void
-  > {
+    page?: number;
+    perPage?: number;
+  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
     try {
       getSchema().parse(ranks);
       getSchema().parse(filters);
@@ -286,7 +311,7 @@ export class Search extends Lister {
 
     if (
       filters.length &&
-      Object.prototype.hasOwnProperty.call(filters[0], "input")
+      Object.keys(filters[0]).some((k) => k.includes("input"))
     ) {
       const filtersInputProto: GrpcInput[] = [];
       for (const filterDict of filters) {
@@ -304,6 +329,7 @@ export class Search extends Lister {
 
       const search = new GrpcSearch();
       search.setQuery(query);
+      search.setAlgorithm(this.algorithm);
       search.setMetric(GrpcSearch["Metric"][this.metricDistance]);
 
       const postInputsSearches = promisifyGrpcCall(
@@ -314,7 +340,12 @@ export class Search extends Lister {
       request.setUserAppId(this.userAppId);
       request.setSearchesList([search]);
 
-      return this.listAllPagesGenerator(postInputsSearches, request);
+      return this.listAllPagesGenerator({
+        endpoint: postInputsSearches,
+        requestData: request,
+        page,
+        perPage,
+      });
     }
 
     const filtersAnnotProto: Annotation[] = [];
@@ -333,6 +364,7 @@ export class Search extends Lister {
 
     const search = new GrpcSearch();
     search.setQuery(query);
+    search.setAlgorithm(this.algorithm);
     search.setMetric(GrpcSearch["Metric"][this.metricDistance]);
 
     const postAnnotationsSearches = promisifyGrpcCall(
@@ -343,6 +375,11 @@ export class Search extends Lister {
     request.setUserAppId(this.userAppId);
     request.setSearchesList([search]);
 
-    return this.listAllPagesGenerator(postAnnotationsSearches, request);
+    return this.listAllPagesGenerator({
+      endpoint: postAnnotationsSearches,
+      requestData: request,
+      page,
+      perPage,
+    });
   }
 }

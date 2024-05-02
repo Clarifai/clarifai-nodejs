@@ -21,3 +21,6 @@ export type GrpcWithCallback<TRequest, TResponse> = (
 export type PaginationRequestParams<T extends Record<string, unknown>> =
   | Omit<Partial<T>, "userAppId" | "pageNo" | "perPage">
   | Record<string, never>;
+
+export type Point = [number, number];
+export type Polygon = Point[];

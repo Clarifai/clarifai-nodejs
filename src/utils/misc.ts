@@ -71,8 +71,8 @@ export function mergeObjects(obj1: AuthConfig, obj2: AuthConfig): AuthConfig {
 export class BackoffIterator {
   private count: number;
 
-  constructor() {
-    this.count = 0;
+  constructor({ count } = { count: 0 }) {
+    this.count = count;
   }
 
   [Symbol.iterator]() {
