@@ -9,13 +9,12 @@ import {
   Input as GrpcInput,
   Image,
   Point,
-  Polygon,
   Region,
   RegionInfo,
   Text,
   Video,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { AuthConfig } from "../utils/types";
+import { AuthConfig, Polygon } from "../utils/types";
 import { Lister } from "./lister";
 import { Buffer } from "buffer";
 import fs from "fs";
@@ -739,9 +738,9 @@ export class Input extends Lister {
   }: {
     inputId: string;
     label: string;
-    polygons: number[][][];
+    polygons: Polygon[];
   }): Annotation {
-    const polygonsSchema = z.array(z.array(z.array(z.number())));
+    const polygonsSchema = z.array(z.array(z.tuple([z.number(), z.number()])));
     try {
       polygonsSchema.parse(polygons);
     } catch {
