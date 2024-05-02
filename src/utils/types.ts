@@ -23,4 +23,4 @@ export type PaginationRequestParams<T extends Record<string, unknown>> =
   | Record<string, never>;
 
 export type Point = [number, number];
-export type Polygon = Array<Point>;
+export type Polygon = Point[];
