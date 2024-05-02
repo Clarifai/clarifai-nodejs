@@ -1,4 +1,5 @@
 import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb";
+import { Polygon } from "../../utils/types";
 
 export interface TextFeatures {
   imagePath?: undefined;
@@ -33,7 +34,7 @@ export interface VisualDetectionFeatures {
 export interface VisualSegmentationFeatures {
   imagePath: string;
   labels: Array<string | number>;
-  polygons: Array<Array<Array<number>>>;
+  polygons: Polygon[];
   geoInfo?: [number, number];
   id?: number;
   metadata?: Record<string, JavaScriptValue>;

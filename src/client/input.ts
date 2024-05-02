@@ -15,7 +15,7 @@ import {
   Text,
   Video,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { AuthConfig } from "../utils/types";
+import { AuthConfig, Polygon as PolygonType } from "../utils/types";
 import { Lister } from "./lister";
 import { Buffer } from "buffer";
 import fs from "fs";
@@ -42,9 +42,9 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 import os from "os";
 import chunk from "lodash/chunk";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
-import cliProgress from "cli-progress";
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";
+import { EventEmitter } from "events";
 
 interface CSVRecord {
   inputid: string;
@@ -53,6 +53,29 @@ interface CSVRecord {
   metadata: string;
   geopoints: string;
 }
+
+interface UploadEvents {
+  start: ProgressEvent;
+  progress: ProgressEvent;
+  error: ErrorEvent;
+  end: ProgressEvent;
+}
+
+interface ProgressEvent {
+  current: number;
+  total: number;
+}
+
+interface ErrorEvent {
+  error: Error;
+}
+
+type BulkUploadEventEmitter<T> = EventEmitter & {
+  emit<K extends keyof T>(event: K, payload: T[K]): boolean;
+  on<K extends keyof T>(event: K, listener: (payload: T[K]) => void): void;
+};
+
+export type InputBulkUpload = BulkUploadEventEmitter<UploadEvents>;
 
 /**
  * Inputs is a class that provides access to Clarifai API endpoints related to Input information.
@@ -739,9 +762,9 @@ export class Input extends Lister {
   }: {
     inputId: string;
     label: string;
-    polygons: number[][][];
+    polygons: PolygonType[];
   }): Annotation {
-    const polygonsSchema = z.array(z.array(z.array(z.number())));
+    const polygonsSchema = z.array(z.array(z.tuple([z.number(), z.number()])));
     try {
       polygonsSchema.parse(polygons);
     } catch {
@@ -1010,19 +1033,18 @@ export class Input extends Lister {
   bulkUpload({
     inputs,
     batchSize: providedBatchSize = 128,
+    uploadProgressEmitter,
   }: {
     inputs: GrpcInput[];
     batchSize?: number;
+    uploadProgressEmitter?: InputBulkUpload;
   }): Promise<void> {
     const batchSize = Math.min(128, providedBatchSize);
     const chunkedInputs = chunk(inputs, batchSize);
 
-    const progressBar = new cliProgress.SingleBar(
-      {},
-      cliProgress.Presets.shades_classic,
-    );
-
-    progressBar.start(chunkedInputs.length, 0);
+    let currentProgress = 0;
+    const total = chunkedInputs.length;
+    uploadProgressEmitter?.emit("start", { current: currentProgress, total });
 
     return new Promise<void>((resolve, reject) => {
       async.mapLimit(
@@ -1034,7 +1056,11 @@ export class Input extends Lister {
               this.retryUploads({
                 failedInputs,
               }).finally(() => {
-                progressBar.increment();
+                currentProgress++;
+                uploadProgressEmitter?.emit("progress", {
+                  current: currentProgress,
+                  total,
+                });
                 callback(null, failedInputs);
               });
             })
@@ -1045,9 +1071,10 @@ export class Input extends Lister {
         (err) => {
           if (err) {
             console.error("Error processing batches", err);
+            uploadProgressEmitter?.emit("error");
             reject(err);
           }
-          progressBar.stop();
+          uploadProgressEmitter?.emit("end", { current: total, total });
           console.log("All inputs processed");
           resolve();
         },

@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     coverage: {
       reporter: ["text", "json", "html", "clover", "json-summary"],
+      include: ["src/**/*"],
     },
   },
 });

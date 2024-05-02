@@ -1,9 +1,10 @@
 import path from "path";
 import { getSchema } from "../../src/schema/search";
 import { z } from "zod";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { App, Dataset, Input, Search, User } from "../../src/index";
 import { Hit } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import EventEmitter from "events";
 
 const NOW = Date.now().toString() + "-search";
 const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
@@ -197,11 +198,48 @@ describe("Search", () => {
       },
       datasetId: datasetObj.id,
     });
+    const eventEmitter = new EventEmitter();
+    const eventHandler = {
+      start: (...args: unknown[]) => console.log("start", args),
+      progress: (...args: unknown[]) => console.log("progress", args),
+      end: (...args: unknown[]) => console.log("end", args),
+      error: (...args: unknown[]) => console.log("error", args),
+    };
+    const startSpy = vi.spyOn(eventHandler, "start");
+    const progressSpy = vi.spyOn(eventHandler, "progress");
+    const endSpy = vi.spyOn(eventHandler, "end");
+    const errorSpy = vi.spyOn(eventHandler, "error");
+    eventEmitter.on("start", (start) => {
+      eventHandler.start(start);
+    });
+    eventEmitter.on("progress", (progress) => {
+      eventHandler.progress(progress);
+    });
+    eventEmitter.on("end", (progress) => {
+      eventHandler.end(progress);
+    });
+    eventEmitter.on("error", (error) => {
+      eventHandler.error(error);
+    });
     await dataset.uploadFromFolder({
       folderPath: DATASET_IMAGES_DIR,
       inputType: "image",
       labels: false,
+      uploadProgressEmitter: eventEmitter,
     });
+    expect(startSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ current: 0, total: 1 }),
+    );
+    expect(progressSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ current: 1, total: 1 }),
+    );
+    expect(endSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ current: 1, total: 1 }),
+    );
+    expect(errorSpy).not.toHaveBeenCalled();
   }, 50000);
 
   it("should get expected hits for filters", async () => {
