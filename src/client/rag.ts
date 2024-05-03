@@ -53,8 +53,6 @@ type workflowSchema = ReturnType<typeof validateWorkflow>;
 export class RAG {
   private authConfig: AuthConfig;
 
-  private chatStateId: string = "";
-
   public promptWorkflow: Workflow;
 
   public app: App;
