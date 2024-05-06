@@ -54,8 +54,6 @@ type workflowSchema = ReturnType<typeof validateWorkflow>;
 export class RAG {
   private authConfig: AuthConfig;
 
-  private chatStateId: string = "";
-
   public promptWorkflow: Workflow;
 
   public app: App;
@@ -402,40 +400,17 @@ export class RAG {
       );
     }
 
-    if (clientManageState) {
-      const singlePrompt = convertMessagesToStr(messages);
-      const inputProto = Input.getTextInput({
-        inputId: uuidv4(),
-        rawText: singlePrompt,
-      });
-      const response = await this.promptWorkflow.predict({
-        inputs: [inputProto],
-      });
-      const outputsList = response.resultsList?.[0]?.outputsList;
-      const output = outputsList[outputsList.length - 1];
-      messages.push(formatAssistantMessage(output?.data?.text?.raw ?? ""));
-      return messages;
-    }
-
-    // Server side chat state management
-    const message = messages[messages.length - 1].content;
-    if (!message.length) {
-      throw new UserError("Empty message supplied.");
-    }
-
-    const chatStateId = this.chatStateId !== null ? this.chatStateId : "init";
+    const singlePrompt = convertMessagesToStr(messages);
     const inputProto = Input.getTextInput({
       inputId: uuidv4(),
-      rawText: message,
+      rawText: singlePrompt,
     });
     const response = await this.promptWorkflow.predict({
       inputs: [inputProto],
-      workflowStateId: chatStateId,
     });
-
-    this.chatStateId = response.workflowState?.id ?? "";
     const outputsList = response.resultsList?.[0]?.outputsList;
     const output = outputsList[outputsList.length - 1];
-    return [formatAssistantMessage(output?.data?.text?.raw ?? "")];
+    messages.push(formatAssistantMessage(output?.data?.text?.raw ?? ""));
+    return messages;
   }
 }

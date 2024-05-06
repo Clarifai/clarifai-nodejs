@@ -7,7 +7,7 @@ import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
-import { Input } from "./input";
+import { Input, InputBulkUpload } from "./input";
 import {
   DeleteDatasetVersionsRequest,
   ListDatasetVersionsRequest,
@@ -144,11 +144,13 @@ export class Dataset extends Lister {
     inputType,
     labels = false,
     batchSize = this.batchSize,
+    uploadProgressEmitter,
   }: {
     folderPath: string;
     inputType: "image" | "text";
     labels: boolean;
     batchSize?: number;
+    uploadProgressEmitter?: InputBulkUpload;
   }): Promise<void> {
     if (["image", "text"].indexOf(inputType) === -1) {
       throw new UserError("Invalid input type");
@@ -171,6 +173,7 @@ export class Dataset extends Lister {
     await this.input.bulkUpload({
       inputs: inputProtos,
       batchSize: batchSize,
+      uploadProgressEmitter,
     });
   }
 
@@ -180,12 +183,14 @@ export class Dataset extends Lister {
     csvType,
     labels = true,
     batchSize = 128,
+    uploadProgressEmitter,
   }: {
     csvPath: string;
     inputType?: "image" | "text" | "video" | "audio";
     csvType: "raw" | "url" | "file";
     labels?: boolean;
     batchSize?: number;
+    uploadProgressEmitter?: InputBulkUpload;
   }): Promise<void> {
     if (!["image", "text", "video", "audio"].includes(inputType)) {
       throw new UserError(
@@ -214,6 +219,7 @@ export class Dataset extends Lister {
     await this.input.bulkUpload({
       inputs: inputProtos,
       batchSize: batchSize,
+      uploadProgressEmitter,
     });
   }
 }
