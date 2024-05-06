@@ -3,7 +3,7 @@ import {
   Dataset as GrpcDataset,
   Input as GrpcInput,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
@@ -85,7 +85,7 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(postDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create dataset version", responseObject);
     }
     logger.info(
       `\nDataset Version created\n${responseObject.status.description}`,
@@ -107,7 +107,7 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(deleteDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete dataset version", responseObject);
     }
     logger.info(
       `\nDataset Version Deleted\n${responseObject.status.description}`,

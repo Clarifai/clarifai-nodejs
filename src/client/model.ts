@@ -8,7 +8,7 @@ import {
   PostModelOutputsRequest,
   PostModelVersionsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig } from "../utils/types";
@@ -162,9 +162,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Failed to get model: ${responseObject.status} : ${responseObject.status?.description}`,
-      );
+      throw new APIError(`Failed to get model`, responseObject);
     }
 
     this.modelInfo = new GrpcModel();
@@ -192,7 +190,7 @@ export class Model extends Lister {
       await this.loadInfo();
     }
     if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
-      throw new Error(
+      throw new UserError(
         `Model type ${this.modelInfo.getModelTypeId()} is not trainable`,
       );
     }
@@ -213,7 +211,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new APIError("", responseObject);
     }
 
     const templates = responseToTemplates(
@@ -241,7 +239,7 @@ export class Model extends Lister {
       await this.loadInfo();
     }
     if (!TRAINABLE_MODEL_TYPES.includes(this.modelInfo.getModelTypeId())) {
-      throw new Error(
+      throw new UserError(
         `Model type ${this.modelInfo.getModelTypeId()} is not trainable`,
       );
     }
@@ -251,7 +249,7 @@ export class Model extends Lister {
         this.modelInfo.getModelTypeId(),
       )
     ) {
-      throw new Error(
+      throw new UserError(
         `Template should be provided for ${this.modelInfo.getModelTypeId()} model type`,
       );
     }
@@ -261,7 +259,7 @@ export class Model extends Lister {
         this.modelInfo.getModelTypeId(),
       )
     ) {
-      throw new Error(
+      throw new UserError(
         `Template should not be provided for ${this.modelInfo.getModelTypeId()} model type`,
       );
     }
@@ -282,7 +280,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new APIError("", responseObject);
     }
 
     const params = responseToModelParams(
@@ -293,7 +291,7 @@ export class Model extends Lister {
 
     // yaml file
     if (!saveTo.endsWith(".yaml")) {
-      throw new Error("File extension should be .yaml");
+      throw new UserError("File extension should be .yaml");
     }
 
     fs.writeFileSync(saveTo, yaml.dump(params, { noRefs: true }));
@@ -383,7 +381,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new APIError("", responseObject);
     }
     const paramInfo = responseToParamInfo(
       responseObject,
@@ -393,7 +391,7 @@ export class Model extends Lister {
     );
 
     if (!paramInfo) {
-      throw new Error("Failed to fetch params info");
+      throw new APIError("Failed to fetch params info", responseObject);
     }
 
     return paramInfo;
@@ -426,7 +424,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new APIError("Failed to delete model version", responseObject);
     }
   }
 
@@ -463,7 +461,7 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create model version", responseObject);
     }
 
     return responseObject.model;
@@ -538,12 +536,14 @@ export class Model extends Lister {
     outputConfig?: OutputConfig;
   }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!Array.isArray(inputs)) {
-      throw new Error(
+      throw new UserError(
         "Invalid inputs, inputs must be an array of Input objects.",
       );
     }
     if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
-      throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
+      throw new UserError(
+        `Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`,
+      );
     }
 
     this.overrideModelVersion({ inferenceParams, outputConfig });
@@ -586,8 +586,9 @@ export class Model extends Lister {
                 setTimeout(makeRequest, backoffIterator.next().value * 1000);
               } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
                 reject(
-                  new Error(
+                  new APIError(
                     `Model Predict failed with response ${responseObject.status?.toString()}`,
+                    responseObject,
                   ),
                 );
               } else {
@@ -635,7 +636,7 @@ export class Model extends Lister {
     } else if (inputType === "audio") {
       inputProto = Input.getInputFromUrl({ inputId: "", audioUrl: url });
     } else {
-      throw new Error(
+      throw new UserError(
         `Got input type ${inputType} but expected one of image, text, video, audio.`,
       );
     }
@@ -668,7 +669,7 @@ export class Model extends Lister {
     outputConfig?: OutputConfig;
   }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!fs.existsSync(filepath)) {
-      throw new Error("Invalid filepath.");
+      throw new UserError("Invalid filepath.");
     }
 
     const fileBuffer = fs.readFileSync(filepath);
@@ -702,7 +703,7 @@ export class Model extends Lister {
     outputConfig?: OutputConfig;
   }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (!(inputBytes instanceof Buffer)) {
-      throw new Error("Invalid bytes.");
+      throw new UserError("Invalid bytes.");
     }
 
     let inputProto: GrpcInput;
@@ -727,7 +728,7 @@ export class Model extends Lister {
         audioBytes: inputBytes,
       });
     } else {
-      throw new Error(
+      throw new UserError(
         `Got input type ${inputType} but expected one of image, text, video, audio.`,
       );
     }

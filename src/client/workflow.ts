@@ -1,6 +1,6 @@
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import {
   Input as GrpcInput,
@@ -132,11 +132,7 @@ export class Workflow extends Lister {
               );
               setTimeout(makeRequest, backoffIterator.next().value * 1000);
             } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
-              reject(
-                new Error(
-                  `Workflow Predict failed with response ${responseObject.status?.description}`,
-                ),
-              );
+              reject(new APIError(`Workflow Predict failed`, responseObject));
             } else {
               resolve(response.toObject());
             }
@@ -268,8 +264,9 @@ export class Workflow extends Lister {
     const response = await this.grpcRequest(getWorkflow, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Workflow Export failed with response ${response.getStatus()?.toString()}`,
+      throw new APIError(
+        `Workflow Export failed with response`,
+        responseObject,
       );
     }
 

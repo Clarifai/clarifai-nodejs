@@ -12,11 +12,11 @@ logger.info(
   `\nClarifai Node.js Client version: ${CLIENT_VERSION}\nSystem Node version: ${NODE_VERSION}\nOS version: ${OS_VER}`,
 );
 
-interface GRPCResponse {
+interface APIResponse {
   status?: Status.AsObject;
 }
 
-export class GRPCError<T extends GRPCResponse> extends Error {
+export class APIError<T extends APIResponse> extends Error {
   constructor(description: string, grpcResponse: T) {
     super(
       `${description}${description ? " - " : ""}${
@@ -27,9 +27,9 @@ export class GRPCError<T extends GRPCResponse> extends Error {
     );
     this.name = "GRPCError";
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, GRPCError);
+      Error.captureStackTrace(this, APIError);
     }
-    logger.error(`GRPC Response:\n${JSON.stringify(grpcResponse, null, 2)}`);
+    logger.error(`API Response:\n${JSON.stringify(grpcResponse, null, 2)}`);
   }
 }
 

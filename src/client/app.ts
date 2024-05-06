@@ -21,7 +21,7 @@ import {
   DeleteModulesRequest,
   PostWorkflowsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
@@ -447,7 +447,7 @@ export class App extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Dataset", responseObject);
     }
 
     logger.info(`\nDataset created\n${responseObject.status.description}`);
@@ -489,7 +489,7 @@ export class App extends Lister {
       responseObject.status?.code !== StatusCode.SUCCESS ||
       !responseObject.model
     ) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Model", responseObject);
     }
     logger.info(`\nModel created\n${responseObject.status.description}`);
     return responseObject.model;
@@ -524,7 +524,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(postModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Module", responseObject);
     }
     logger.info(`\nModule created\n${responseObject.status.description}`);
     return responseObject.modulesList?.[0];
@@ -658,7 +658,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(postWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create workflow", responseObject);
     }
     logger.info(`\nWorkflow created\n${responseObject.status?.description}`);
 
@@ -713,7 +713,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getModel, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.model;
   }
@@ -741,7 +741,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getWorkflow, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.workflow;
   }
@@ -769,7 +769,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getDataset, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.dataset;
   }
@@ -792,7 +792,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteDatasets, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete dataset", responseObject);
     }
     logger.info(`\nDataset Deleted\n${responseObject.status?.description}`);
   }
@@ -815,7 +815,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModels, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete model", responseObject);
     }
     logger.info(`\nModel Deleted\n${responseObject.status?.description}`);
   }
@@ -838,7 +838,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete workflow", responseObject);
     }
     logger.info(`\nWorkflow Deleted\n${responseObject.status?.description}`);
   }
@@ -861,7 +861,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete module", responseObject);
     }
     logger.info(`\nModule Deleted\n${responseObject.status?.description}`);
   }

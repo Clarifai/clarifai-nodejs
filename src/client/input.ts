@@ -45,7 +45,7 @@ import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb
 import cliProgress from "cli-progress";
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";
-import { GRPCError, UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { logger } from "../utils/logging";
 
 interface CSVRecord {
@@ -808,7 +808,7 @@ export class Input extends Lister {
         // eslint-disable-next-line no-console -- essential log message hence console is used
         console.warn(responseObject.status?.description);
       }
-      throw new GRPCError(`Inputs upload failed with response`, responseObject);
+      throw new APIError(`Inputs upload failed with response`, responseObject);
     } else {
       if (showLog) {
         // eslint-disable-next-line no-console -- essential log message hence console is used
@@ -967,7 +967,7 @@ export class Input extends Lister {
       logger.warn(
         `Patch inputs failed, status: ${responseObject.status?.description}`,
       );
-      throw new GRPCError(`Patch inputs failed, status`, responseObject);
+      throw new APIError(`Patch inputs failed, status`, responseObject);
     }
     logger.info(
       `\nPatch Inputs Successful\n${responseObject.status?.description}`,
