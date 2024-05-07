@@ -5,11 +5,11 @@ import { Workflow } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiAuthHelper } from "../../src/client/auth/helper";
 import { ClarifaiUrl } from "../../src/urls/helper";
 
-const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
+const CREATE_APP_USER_ID = process.env.VITE_CLARIFAI_USER_ID;
 
 const TEXT_FILE_PATH = path.resolve(__dirname, "../assets/sample.txt");
 
-const pat = import.meta.env.VITE_CLARIFAI_PAT;
+const pat = process.env.VITE_CLARIFAI_PAT;
 
 const PDF_URL = "https://samples.clarifai.com/test_doc.pdf";
 

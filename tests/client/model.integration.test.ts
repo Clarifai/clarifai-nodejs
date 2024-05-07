@@ -22,7 +22,7 @@ const MAIN_APP_USER_ID = "clarifai";
 const GENERAL_MODEL_ID = "aaa03c23b3724a16a56b629203edc62c";
 const CLIP_EMBED_MODEL_ID = "multimodal-clip-embed";
 
-const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
+const CLARIFAI_PAT = process.env.VITE_CLARIFAI_PAT;
 
 function validateConceptsLength(
   response: MultiOutputResponse.AsObject["outputsList"],
