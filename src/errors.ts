@@ -25,7 +25,7 @@ export class APIError<T extends APIResponse> extends Error {
         "Unknown Server error"
       }`,
     );
-    this.name = "GRPCError";
+    this.name = "APIError";
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, APIError);
     }
