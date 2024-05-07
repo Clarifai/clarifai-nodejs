@@ -3,7 +3,7 @@ import {
   Dataset as GrpcDataset,
   Input as GrpcInput,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
@@ -19,6 +19,7 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import { logger } from "../utils/logging";
 
 type DatasetConfig =
   | {
@@ -84,9 +85,11 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(postDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create dataset version", responseObject);
     }
-    console.info("\nDataset Version created\n%s", response.getStatus());
+    logger.info(
+      `\nDataset Version created\n${responseObject.status.description}`,
+    );
 
     return responseObject.datasetVersionsList[0];
   }
@@ -104,9 +107,11 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(deleteDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete dataset version", responseObject);
     }
-    console.info("\nDataset Version Deleted\n%s", response.getStatus());
+    logger.info(
+      `\nDataset Version Deleted\n${responseObject.status.description}`,
+    );
   }
 
   async *listVersions(

@@ -7,7 +7,7 @@ import { Hit } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import EventEmitter from "events";
 
 const NOW = Date.now().toString() + "-search";
-const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
+const CREATE_APP_USER_ID = process.env.VITE_CLARIFAI_USER_ID;
 const CREATE_APP_ID = `ci_test_app_${NOW}`;
 const CREATE_DATASET_ID = `ci_test_dataset_${NOW}`;
 const DOG_IMG_URL = "https://samples.clarifai.com/dog.tiff";
@@ -134,13 +134,13 @@ describe("Search", () => {
   const client = new User({
     userId: CREATE_APP_USER_ID,
     appId: CREATE_APP_ID,
-    pat: import.meta.env.VITE_CLARIFAI_PAT,
+    pat: process.env.VITE_CLARIFAI_PAT,
   });
   const search = new Search({
     authConfig: {
       userId: CREATE_APP_USER_ID,
       appId: CREATE_APP_ID,
-      pat: import.meta.env.VITE_CLARIFAI_PAT,
+      pat: process.env.VITE_CLARIFAI_PAT,
     },
     topK: 1,
     metric: "euclidean",
@@ -150,7 +150,7 @@ describe("Search", () => {
     authConfig: {
       userId: CREATE_APP_USER_ID,
       appId: CREATE_APP_ID,
-      pat: import.meta.env.VITE_CLARIFAI_PAT,
+      pat: process.env.VITE_CLARIFAI_PAT,
     },
     metric: "euclidean",
   });
@@ -165,7 +165,7 @@ describe("Search", () => {
       authConfig: {
         userId: CREATE_APP_USER_ID,
         appId: appObj.id,
-        pat: import.meta.env.VITE_CLARIFAI_PAT,
+        pat: process.env.VITE_CLARIFAI_PAT,
       },
     });
     const datasetObj = await app.createDataset({
@@ -186,7 +186,7 @@ describe("Search", () => {
       authConfig: {
         userId: CREATE_APP_USER_ID,
         appId: appObj.id,
-        pat: import.meta.env.VITE_CLARIFAI_PAT,
+        pat: process.env.VITE_CLARIFAI_PAT,
       },
     });
     await input.uploadInputs({ inputs: [inputProto] });
@@ -194,7 +194,7 @@ describe("Search", () => {
       authConfig: {
         userId: CREATE_APP_USER_ID,
         appId: appObj.id,
-        pat: import.meta.env.VITE_CLARIFAI_PAT,
+        pat: process.env.VITE_CLARIFAI_PAT,
       },
       datasetId: datasetObj.id,
     });

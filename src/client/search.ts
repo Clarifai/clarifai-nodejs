@@ -23,7 +23,7 @@ import {
   Search as GrpcSearch,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { Input } from "./input";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { getSchema } from "../schema/search";
 import { z } from "zod";
 import {
@@ -262,9 +262,7 @@ export class Search extends Lister {
           const msg = `Your topK is set to ${this.topK}. The current pagination settings exceed the limit. Please reach out to support@clarifai.com to request an increase for your use case.\nreqId: ${responseObject.status?.reqId}`;
           throw new UserError(msg);
         } else {
-          throw new Error(
-            `Listing failed with response ${responseObject.status?.description}`,
-          );
+          throw new APIError(`Listing failed with response`, responseObject);
         }
       }
 

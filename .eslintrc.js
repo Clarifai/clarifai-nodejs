@@ -17,5 +17,12 @@ module.exports = {
         "@typescript-eslint/no-var-requires": "off",
       },
     },
+    {
+      files: ["*.ts"],
+      excludedFiles: ["example/**/*.ts", "examples/**/*.ts", "**/*.test.ts"],
+      rules: {
+        "no-console": "error",
+      },
+    },
   ],
 };

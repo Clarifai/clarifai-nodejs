@@ -2,6 +2,7 @@ import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb"
 import { grpc } from "clarifai-nodejs-grpc";
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import process from "process";
+import { UserError } from "../../errors";
 
 // TypeScript interface for the cache
 export interface Cache {
@@ -60,7 +61,7 @@ export function httpsCache(cache: Cache, url: string): string {
       cache[url] = HTTPS;
     } else {
       // For URLs without a scheme and not ending with .clarifai.com, prompt user to provide the scheme
-      throw new Error(
+      throw new UserError(
         `Please provide a valid scheme for the ${url}, either use http:// or https://`,
       );
     }
@@ -125,21 +126,21 @@ export class ClarifaiAuthHelper {
 
   private validate(): void {
     if (this.userId === "") {
-      throw new Error(
+      throw new UserError(
         "Need 'user_id' to not be empty in the query params or use CLARIFAI_USER_ID env var",
       );
     }
     if (this.appId === "") {
-      throw new Error(
+      throw new UserError(
         "Need 'app_id' to not be empty in the query params or use CLARIFAI_APP_ID env var",
       );
     }
     if (this._pat !== "" && this.token !== "") {
-      throw new Error(
+      throw new UserError(
         "A personal access token OR a session token need to be provided, but you cannot provide both.",
       );
     } else if (this._pat === "" && this.token === "") {
-      throw new Error(
+      throw new UserError(
         "Need 'pat' or 'token' in the query params or use one of the CLARIFAI_PAT or CLARIFAI_SESSION_TOKEN env vars",
       );
     }
@@ -205,7 +206,7 @@ export class ClarifaiAuthHelper {
     } else if (this.token !== "") {
       return [["x-clarifai-session-token", this.token]];
     } else {
-      throw new Error(
+      throw new UserError(
         "'token' or 'pat' needed to be provided in the query params or env vars.",
       );
     }
@@ -333,7 +334,7 @@ export class ClarifaiAuthHelper {
 
     for (const [key, value] of Object.entries(tomlDict)) {
       if (authKeys.includes(key) && value === "") {
-        throw new Error(`'${key}' in secrets.toml cannot be empty`);
+        throw new UserError(`'${key}' in secrets.toml cannot be empty`);
       }
     }
     // Assuming all non-present keys have non-empty values.
@@ -350,7 +351,7 @@ export class ClarifaiAuthHelper {
     versionId?: string;
   }): string {
     if (!validResourceTypes.includes(resourceType)) {
-      throw new Error(
+      throw new UserError(
         `resourceType must be one of ${validResourceTypes.join(", ")} but was ${resourceType}`,
       );
     }

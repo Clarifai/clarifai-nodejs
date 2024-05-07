@@ -23,6 +23,8 @@ import {
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
+import { APIError, UserError } from "../errors";
+import { logger } from "../utils/logging";
 
 export type UserConfig = AuthConfig;
 export type ListAppsRequestParams =
@@ -170,9 +172,7 @@ export class User extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Failed to create app: ${responseObject.status?.description}`,
-      );
+      throw new APIError(`Failed to create app`, responseObject);
     }
 
     return responseObject.appsList?.[0];
@@ -198,7 +198,7 @@ export class User extends Lister {
     description: string;
   }): Promise<MultiRunnerResponse.AsObject["runnersList"][0]> {
     if (!Array.isArray(labels)) {
-      throw new Error("Labels must be an array of strings");
+      throw new UserError("Labels must be an array of strings");
     }
 
     const request = new PostRunnersRequest();
@@ -216,11 +216,9 @@ export class User extends Lister {
     const response = await this.grpcRequest(postRunners, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Failed to create runner: ${responseObject.status?.description}`,
-      );
+      throw new APIError(`Failed to create runner`, responseObject);
     }
-    console.info("\nRunner created\n%s", responseObject.status.description);
+    logger.info(`\nRunner created\n${responseObject.status.description}`);
 
     return responseObject.runnersList?.[0];
   }
@@ -247,9 +245,7 @@ export class User extends Lister {
     const response = await this.grpcRequest(getApp, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Failed to retrieve app: ${responseObject.status?.description}`,
-      );
+      throw new APIError(`Failed to retrieve app`, responseObject);
     }
     return responseObject["app"];
   }
@@ -277,9 +273,7 @@ export class User extends Lister {
     const response = await this.grpcRequest(getRunner, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Failed to retrieve runner: ${responseObject.status?.description}`,
-      );
+      throw new APIError(`Failed to retrieve runner`, responseObject);
     }
     return responseObject.runner;
   }
@@ -304,9 +298,9 @@ export class User extends Lister {
     const response = await this.grpcRequest(deleteApp, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete app", responseObject);
     }
-    console.info("\nApp Deleted\n%s", responseObject.status.description);
+    logger.info(`\nApp Deleted\n${responseObject.status.description}`);
   }
 
   /**
@@ -327,8 +321,8 @@ export class User extends Lister {
     const response = await this.grpcRequest(deleteRunners, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete runner", responseObject);
     }
-    console.info("\nRunner Deleted\n%s", responseObject.status.description);
+    logger.info(`\nRunner Deleted\n${responseObject.status.description}`);
   }
 }

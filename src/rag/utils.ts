@@ -8,6 +8,7 @@ import {
 import axios from "axios";
 import tmp from "tmp";
 import * as fs from "fs";
+import { logger } from "../utils/logging";
 
 export interface Message {
   role: string;
@@ -25,7 +26,7 @@ async function downloadFileToTemp(url: string): Promise<DownloadResponse> {
   try {
     // Create a temporary file
     const tempFile = tmp.fileSync({ postfix: ".tmp" });
-    console.log(`Temporary file created at: ${tempFile.name}`);
+    logger.info(`Temporary file created at: ${tempFile.name}`);
 
     // Fetch the file using axios
     const response = await axios({

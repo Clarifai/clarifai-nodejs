@@ -7,14 +7,14 @@ const MAIN_APP_USER_ID = "clarifai";
 const GENERAL_MODEL_ID = "general-image-recognition";
 const General_Workflow_ID = "General";
 
-const CREATE_APP_USER_ID = import.meta.env.VITE_CLARIFAI_USER_ID;
+const CREATE_APP_USER_ID = process.env.VITE_CLARIFAI_USER_ID;
 const CREATE_APP_ID = `ci_test_app_${NOW}`;
 const CREATE_MODEL_ID = `ci_test_model_${NOW}`;
 const CREATE_DATASET_ID = `ci_test_dataset_${NOW}`;
 const CREATE_MODULE_ID = `ci_test_module_${NOW}`;
 const CREATE_RUNNER_ID = `ci_test_runner_${NOW}`;
 
-const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
+const CLARIFAI_PAT = process.env.VITE_CLARIFAI_PAT;
 
 describe("App", () => {
   it(
@@ -250,5 +250,33 @@ describe("App", () => {
     await expect(
       user.deleteApp({ appId: CREATE_APP_ID }),
     ).resolves.not.toThrow();
+  });
+
+  it("should throw error for invalid arguments", async () => {
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: CREATE_APP_USER_ID,
+        appId: CREATE_APP_ID,
+      },
+    });
+
+    const createWorkflow = async () =>
+      await app.createWorkflow({ configFilePath: "invalid_path.yml" });
+
+    await expect(createWorkflow()).rejects.toThrow();
+
+    const createApp = () =>
+      new App({
+        // @ts-expect-error Testing invalid arguments
+        url: "App url",
+        authConfig: {
+          pat: CLARIFAI_PAT,
+          userId: CREATE_APP_USER_ID,
+          appId: CREATE_APP_ID,
+        },
+      });
+
+    expect(createApp).toThrow();
   });
 });

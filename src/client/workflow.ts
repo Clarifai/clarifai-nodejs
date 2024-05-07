@@ -1,6 +1,6 @@
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import {
   Input as GrpcInput,
@@ -20,6 +20,7 @@ import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/statu
 import { Input } from "./input";
 import { Exporter } from "../workflows/export";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
+import { logger } from "../utils/logging";
 
 type OutputConfig = { minValue: number };
 
@@ -126,16 +127,12 @@ export class Workflow extends Lister {
               responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
               Date.now() - startTime < 600000
             ) {
-              console.log(
+              logger.info(
                 `${this.id} Workflow is still deploying, please wait...`,
               );
               setTimeout(makeRequest, backoffIterator.next().value * 1000);
             } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
-              reject(
-                new Error(
-                  `Workflow Predict failed with response ${responseObject.status?.description}`,
-                ),
-              );
+              reject(new APIError(`Workflow Predict failed`, responseObject));
             } else {
               resolve(response.toObject());
             }
@@ -267,8 +264,9 @@ export class Workflow extends Lister {
     const response = await this.grpcRequest(getWorkflow, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(
-        `Workflow Export failed with response ${response.getStatus()?.toString()}`,
+      throw new APIError(
+        `Workflow Export failed with response`,
+        responseObject,
       );
     }
 

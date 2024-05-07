@@ -6,6 +6,7 @@ import { V2Stub } from "./register";
 import { grpc } from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import { logger } from "../../utils/logging";
 
 const throttleStatusCodes = new Set([
   StatusCode.CONN_THROTTLED,
@@ -86,7 +87,8 @@ export class AuthorizedStub {
           reject(err);
         } else {
           // TODO - Fix the type issue with the response
-          // @ts-expect-error - Response type is not fully inferred
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore - @ts-expect-error directive not working here
           resolve(response);
         }
       });
@@ -148,7 +150,7 @@ export class RetryStub extends AuthorizedStub {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (err as any).status?.code in throttleStatusCodes
         ) {
-          console.log(`Attempt ${attempt} failed, retrying...`);
+          logger.warn(`Attempt ${attempt} failed, retrying...`);
           if (attempt < this.maxAttempts) {
             await new Promise((resolve) =>
               setTimeout(resolve, this.backoffTime * 1000),
@@ -187,7 +189,7 @@ export class RetryStub extends AuthorizedStub {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (err as any).status?.code in throttleStatusCodes
         ) {
-          console.log(`Attempt ${attempt} failed, retrying...`);
+          logger.warn(`Attempt ${attempt} failed, retrying...`);
           if (attempt < this.maxAttempts) {
             await new Promise((resolve) =>
               setTimeout(resolve, this.backoffTime * 1000),

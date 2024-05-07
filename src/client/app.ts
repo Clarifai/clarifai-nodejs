@@ -21,7 +21,7 @@ import {
   DeleteModulesRequest,
   PostWorkflowsRequest,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { UserError } from "../errors";
+import { APIError, UserError } from "../errors";
 import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
@@ -49,6 +49,7 @@ import { v4 as uuid } from "uuid";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
+import { logger } from "../utils/logging";
 
 export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
   appId?: undefined;
@@ -446,10 +447,10 @@ export class App extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Dataset", responseObject);
     }
 
-    console.info("\nDataset created\n%s", responseObject.status.description);
+    logger.info(`\nDataset created\n${responseObject.status.description}`);
 
     return responseObject.datasetsList?.[0];
   }
@@ -488,9 +489,9 @@ export class App extends Lister {
       responseObject.status?.code !== StatusCode.SUCCESS ||
       !responseObject.model
     ) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Model", responseObject);
     }
-    console.info("\nModel created\n%s", responseObject.status.description);
+    logger.info(`\nModel created\n${responseObject.status.description}`);
     return responseObject.model;
   }
 
@@ -523,9 +524,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(postModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create Module", responseObject);
     }
-    console.info("\nModule created\n%s", responseObject.status.description);
+    logger.info(`\nModule created\n${responseObject.status.description}`);
     return responseObject.modulesList?.[0];
   }
 
@@ -657,12 +658,13 @@ export class App extends Lister {
     const response = await this.grpcRequest(postWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to create workflow", responseObject);
     }
-    console.info("\nWorkflow created\n%s", responseObject.status?.description);
+    logger.info(`\nWorkflow created\n${responseObject.status?.description}`);
 
     // Display the workflow nodes tree.
     if (display) {
+      // eslint-disable-next-line no-console -- console.table is used for displaying the workflow info
       console.table(flatten(responseObject.workflowsList?.[0]?.nodesList));
     }
     return responseObject.workflowsList?.[0];
@@ -711,7 +713,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getModel, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.model;
   }
@@ -739,7 +741,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getWorkflow, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.workflow;
   }
@@ -767,7 +769,7 @@ export class App extends Lister {
     const response = await this.grpcRequest(getDataset, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("", responseObject);
     }
     return responseObject.dataset;
   }
@@ -790,9 +792,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteDatasets, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete dataset", responseObject);
     }
-    console.info("\nDataset Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nDataset Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -813,9 +815,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModels, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete model", responseObject);
     }
-    console.info("\nModel Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nModel Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -836,9 +838,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete workflow", responseObject);
     }
-    console.info("\nWorkflow Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nWorkflow Deleted\n${responseObject.status?.description}`);
   }
 
   /**
@@ -859,8 +861,8 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new APIError("Failed to delete module", responseObject);
     }
-    console.info("\nModule Deleted\n%s", responseObject.status?.description);
+    logger.info(`\nModule Deleted\n${responseObject.status?.description}`);
   }
 }
