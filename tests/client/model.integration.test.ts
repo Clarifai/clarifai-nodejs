@@ -255,5 +255,20 @@ describe(
         clipDim,
       );
     });
+
+    it("should predict from a community model", async () => {
+      const model = new Model({
+        url: "https://clarifai.com/clarifai/main/models/general-image-recognition",
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const imageUrl = "https://samples.clarifai.com/metro-north.jpg";
+      const modelPrediction = await model.predictByUrl({
+        url: imageUrl,
+        inputType: "image",
+      });
+      expect(modelPrediction.length).toBeGreaterThan(0);
+    });
   },
 );

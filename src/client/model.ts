@@ -98,6 +98,9 @@ export class Model extends Lister {
     if (url && modelId) {
       throw new UserError("You can only specify one of url or model_id.");
     }
+    if (url && modelUserAppId) {
+      throw new UserError("You can only specify one of url or modelUserAppId.");
+    }
     if (!url && !modelId) {
       throw new UserError("You must specify one of url or model_id.");
     }
@@ -105,13 +108,15 @@ export class Model extends Lister {
 
     let authConfigFromUrl: AuthConfig | undefined;
     if (url) {
-      const [userId, appId, destructuredModelId, modelVersionId] =
+      const [userId, appId, , destructuredModelId, modelVersionId] =
         ClarifaiUrlHelper.splitClarifaiUrl(url);
       modelIdFromUrl = destructuredModelId;
-      if (modelVersion) {
-        modelVersion.id = modelVersionId;
-      } else {
-        modelVersion = { id: modelVersionId };
+      if (modelVersionId) {
+        if (modelVersion) {
+          modelVersion.id = modelVersionId;
+        } else {
+          modelVersion = { id: modelVersionId };
+        }
       }
       authConfigFromUrl = {
         ...(authConfig as Omit<AuthConfig, "userId" | "appId">),
@@ -133,15 +138,14 @@ export class Model extends Lister {
     if (this.id) this.modelInfo.setId(this.id);
     if (this.modelVersion) this.modelInfo.setModelVersion(grpcModelVersion);
     this.trainingParams = {};
-    if (modelUserAppId) {
+    if (authConfigFromUrl) {
+      this.modelUserAppId = new UserAppIDSet()
+        .setAppId(authConfigFromUrl.appId)
+        .setUserId(authConfigFromUrl.userId);
+    } else if (modelUserAppId) {
       this.modelUserAppId = new UserAppIDSet()
         .setAppId(modelUserAppId.appId)
         .setUserId(modelUserAppId.userId);
-    }
-    if (url) {
-      this.modelUserAppId = new UserAppIDSet()
-        .setAppId(authConfigFromUrl?.appId ?? "")
-        .setUserId(authConfigFromUrl?.userId ?? "");
     }
   }
 
