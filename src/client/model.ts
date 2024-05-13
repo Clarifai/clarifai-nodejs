@@ -42,22 +42,23 @@ import {
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
-  modelUserAppId?: {
-    userId: string;
-    appId: string;
-  };
 }
 
 interface ModelConfigWithUrl extends BaseModelConfig {
   url: ClarifaiUrl;
   modelId?: undefined;
   authConfig?: Omit<AuthConfig, "userId" | "appId">;
+  modelUserAppId?: undefined;
 }
 
 interface ModelConfigWithModelId extends BaseModelConfig {
   url?: undefined;
   modelId: string;
   authConfig?: AuthConfig;
+  modelUserAppId?: {
+    userId: string;
+    appId: string;
+  };
 }
 
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
@@ -136,6 +137,11 @@ export class Model extends Lister {
       this.modelUserAppId = new UserAppIDSet()
         .setAppId(modelUserAppId.appId)
         .setUserId(modelUserAppId.userId);
+    }
+    if (url) {
+      this.modelUserAppId = new UserAppIDSet()
+        .setAppId(authConfigFromUrl?.appId ?? "")
+        .setUserId(authConfigFromUrl?.userId ?? "");
     }
   }
 
