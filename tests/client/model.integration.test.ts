@@ -289,5 +289,29 @@ describe(
       });
       expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
     });
+
+    it("should predict multimodal with image and text", async () => {
+      const prompt = "What time of day is it?";
+      const imageUrl = "https://samples.clarifai.com/metro-north.jpg";
+      const modelUrl =
+        "https://clarifai.com/openai/chat-completion/models/openai-gpt-4-vision";
+      const inferenceParams = { temperature: 0.2, maxTokens: 100 };
+      const multiInputs = Input.getMultimodalInput({
+        inputId: "",
+        imageUrl,
+        rawText: prompt,
+      });
+      const model = new Model({
+        url: modelUrl,
+        authConfig: { pat: CLARIFAI_PAT },
+      });
+
+      const modelPrediction = await model.predict({
+        inputs: [multiInputs],
+        inferenceParams,
+      });
+
+      expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
+    });
   },
 );
