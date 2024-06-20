@@ -150,7 +150,8 @@ describe("App", () => {
     expect(module.userId).toBe(CREATE_APP_USER_ID);
   });
 
-  it("should create runner", async () => {
+  // TODO: To be addressed once runners API is stabilized
+  it.skip("should create runner", async () => {
     const user = new User({
       pat: CLARIFAI_PAT,
       userId: CREATE_APP_USER_ID,
@@ -230,7 +231,8 @@ describe("App", () => {
     ).resolves.not.toThrow();
   });
 
-  it("should delete runner", async () => {
+  // TODO: To be addressed once runners API is stabilized
+  it.skip("should delete runner", async () => {
     const user = new User({
       pat: CLARIFAI_PAT,
       userId: CREATE_APP_USER_ID,

@@ -36,19 +36,30 @@ type UrlAuthConfig = Omit<AuthConfig, "userId" | "appId"> & {
   userId?: undefined;
 };
 
-type RAGConfig =
-  | {
-      workflowUrl: ClarifaiUrl;
-      workflow?: undefined;
-      authConfig?: UrlAuthConfig;
-    }
-  | {
-      workflowUrl?: undefined;
-      workflow: Workflow;
-      authConfig?: AuthConfig;
-    };
+type RAGConfigWithURL = {
+  workflowUrl: ClarifaiUrl;
+  workflow?: undefined;
+  authConfig?: UrlAuthConfig;
+};
+
+type RAGConfigWithWorkflow = {
+  workflowUrl?: undefined;
+  workflow: Workflow;
+  authConfig?: AuthConfig;
+};
+
+type RAGConfig = RAGConfigWithURL | RAGConfigWithWorkflow;
 
 type workflowSchema = ReturnType<typeof validateWorkflow>;
+
+const authConfigGuard = (
+  authConfig: AuthConfig | UrlAuthConfig | undefined,
+): authConfig is AuthConfig => {
+  if (authConfig?.appId && authConfig?.userId) {
+    return true;
+  }
+  return false;
+};
 
 export class RAG {
   private authConfig: AuthConfig;
@@ -58,6 +69,32 @@ export class RAG {
   public app: App;
 
   constructor({ workflowUrl, workflow, authConfig }: RAGConfig) {
+    this.validateInputs(workflowUrl, workflow, authConfig);
+    if (!authConfig || authConfigGuard(authConfig)) {
+      const targetAuthConfig: AuthConfig = authConfig ?? {};
+      this.authConfig = targetAuthConfig;
+      this.promptWorkflow = workflow as Workflow;
+    } else {
+      console.info("workflow_url:%s", workflowUrl);
+      const [userId, appId, , ,] = ClarifaiUrlHelper.splitClarifaiUrl(
+        workflowUrl as ClarifaiUrl,
+      );
+      const w = new Workflow({
+        url: workflowUrl as ClarifaiUrl,
+        authConfig: authConfig,
+      });
+      const targetAuthConfig: AuthConfig = { ...authConfig, appId, userId };
+      this.authConfig = targetAuthConfig;
+      this.promptWorkflow = w;
+    }
+    this.app = new App({ authConfig: this.authConfig });
+  }
+
+  private validateInputs(
+    workflowUrl?: string,
+    workflow?: Workflow,
+    authConfig?: AuthConfig | UrlAuthConfig,
+  ) {
     if (workflowUrl && workflow) {
       throw new UserError(
         "Only one of workflowUrl or workflow can be specified.",
@@ -66,28 +103,11 @@ export class RAG {
     if (!workflowUrl && !workflow) {
       throw new UserError("One of workflowUrl or workflow must be specified.");
     }
-    const targetAuthConfig: AuthConfig = (authConfig as AuthConfig) ?? {};
-    if (workflowUrl) {
-      if (authConfig?.userId || authConfig?.appId) {
-        throw new UserError(
-          "userId and appId should not be specified in authConfig when using workflowUrl.",
-        );
-      }
-      console.info("workflow_url:%s", workflowUrl);
-      const [userId, appId, , ,] =
-        ClarifaiUrlHelper.splitClarifaiUrl(workflowUrl);
-      const w = new Workflow({
-        url: workflowUrl,
-        authConfig: authConfig as UrlAuthConfig,
-      });
-      targetAuthConfig.appId = appId;
-      targetAuthConfig.userId = userId;
-      this.promptWorkflow = w;
-    } else {
-      this.promptWorkflow = workflow;
+    if (workflowUrl && (authConfig?.userId || authConfig?.appId)) {
+      throw new UserError(
+        "userId and appId should not be specified in authConfig when using workflowUrl.",
+      );
     }
-    this.authConfig = targetAuthConfig;
-    this.app = new App({ authConfig: this.authConfig });
   }
 
   static async setup({

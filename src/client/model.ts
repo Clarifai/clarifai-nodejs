@@ -63,6 +63,12 @@ interface ModelConfigWithModelId extends BaseModelConfig {
 
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
 
+const isModelConfigWithUrl = (
+  config: ModelConfig,
+): config is ModelConfigWithUrl => {
+  return (config as ModelConfigWithUrl).url !== undefined;
+};
+
 /**
  * Model is a class that provides access to Clarifai API endpoints related to Model information.
  * @noInheritDoc
@@ -88,65 +94,68 @@ export class Model extends Lister {
    *
    * @includeExample examples/model/index.ts
    */
-  constructor({
-    url,
-    modelId,
-    modelVersion,
-    authConfig = {},
-    modelUserAppId,
-  }: ModelConfig) {
-    if (url && modelId) {
+  constructor(config: ModelConfig) {
+    const { modelId, modelVersion, modelUserAppId } = config;
+    if (config.url && config.modelId) {
       throw new UserError("You can only specify one of url or model_id.");
     }
-    if (url && modelUserAppId) {
+    if (config.url && modelUserAppId) {
       throw new UserError("You can only specify one of url or modelUserAppId.");
     }
-    if (!url && !modelId) {
+    if (!config.url && !config.modelId) {
       throw new UserError("You must specify one of url or model_id.");
     }
-    let modelIdFromUrl;
 
-    let authConfigFromUrl: AuthConfig | undefined;
-    if (url) {
-      const [userId, appId, , destructuredModelId, modelVersionId] =
+    let _authConfig: AuthConfig,
+      _destructuredModelId: string = "",
+      _destructuredModelVersionId: string | undefined = undefined;
+    if (isModelConfigWithUrl(config)) {
+      const { url } = config;
+      const [userId, appId] = ClarifaiUrlHelper.splitClarifaiUrl(url);
+      [, , , _destructuredModelId, _destructuredModelVersionId] =
         ClarifaiUrlHelper.splitClarifaiUrl(url);
-      modelIdFromUrl = destructuredModelId;
-      if (modelVersionId) {
-        if (modelVersion) {
-          modelVersion.id = modelVersionId;
-        } else {
-          modelVersion = { id: modelVersionId };
-        }
-      }
-      authConfigFromUrl = {
-        ...(authConfig as Omit<AuthConfig, "userId" | "appId">),
-        userId,
-        appId,
+      _authConfig = config.authConfig
+        ? {
+            ...config.authConfig,
+            userId,
+            appId,
+          }
+        : {
+            userId,
+            appId,
+            pat: process.env.CLARIFAI_PAT!,
+          };
+    } else {
+      // if authconfig is undefined, we pick the values from env
+      _authConfig = config.authConfig || {
+        pat: process.env.CLARIFAI_PAT!,
+        userId: process.env.CLARIFAI_USER_ID!,
+        appId: process.env.CLARIFAI_APP_ID!,
       };
     }
 
-    super({ authConfig: authConfigFromUrl || (authConfig as AuthConfig) });
-    this.appId = authConfigFromUrl?.appId ?? (authConfig as AuthConfig)?.appId;
-    this.modelVersion = modelVersion;
-    this.id = (modelIdFromUrl || modelId) as string;
+    super({ authConfig: _authConfig });
+    this.appId = _authConfig.appId;
+    this.modelVersion =
+      modelVersion ||
+      (_destructuredModelVersionId
+        ? { id: _destructuredModelVersionId }
+        : undefined);
+    this.id = modelId || _destructuredModelId;
     this.modelInfo = new GrpcModel();
     const grpcModelVersion = new ModelVersion();
     if (this.modelVersion) {
       grpcModelVersion.setId(this.modelVersion.id);
     }
-    if (this.appId) this.modelInfo.setAppId(this.appId);
-    if (this.id) this.modelInfo.setId(this.id);
-    if (this.modelVersion) this.modelInfo.setModelVersion(grpcModelVersion);
-    this.trainingParams = {};
-    if (authConfigFromUrl) {
-      this.modelUserAppId = new UserAppIDSet()
-        .setAppId(authConfigFromUrl.appId)
-        .setUserId(authConfigFromUrl.userId);
-    } else if (modelUserAppId) {
-      this.modelUserAppId = new UserAppIDSet()
-        .setAppId(modelUserAppId.appId)
-        .setUserId(modelUserAppId.userId);
+    this.modelInfo.setAppId(this.appId);
+    this.modelInfo.setId(this.id);
+    if (this.modelVersion) {
+      this.modelInfo.setModelVersion(grpcModelVersion);
     }
+    this.trainingParams = {};
+    this.modelUserAppId = new UserAppIDSet()
+      .setAppId(_authConfig.appId)
+      .setUserId(_authConfig.userId);
   }
 
   /**
