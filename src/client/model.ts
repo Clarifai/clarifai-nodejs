@@ -42,22 +42,23 @@ import {
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
-  modelUserAppId?: {
-    userId: string;
-    appId: string;
-  };
 }
 
 interface ModelConfigWithUrl extends BaseModelConfig {
   url: ClarifaiUrl;
   modelId?: undefined;
   authConfig?: Omit<AuthConfig, "userId" | "appId">;
+  modelUserAppId?: undefined;
 }
 
 interface ModelConfigWithModelId extends BaseModelConfig {
   url?: undefined;
   modelId: string;
   authConfig?: AuthConfig;
+  modelUserAppId?: {
+    userId: string;
+    appId: string;
+  };
 }
 
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
@@ -98,6 +99,9 @@ export class Model extends Lister {
     if (config.url && config.modelId) {
       throw new UserError("You can only specify one of url or model_id.");
     }
+    if (config.url && modelUserAppId) {
+      throw new UserError("You can only specify one of url or modelUserAppId.");
+    }
     if (!config.url && !config.modelId) {
       throw new UserError("You must specify one of url or model_id.");
     }
@@ -108,7 +112,7 @@ export class Model extends Lister {
     if (isModelConfigWithUrl(config)) {
       const { url } = config;
       const [userId, appId] = ClarifaiUrlHelper.splitClarifaiUrl(url);
-      [, , _destructuredModelId, _destructuredModelVersionId] =
+      [, , , _destructuredModelId, _destructuredModelVersionId] =
         ClarifaiUrlHelper.splitClarifaiUrl(url);
       _authConfig = config.authConfig
         ? {
@@ -149,11 +153,9 @@ export class Model extends Lister {
       this.modelInfo.setModelVersion(grpcModelVersion);
     }
     this.trainingParams = {};
-    if (modelUserAppId) {
-      this.modelUserAppId = new UserAppIDSet()
-        .setAppId(modelUserAppId.appId)
-        .setUserId(modelUserAppId.userId);
-    }
+    this.modelUserAppId = new UserAppIDSet()
+      .setAppId(_authConfig.appId)
+      .setUserId(_authConfig.userId);
   }
 
   /**

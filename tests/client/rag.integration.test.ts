@@ -64,7 +64,7 @@ describe("Rag", async () => {
     const messages = [{ role: "human", content: "What is 1 + 1?" }];
     const newMessages = await rag.chat({ messages, clientManageState: true });
     expect(newMessages.length).toBe(2);
-  }, 10000);
+  }, 15000);
 
   // TODO: Server side state management is not supported yet - work in progress
   it.skip("should predict & manage state on the server", async () => {

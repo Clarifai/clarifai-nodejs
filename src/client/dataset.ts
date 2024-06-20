@@ -143,7 +143,7 @@ export class Dataset extends Lister {
   }: {
     folderPath: string;
     inputType: "image" | "text";
-    labels: boolean;
+    labels?: boolean;
     batchSize?: number;
     uploadProgressEmitter?: InputBulkUpload;
   }): Promise<void> {
