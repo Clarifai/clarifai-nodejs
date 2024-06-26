@@ -28,6 +28,7 @@ export class BaseClient {
   protected pat: string;
   protected userAppId: UserAppIDSet;
   protected base: string;
+  protected rootCertificatesPath: string;
 
   /**
    * Constructs a new BaseClient instance with specified configuration options.
@@ -39,6 +40,7 @@ export class BaseClient {
    * @param {string} [authConfig.token] An optional token for authentication.
    * @param {string} [authConfig.base='https://api.clarifai.com'] The base URL for the API endpoint. Defaults to 'https://api.clarifai.com'.
    * @param {string} [authConfig.ui='https://clarifai.com'] The URL for the UI. Defaults to 'https://clarifai.com'.
+   * @param {string} [authConfig.rootCertificatesPath] Path to the SSL root certificates file, used to establish secure gRPC connections.
    */
   constructor(authConfig: AuthConfig = {}) {
     const pat = getFromDictOrEnv("pat", "CLARIFAI_PAT", authConfig);
@@ -52,6 +54,7 @@ export class BaseClient {
             authConfig.token,
             authConfig.base,
             authConfig.ui,
+            authConfig.rootCertificatesPath,
             false,
           )
         : ClarifaiAuthHelper.fromEnv(false); // The validate parameter is set to false explicitly
@@ -60,6 +63,7 @@ export class BaseClient {
     this.pat = this.authHelper.pat;
     this.userAppId = this.authHelper.getUserAppIdProto();
     this.base = this.authHelper.base;
+    this.rootCertificatesPath = this.authHelper.rootCertificatesPath;
   }
 
   /**

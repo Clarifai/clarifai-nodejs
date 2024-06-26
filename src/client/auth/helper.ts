@@ -2,6 +2,7 @@ import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb"
 import { grpc } from "clarifai-nodejs-grpc";
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import process from "process";
+import fs from "fs";
 
 // TypeScript interface for the cache
 export interface Cache {
@@ -75,6 +76,7 @@ export class ClarifaiAuthHelper {
   private token: string;
   private _base: string;
   private _ui: string;
+  private _rootCertificatesPath: string;
 
   /**
    * A helper to get the authorization information needed to make API calls with the grpc
@@ -97,6 +99,7 @@ export class ClarifaiAuthHelper {
    *             https://clarifai.com (default), https://host:port, http://host:port,
    *             host:port (will be treated as http, not https). It's highly recommended to include
    *             the http:// or https:// otherwise we need to check the endpoint to determine if it has SSL during this __init__.
+   * @param rootCertificatesPath - path to the root certificates file. This is only used for grpc secure channels.
    * @param validate - Whether to validate the inputs. This is useful for overriding vars then validating.
    */
   constructor(
@@ -106,12 +109,14 @@ export class ClarifaiAuthHelper {
     token: string = "",
     base: string = DEFAULT_BASE,
     ui: string = DEFAULT_UI,
+    rootCertificatesPath: string = "",
     validate: boolean = true,
   ) {
     this.userId = userId;
     this.appId = appId;
     this._pat = pat;
     this.token = token;
+    this._rootCertificatesPath = rootCertificatesPath;
     this._base = base;
     this._ui = ui;
 
@@ -142,6 +147,13 @@ export class ClarifaiAuthHelper {
       throw new Error(
         "Need 'pat' or 'token' in the query params or use one of the CLARIFAI_PAT or CLARIFAI_SESSION_TOKEN env vars",
       );
+    } else if (
+      this._rootCertificatesPath &&
+      !fs.existsSync(this._rootCertificatesPath)
+    ) {
+      throw new Error(
+        `Root certificates path ${this._rootCertificatesPath} does not exist`,
+      );
     }
   }
 
@@ -163,6 +175,8 @@ export class ClarifaiAuthHelper {
     const pat = process.env.CLARIFAI_PAT || "";
     const base = process.env.CLARIFAI_API_BASE || DEFAULT_BASE;
     const ui = process.env.CLARIFAI_UI || DEFAULT_UI;
+    const rootCertificatesPath =
+      process.env.CLARIFAI_ROOT_CERTIFICATES_PATH || "";
 
     return new ClarifaiAuthHelper(
       userId,
@@ -171,6 +185,7 @@ export class ClarifaiAuthHelper {
       token,
       base,
       ui,
+      rootCertificatesPath,
       validate,
     );
   }
@@ -227,7 +242,16 @@ export class ClarifaiAuthHelper {
     let client: V2Client;
 
     if (https) {
-      client = new V2Client(this._base, grpc.ChannelCredentials.createSsl());
+      if (this._rootCertificatesPath) {
+        client = new V2Client(
+          this._base,
+          grpc.ChannelCredentials.createSsl(
+            fs.readFileSync(this._rootCertificatesPath),
+          ),
+        );
+      } else {
+        client = new V2Client(this._base, grpc.ChannelCredentials.createSsl());
+      }
     } else {
       let host: string;
       let port: number = 80;
@@ -280,6 +304,13 @@ export class ClarifaiAuthHelper {
    */
   setUi(ui: string): void {
     this._ui = httpsCache(uiHttpsCache, ui);
+  }
+
+  /**
+   * Return the root certificates path.
+   */
+  get rootCertificatesPath(): string {
+    return this._rootCertificatesPath;
   }
 
   /**
