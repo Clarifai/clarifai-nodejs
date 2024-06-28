@@ -19,6 +19,7 @@ import {
   ModelVersion,
   OutputConfig,
   OutputInfo,
+  UserAppIDSet,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -39,6 +40,34 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
 
+interface BaseModelConfig {
+  modelVersion?: { id: string };
+  modelUserAppId?: {
+    userId: string;
+    appId: string;
+  };
+}
+
+interface ModelConfigWithUrl extends BaseModelConfig {
+  url: ClarifaiUrl;
+  modelId?: undefined;
+  authConfig?: Omit<AuthConfig, "userId" | "appId">;
+}
+
+interface ModelConfigWithModelId extends BaseModelConfig {
+  url?: undefined;
+  modelId: string;
+  authConfig?: AuthConfig;
+}
+
+type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
+
+const isModelConfigWithUrl = (
+  config: ModelConfig,
+): config is ModelConfigWithUrl => {
+  return (config as ModelConfigWithUrl).url !== undefined;
+};
+
 /**
  * Model is a class that provides access to Clarifai API endpoints related to Model information.
  * @noInheritDoc
@@ -46,8 +75,9 @@ import {
 export class Model extends Lister {
   private appId: string;
   private id: string;
+  private modelUserAppId: UserAppIDSet | undefined;
   private modelVersion: { id: string } | undefined;
-  private modelInfo: GrpcModel;
+  public modelInfo: GrpcModel;
   private trainingParams: Record<string, unknown>;
 
   /**
@@ -63,58 +93,67 @@ export class Model extends Lister {
    *
    * @includeExample examples/model/index.ts
    */
-  constructor({
-    url,
-    modelId,
-    modelVersion,
-    authConfig = {},
-  }:
-    | {
-        url: ClarifaiUrl;
-        modelId?: undefined;
-        modelVersion?: { id: string };
-        authConfig?: AuthConfig;
-      }
-    | {
-        url?: undefined;
-        modelId: string;
-        modelVersion?: { id: string };
-        authConfig?: AuthConfig;
-      }) {
-    if (url && modelId) {
+  constructor(config: ModelConfig) {
+    const { modelId, modelVersion, modelUserAppId } = config;
+    if (config.url && config.modelId) {
       throw new UserError("You can only specify one of url or model_id.");
     }
-    if (!url && !modelId) {
+    if (!config.url && !config.modelId) {
       throw new UserError("You must specify one of url or model_id.");
     }
-    let modelIdFromUrl;
 
-    if (url) {
-      const [userId, appId, destructuredModelId, modelVersionId] =
+    let _authConfig: AuthConfig,
+      _destructuredModelId: string = "",
+      _destructuredModelVersionId: string | undefined = undefined;
+    if (isModelConfigWithUrl(config)) {
+      const { url } = config;
+      const [userId, appId] = ClarifaiUrlHelper.splitClarifaiUrl(url);
+      [, , _destructuredModelId, _destructuredModelVersionId] =
         ClarifaiUrlHelper.splitClarifaiUrl(url);
-      modelIdFromUrl = destructuredModelId;
-      if (modelVersion) {
-        modelVersion.id = modelVersionId;
-      } else {
-        modelVersion = { id: modelVersionId };
-      }
-      authConfig.userId = userId;
-      authConfig.appId = appId;
+      _authConfig = config.authConfig
+        ? {
+            ...config.authConfig,
+            userId,
+            appId,
+          }
+        : {
+            userId,
+            appId,
+            pat: process.env.CLARIFAI_PAT!,
+          };
+    } else {
+      // if authconfig is undefined, we pick the values from env
+      _authConfig = config.authConfig || {
+        pat: process.env.CLARIFAI_PAT!,
+        userId: process.env.CLARIFAI_USER_ID!,
+        appId: process.env.CLARIFAI_APP_ID!,
+      };
     }
 
-    super({ authConfig: authConfig });
-    this.appId = authConfig.appId;
-    this.modelVersion = modelVersion;
-    this.id = (modelIdFromUrl || modelId) as string;
+    super({ authConfig: _authConfig });
+    this.appId = _authConfig.appId;
+    this.modelVersion =
+      modelVersion ||
+      (_destructuredModelVersionId
+        ? { id: _destructuredModelVersionId }
+        : undefined);
+    this.id = modelId || _destructuredModelId;
     this.modelInfo = new GrpcModel();
     const grpcModelVersion = new ModelVersion();
     if (this.modelVersion) {
       grpcModelVersion.setId(this.modelVersion.id);
     }
-    if (this.appId) this.modelInfo.setAppId(this.appId);
-    if (this.id) this.modelInfo.setId(this.id);
-    if (this.modelVersion) this.modelInfo.setModelVersion(grpcModelVersion);
+    this.modelInfo.setAppId(this.appId);
+    this.modelInfo.setId(this.id);
+    if (this.modelVersion) {
+      this.modelInfo.setModelVersion(grpcModelVersion);
+    }
     this.trainingParams = {};
+    if (modelUserAppId) {
+      this.modelUserAppId = new UserAppIDSet()
+        .setAppId(modelUserAppId.appId)
+        .setUserId(modelUserAppId.userId);
+    }
   }
 
   /**
@@ -127,7 +166,11 @@ export class Model extends Lister {
       this.STUB.client,
     );
     const request = new GetModelRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     if (this.modelVersion?.id) request.setVersionId(this.modelVersion.id);
 
@@ -171,7 +214,11 @@ export class Model extends Lister {
     }
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -236,7 +283,11 @@ export class Model extends Lister {
     }
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -333,7 +384,11 @@ export class Model extends Lister {
       this.trainingParams?.["train_params"]?.["template"] ?? null;
 
     const request = new ListModelTypesRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
 
     const listModelTypes = promisifyGrpcCall(
       this.STUB.client.listModelTypes,
@@ -369,7 +424,11 @@ export class Model extends Lister {
    */
   async deleteVersion(versionId: string): Promise<void> {
     const request = new DeleteModelVersionRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     request.setVersionId(versionId);
 
@@ -402,7 +461,11 @@ export class Model extends Lister {
     }
 
     const request = new PostModelVersionsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     request.setModelVersionsList([modelVersion]);
 
@@ -442,7 +505,11 @@ export class Model extends Lister {
     void
   > {
     const request = new ListModelVersionsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
 
     const listModelVersions = promisifyGrpcCall(
@@ -502,7 +569,11 @@ export class Model extends Lister {
     }
 
     const request = new PostModelOutputsRequest();
-    request.setUserAppId(this.userAppId);
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(this.id);
     if (this.modelVersion && this.modelVersion.id)
       request.setVersionId(this.modelVersion.id);

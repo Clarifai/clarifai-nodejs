@@ -15,9 +15,9 @@ type YamlModel = Record<string, unknown>;
 
 export function getYamlOutputInfoProto(
   yamlModelOutputInfo: YamlModelOutputInfo,
-): OutputInfo | null {
+): OutputInfo | undefined {
   if (!yamlModelOutputInfo?.params) {
-    return null;
+    return undefined;
   }
 
   return new OutputInfo().setParams(

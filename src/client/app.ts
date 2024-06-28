@@ -36,6 +36,7 @@ import {
   Dataset,
   WorkflowNode,
   ModelVersion,
+  UserAppIDSet,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
@@ -49,13 +50,15 @@ import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
 
+export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
+  appId?: undefined;
+  userId?: undefined;
+};
+
 export type AppConfig =
   | {
       url: ClarifaiAppUrl;
-      authConfig: Omit<AuthConfig, "appId" | "userId"> & {
-        appId?: undefined;
-        userId?: undefined;
-      };
+      authConfig: AuthAppConfig;
     }
   | {
       url?: undefined;
@@ -81,6 +84,7 @@ export type CreateModelParam = Omit<Partial<Model.AsObject>, "id">;
  */
 export class App extends Lister {
   private appInfo: GrpcApp;
+  public info: GrpcApp.AsObject;
 
   /**
    * Initializes an App object.
@@ -113,6 +117,7 @@ export class App extends Lister {
     this.appInfo = new GrpcApp();
     this.appInfo.setUserId(authConfig.userId!);
     this.appInfo.setId(authConfig.appId!);
+    this.info = this.appInfo.toObject();
   }
 
   /**
@@ -563,6 +568,13 @@ export class App extends Lister {
         const model = await this.model({
           modelId: node.model.modelId,
           modelVersionId: node.model.modelVersionId ?? "",
+          modelUserAppId:
+            node.model.userId && node.model.appId
+              ? {
+                  userId: node.model.userId,
+                  appId: node.model.appId,
+                }
+              : undefined,
         });
         modelObject = model;
         if (model) {
@@ -571,10 +583,7 @@ export class App extends Lister {
       } catch (e) {
         // model doesn't exist, create a new model from yaml config
         if (
-          (e as { message?: string })?.message?.includes(
-            "Model does not exist",
-          ) &&
-          outputInfo
+          (e as { message?: string })?.message?.includes("Model does not exist")
         ) {
           const { modelId, ...otherParams } = node.model;
           modelObject = await this.createModel({
@@ -589,11 +598,16 @@ export class App extends Lister {
               userId: this.userAppId.getUserId(),
             },
           });
-          const modelVersion = new ModelVersion().setOutputInfo(outputInfo);
-          const modelWithVersion = await model.createVersion(modelVersion);
-          if (modelWithVersion) {
-            allModels.push(modelWithVersion);
-            continue;
+          if (outputInfo) {
+            const modelVersion = new ModelVersion().setOutputInfo(outputInfo);
+            const modelWithVersion = await model.createVersion(modelVersion);
+            if (modelWithVersion) {
+              allModels.push(modelWithVersion);
+              continue;
+            }
+          } else {
+            await model.loadInfo();
+            allModels.push(model.modelInfo.toObject());
           }
         }
       }
@@ -659,6 +673,7 @@ export class App extends Lister {
    *
    * @param modelId - The model ID for the existing model.
    * @param modelVersionId - Specific version id of the model.
+   * @param modelUserAppId - The user app ID for the model.
    * @returns A model object for the specified model ID.
    *
    * @includeExample examples/app/model.ts
@@ -666,12 +681,25 @@ export class App extends Lister {
   async model({
     modelId,
     modelVersionId,
+    modelUserAppId,
   }: {
     modelId: string;
     modelVersionId?: string;
+    modelUserAppId?: {
+      userId: string;
+      appId: string;
+    };
   }): Promise<SingleModelResponse.AsObject["model"]> {
     const request = new GetModelRequest();
-    request.setUserAppId(this.userAppId);
+    if (modelUserAppId) {
+      request.setUserAppId(
+        new UserAppIDSet()
+          .setAppId(modelUserAppId.appId)
+          .setUserId(modelUserAppId.userId),
+      );
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
     request.setModelId(modelId);
     if (modelVersionId) request.setVersionId(modelVersionId);
 

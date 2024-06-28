@@ -137,7 +137,8 @@ export class ClarifaiUrlHelper {
         `Provided url must have 2 parts after the domain name. The current parts are: ${parts}`,
       );
     }
-    return [parts[0], parts[1]];
+    const [userId, appId] = parts;
+    return [userId, appId];
   }
 
   /**

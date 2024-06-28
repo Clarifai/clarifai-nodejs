@@ -356,3 +356,6 @@ example/*
 
 # Test outputs
 tests/client/workflow/export_general.yml
+
+# Default workflow file path
+prompter_wf.yaml
