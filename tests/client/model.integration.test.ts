@@ -255,5 +255,63 @@ describe(
         clipDim,
       );
     });
+
+    it("should predict from a model outside the app", async () => {
+      const model = new Model({
+        url: "https://clarifai.com/clarifai/main/models/general-image-recognition",
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const imageUrl = "https://samples.clarifai.com/metro-north.jpg";
+      const modelPrediction = await model.predictByUrl({
+        url: imageUrl,
+        inputType: "image",
+      });
+      expect(modelPrediction.length).toBeGreaterThan(0);
+    });
+
+    it("should convert image to text", async () => {
+      const modelUrl =
+        "https://clarifai.com/salesforce/blip/models/general-english-image-caption-blip";
+      const imageUrl =
+        "https://s3.amazonaws.com/samples.clarifai.com/featured-models/image-captioning-statue-of-liberty.jpeg";
+
+      const model = new Model({
+        url: modelUrl,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const modelPrediction = await model.predictByUrl({
+        url: imageUrl,
+        inputType: "image",
+      });
+      expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
+    });
+
+    it("should predict multimodal with image and text", async () => {
+      const prompt = "What time of day is it?";
+      const imageUrl = "https://samples.clarifai.com/metro-north.jpg";
+      const modelUrl =
+        "https://clarifai.com/openai/chat-completion/models/openai-gpt-4-vision";
+      const inferenceParams = { temperature: 0.2, maxTokens: 100 };
+      const multiInputs = Input.getMultimodalInput({
+        inputId: "",
+        imageUrl,
+        rawText: prompt,
+      });
+      const model = new Model({
+        url: modelUrl,
+        authConfig: { pat: CLARIFAI_PAT },
+      });
+
+      const modelPrediction = await model.predict({
+        inputs: [multiInputs],
+        inferenceParams,
+      });
+
+      expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
+    });
   },
 );
