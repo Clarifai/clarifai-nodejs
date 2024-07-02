@@ -114,7 +114,7 @@ export class RAG {
     authConfig,
     appUrl,
     llmUrl = "https://clarifai.com/mistralai/completion/models/mistral-7B-Instruct",
-    baseWorkflow = "Universal",
+    baseWorkflow = "Text",
     workflowYamlFilename = "prompter_wf.yaml",
     promptTemplate = DEFAULT_RAG_PROMPT_TEMPLATE,
     workflowId,
