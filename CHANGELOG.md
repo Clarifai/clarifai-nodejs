@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.3](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.2...v0.0.3) (2024-07-02)
+
+
+### Features
+
+* custom root certificate support ([#19](https://github.com/Clarifai/clarifai-nodejs/issues/19)) ([8b517f4](https://github.com/Clarifai/clarifai-nodejs/commit/8b517f4b534d877ef8e6378b011a997de54e809c))
+* RAG Module ([#9](https://github.com/Clarifai/clarifai-nodejs/issues/9)) ([7354e93](https://github.com/Clarifai/clarifai-nodejs/commit/7354e935ce24f86a2201dcca4c035218883df5ca))
+
+
+### Bug Fixes
+
+* updated methods to match docs ([#14](https://github.com/Clarifai/clarifai-nodejs/issues/14)) ([3d46b72](https://github.com/Clarifai/clarifai-nodejs/commit/3d46b72fc92cbb79f5d030c9855e3a463f30dc8d))
+
 ## [0.0.2](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.1...v0.0.2) (2024-05-07)
 
 
