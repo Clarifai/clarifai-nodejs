@@ -118,6 +118,21 @@ describe("ClarifaiAuthHelper", () => {
     expect(() => ClarifaiAuthHelper.validateSecretsDict(secrets)).toThrow();
   });
 
+  it("throws error for invalid root certificates path", () => {
+    expect(
+      () =>
+        new ClarifaiAuthHelper(
+          "userId",
+          "appId",
+          "pat",
+          "",
+          "https://customdomain.com",
+          "https://customdomain.com/ui",
+          "invalid",
+        ),
+    ).toThrow(`Root certificates path invalid does not exist`);
+  });
+
   it("getUserAppIdProto returns correct UserAppIDSet proto object", () => {
     const helper = new ClarifaiAuthHelper("userId", "appId", "pat");
     const userAppIdProto = helper.getUserAppIdProto();
