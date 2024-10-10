@@ -1,10 +1,6 @@
-<h1 align="center">
-  <a href="https://www.clarifai.com/"><img alt="Clarifai" title="Clarifai" src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Clarifai_Logo_FC_Web.png"></a>
-</h1>
+![image](https://github.com/user-attachments/assets/3721189c-01c0-4936-a73c-13dcbf808542)
 
-<h2 align="center">
-Clarifai Node.js SDK</a>
-</h2>
+<h2 align="center">Clarifai Node.js SDK</h2>
 
 [![npm](https://img.shields.io/npm/v/clarifai-nodejs)](https://www.npmjs.com/package/clarifai-nodejs)
 [![Build](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml/badge.svg)](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml)
