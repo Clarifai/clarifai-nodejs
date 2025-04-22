@@ -1,4 +1,8 @@
-import { Workflow } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import {
+  LicenseType,
+  Workflow,
+  Model,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { describe, expect, it } from "vitest";
 import {
   Subset,
@@ -44,6 +48,10 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -81,6 +89,10 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -118,6 +130,10 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
           },
           nodeInputsList: [
             {
