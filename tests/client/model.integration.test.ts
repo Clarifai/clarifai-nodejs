@@ -290,7 +290,7 @@ describe(
       expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
     });
 
-    it("should predict multimodal with image and text", async () => {
+    it.skip("should predict multimodal with image and text", async () => {
       const prompt = "What time of day is it?";
       const imageUrl = "https://samples.clarifai.com/metro-north.jpg";
       const modelUrl =

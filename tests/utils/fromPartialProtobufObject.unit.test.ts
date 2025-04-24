@@ -1,4 +1,8 @@
-import { Workflow } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import {
+  LicenseType,
+  Workflow,
+  Model,
+} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { describe, expect, it } from "vitest";
 import {
   Subset,
@@ -30,6 +34,7 @@ describe("fromPartialProtobufObject", () => {
               userId: "",
               license: "",
               trainLog: "",
+              methodSignaturesList: [],
             },
             displayName: "",
             userId: "clarifai",
@@ -44,6 +49,11 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
+            billingType: Model.BillingType.UNKNOWN,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -67,6 +77,7 @@ describe("fromPartialProtobufObject", () => {
               userId: "",
               license: "",
               trainLog: "",
+              methodSignaturesList: [],
             },
             displayName: "",
             userId: "clarifai",
@@ -81,6 +92,11 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
+            billingType: Model.BillingType.UNKNOWN,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -104,6 +120,7 @@ describe("fromPartialProtobufObject", () => {
               userId: "",
               license: "",
               trainLog: "",
+              methodSignaturesList: [],
             },
             displayName: "",
             userId: "clarifai",
@@ -118,6 +135,11 @@ describe("fromPartialProtobufObject", () => {
             checkConsentsList: [],
             isStarred: false,
             starCount: 0,
+            licenseType: LicenseType.UNKNOWN_LICENSE_TYPE,
+            source: Model.Source.UNKNOWN_SOURCE,
+            creator: "",
+            versionCount: 0,
+            billingType: Model.BillingType.UNKNOWN,
           },
           nodeInputsList: [
             {

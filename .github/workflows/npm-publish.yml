@@ -15,7 +15,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -29,7 +29,7 @@ jobs:
         run: npm run test
         env:
           VITE_CLARIFAI_USER_ID: ${{ secrets.VITE_CLARIFAI_USER_ID }}
-          VITE_CLARIFAI_PAT:  ${{ secrets.VITE_CLARIFAI_PAT }}
+          VITE_CLARIFAI_PAT: ${{ secrets.VITE_CLARIFAI_PAT }}
       - name: Build
         run: npm run build
       - name: Publish to npm
