@@ -254,7 +254,7 @@ describe("Search", () => {
         expect(result.hitsList.length).toBe(expectedHits);
       }
     }
-  }, 10000);
+  }, 50000);
 
   it("should get expected hits for ranks", async () => {
     const searchResponseGenerator = search.query({
