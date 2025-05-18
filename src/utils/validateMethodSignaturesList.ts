@@ -32,6 +32,13 @@ export const validateMethodSignaturesList = (
   params: Record<string, unknown>,
   inputFieldsList: ModelTypeField.AsObject[],
 ) => {
+  const requiredFieldsList = inputFieldsList
+    .filter((each) => each.required)
+    .map((each) => each.name);
+  const missingKeys = requiredFieldsList.filter((key) => !(key in params));
+  if (missingKeys.length > 0) {
+    throw new Error(`Missing required fields: ${missingKeys.join(", ")}`);
+  }
   Object.entries(params).forEach(([key, value]) => {
     const field = inputFieldsList.find((field) => field.name === key);
     if (field) {

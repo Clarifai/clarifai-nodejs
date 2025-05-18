@@ -45,6 +45,8 @@ import {
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
 import uniqBy from "lodash/uniqBy";
 import compact from "lodash/compact";
+import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
+import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -75,18 +77,9 @@ interface GeneralModelPredictConfig {
   outputConfig?: OutputConfig;
 }
 
-interface TextModelPredictConfig {
+type TextModelPredictConfig = {
   methodName: string;
-  message?: string;
-  image?: Image.AsObject;
-  messageHistory?: {
-    role: "user" | "assistant";
-    content: string;
-    image?: Image.AsObject;
-  }[];
-  runner?: RunnerSelector.AsObject;
-  inferenceParams?: Record<string, JavaScriptValue>;
-}
+} & Record<string, unknown>;
 
 type ModelPredictConfig = GeneralModelPredictConfig | TextModelPredictConfig;
 
@@ -97,8 +90,7 @@ const isTextModelPredictConfig = (
     typeof config === "object" &&
     config !== null &&
     // @ts-expect-error - methodName check needed for the type guard
-    typeof config.methodName === "string" &&
-    ("message" in config || "messageHistory" in config || "image" in config)
+    typeof config.methodName === "string"
   );
 };
 
@@ -236,6 +228,11 @@ export class Model extends Lister {
       grpcModelVersion.setId(responseObject.model?.modelVersion?.id);
     }
     this.modelInfo.setModelVersion(grpcModelVersion);
+    this.modelInfo
+      .getModelVersion()
+      ?.setMethodSignaturesList(
+        response.getModel()?.getModelVersion()?.getMethodSignaturesList() ?? [],
+      );
   }
 
   /**
@@ -610,58 +607,71 @@ export class Model extends Lister {
     config: ModelPredictConfig,
   ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     if (isTextModelPredictConfig(config)) {
-      const {
-        runner,
-        inferenceParams = {},
-        message,
-        image,
-        methodName,
-      } = config;
+      await this.loadInfo();
 
-      const methodSignatures = (
-        this.modelInfo.getModelVersion()?.getMethodSignaturesList() ?? []
-      ).map((each) => {
-        return each.toObject();
-      });
+      const { methodName, ...otherParams } = config;
+
+      const modelInfoObject = this.modelInfo.toObject();
+
+      const methodSignatures =
+        modelInfoObject?.modelVersion?.methodSignaturesList;
+
+      if (!methodSignatures) {
+        throw new Error(
+          `Model ${this.id} is incompatible with the new interface`,
+        );
+      }
 
       const targetMethodSignature = methodSignatures.find((each) => {
         return each.name === methodName;
       });
 
-      const modelParamSpecs =
-        targetMethodSignature?.inputFieldsList?.filter(
-          (eachField) => eachField.isParam as boolean,
-        ) ?? [];
+      if (!targetMethodSignature) {
+        throw new Error(
+          `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
+        );
+      }
 
-      const prompt: Part.AsObject[] = compact([
-        message
-          ? {
-              id: "prompt",
-              data: {
-                stringValue: message,
-              },
-            }
-          : undefined,
-        image
-          ? {
-              id: "image",
-              image,
-            }
-          : undefined,
-      ]);
+      validateMethodSignaturesList(
+        otherParams,
+        targetMethodSignature?.inputFieldsList ?? [],
+      );
+
+      const { params, payload } = extractPayloadAndParams(
+        otherParams,
+        targetMethodSignature.inputFieldsList,
+      );
+
+      // const prompt: Part.AsObject[] = compact([
+      //   message
+      //     ? {
+      //         id: "prompt",
+      //         data: {
+      //           stringValue: message,
+      //         },
+      //       }
+      //     : undefined,
+      //   image
+      //     ? {
+      //         id: "image",
+      //         image,
+      //       }
+      //     : undefined,
+      // ]);
 
       const partParams = constructPartsFromParams(
-        inferenceParams,
-        modelParamSpecs,
+        params as Record<string, JavaScriptValue>,
+        targetMethodSignature.inputFieldsList,
       );
-      const request: PostModelOutputsRequest.AsObject = {
-        userAppId: this.modelUserAppId?.toObject(),
-        modelId: this.id,
-        versionId: this.modelVersion?.id ?? "",
-        runnerSelector: runner,
-        usePredictCache: false,
-      };
-      console.log(request);
+
+      // const request: PostModelOutputsRequest.AsObject = {
+      //   userAppId: this.modelUserAppId?.toObject(),
+      //   modelId: this.id,
+      //   versionId: this.modelVersion?.id ?? "",
+      //   runnerSelector: runner,
+      //   usePredictCache: false,
+      // };
+      // console.log(request);
     } else {
       const { inputs, inferenceParams, outputConfig } = config;
       if (!Array.isArray(inputs)) {
