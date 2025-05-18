@@ -20,6 +20,9 @@ import {
   OutputConfig,
   OutputInfo,
   UserAppIDSet,
+  RunnerSelector,
+  Image,
+  Part,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -39,6 +42,9 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
+import { constructPartsFromParams } from "../utils/setPartsFromParams";
+import uniqBy from "lodash/uniqBy";
+import compact from "lodash/compact";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -62,6 +68,39 @@ interface ModelConfigWithModelId extends BaseModelConfig {
 }
 
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
+
+interface GeneralModelPredictConfig {
+  inputs: GrpcInput[];
+  inferenceParams?: Record<string, JavaScriptValue>;
+  outputConfig?: OutputConfig;
+}
+
+interface TextModelPredictConfig {
+  methodName: string;
+  message?: string;
+  image?: Image.AsObject;
+  messageHistory?: {
+    role: "user" | "assistant";
+    content: string;
+    image?: Image.AsObject;
+  }[];
+  runner?: RunnerSelector.AsObject;
+  inferenceParams?: Record<string, JavaScriptValue>;
+}
+
+type ModelPredictConfig = GeneralModelPredictConfig | TextModelPredictConfig;
+
+const isTextModelPredictConfig = (
+  config: ModelPredictConfig,
+): config is TextModelPredictConfig => {
+  return (
+    typeof config === "object" &&
+    config !== null &&
+    // @ts-expect-error - methodName check needed for the type guard
+    typeof config.methodName === "string" &&
+    ("message" in config || "messageHistory" in config || "image" in config)
+  );
+};
 
 const isModelConfigWithUrl = (
   config: ModelConfig,
@@ -533,6 +572,20 @@ export class Model extends Lister {
 
   /**
    * Predicts the model based on the given inputs.
+   * Useful for chat / text based llms
+   */
+  async predict({
+    methodName,
+    message,
+    image,
+    messageHistory,
+    runner,
+    inferenceParams,
+  }: TextModelPredictConfig): Promise<
+    MultiOutputResponse.AsObject["outputsList"]
+  >;
+  /**
+   * Predicts the model based on the given inputs.
    * Use the `Input` module to create the input objects.
    *
    * @param inputs - The inputs to predict, must be less than 128.
@@ -550,77 +603,136 @@ export class Model extends Lister {
     inputs,
     inferenceParams,
     outputConfig,
-  }: {
-    inputs: GrpcInput[];
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
-    if (!Array.isArray(inputs)) {
-      throw new Error(
-        "Invalid inputs, inputs must be an array of Input objects.",
+  }: GeneralModelPredictConfig): Promise<
+    MultiOutputResponse.AsObject["outputsList"]
+  >;
+  async predict(
+    config: ModelPredictConfig,
+  ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+    if (isTextModelPredictConfig(config)) {
+      const {
+        runner,
+        inferenceParams = {},
+        message,
+        image,
+        methodName,
+      } = config;
+
+      const methodSignatures = (
+        this.modelInfo.getModelVersion()?.getMethodSignaturesList() ?? []
+      ).map((each) => {
+        return each.toObject();
+      });
+
+      const targetMethodSignature = methodSignatures.find((each) => {
+        return each.name === methodName;
+      });
+
+      const modelParamSpecs =
+        targetMethodSignature?.inputFieldsList?.filter(
+          (eachField) => eachField.isParam as boolean,
+        ) ?? [];
+
+      const prompt: Part.AsObject[] = compact([
+        message
+          ? {
+              id: "prompt",
+              data: {
+                stringValue: message,
+              },
+            }
+          : undefined,
+        image
+          ? {
+              id: "image",
+              image,
+            }
+          : undefined,
+      ]);
+
+      const partParams = constructPartsFromParams(
+        inferenceParams,
+        modelParamSpecs,
       );
-    }
-    if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
-      throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
-    }
-
-    this.overrideModelVersion({ inferenceParams, outputConfig });
-    const requestInputs: GrpcInput[] = [];
-    for (const input of inputs) {
-      requestInputs.push(input);
-    }
-
-    const request = new PostModelOutputsRequest();
-    if (this.modelUserAppId) {
-      request.setUserAppId(this.modelUserAppId);
+      const request: PostModelOutputsRequest.AsObject = {
+        userAppId: this.modelUserAppId?.toObject(),
+        modelId: this.id,
+        versionId: this.modelVersion?.id ?? "",
+        runnerSelector: runner,
+        usePredictCache: false,
+      };
+      console.log(request);
     } else {
-      request.setUserAppId(this.userAppId);
-    }
-    request.setModelId(this.id);
-    if (this.modelVersion && this.modelVersion.id)
-      request.setVersionId(this.modelVersion.id);
-    request.setInputsList(requestInputs);
-    request.setModel(this.modelInfo);
+      const { inputs, inferenceParams, outputConfig } = config;
+      if (!Array.isArray(inputs)) {
+        throw new Error(
+          "Invalid inputs, inputs must be an array of Input objects.",
+        );
+      }
+      if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
+        throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
+      }
 
-    const startTime = Date.now();
-    const backoffIterator = new BackoffIterator();
-    return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
-      (resolve, reject) => {
-        const makeRequest = () => {
-          const postModelOutputs = promisifyGrpcCall(
-            this.STUB.client.postModelOutputs,
-            this.STUB.client,
-          );
-          this.grpcRequest(postModelOutputs, request)
-            .then((response) => {
-              const responseObject = response.toObject();
-              if (
-                responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
-                Date.now() - startTime < 600000
-              ) {
-                console.log(
-                  `${this.id} model is still deploying, please wait...`,
-                );
-                setTimeout(makeRequest, backoffIterator.next().value * 1000);
-              } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
+      this.overrideModelVersion({ inferenceParams, outputConfig });
+      const requestInputs: GrpcInput[] = [];
+      for (const input of inputs) {
+        requestInputs.push(input);
+      }
+
+      const request = new PostModelOutputsRequest();
+      if (this.modelUserAppId) {
+        request.setUserAppId(this.modelUserAppId);
+      } else {
+        request.setUserAppId(this.userAppId);
+      }
+      request.setModelId(this.id);
+      if (this.modelVersion && this.modelVersion.id)
+        request.setVersionId(this.modelVersion.id);
+      request.setInputsList(requestInputs);
+      request.setModel(this.modelInfo);
+
+      const startTime = Date.now();
+      const backoffIterator = new BackoffIterator();
+      return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
+        (resolve, reject) => {
+          const makeRequest = () => {
+            const postModelOutputs = promisifyGrpcCall(
+              this.STUB.client.postModelOutputs,
+              this.STUB.client,
+            );
+            this.grpcRequest(postModelOutputs, request)
+              .then((response) => {
+                const responseObject = response.toObject();
+                if (
+                  responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
+                  Date.now() - startTime < 600000
+                ) {
+                  console.log(
+                    `${this.id} model is still deploying, please wait...`,
+                  );
+                  setTimeout(makeRequest, backoffIterator.next().value * 1000);
+                } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
+                  reject(
+                    new Error(
+                      `Model Predict failed with response ${responseObject.status?.toString()}`,
+                    ),
+                  );
+                } else {
+                  resolve(response.toObject().outputsList);
+                }
+              })
+              .catch((error) => {
                 reject(
                   new Error(
-                    `Model Predict failed with response ${responseObject.status?.toString()}`,
+                    `Model Predict failed with error: ${error.message}`,
                   ),
                 );
-              } else {
-                resolve(response.toObject().outputsList);
-              }
-            })
-            .catch((error) => {
-              reject(
-                new Error(`Model Predict failed with error: ${error.message}`),
-              );
-            });
-        };
-        makeRequest();
-      },
-    );
+              });
+          };
+          makeRequest();
+        },
+      );
+    }
   }
 
   /**
