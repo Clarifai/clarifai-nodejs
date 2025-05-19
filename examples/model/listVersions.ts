@@ -27,7 +27,7 @@ export const model = new Model({
 model
   .predict({
     methodName: "chat",
-    messages: ["foo"],
+    messages: [{ foo: "bar" }, { foo: "bar" }, { foo: "bar" }],
     max_tokens: 5,
   })
   .then(() => {

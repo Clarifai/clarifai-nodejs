@@ -43,11 +43,9 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
-import uniqBy from "lodash/uniqBy";
-import compact from "lodash/compact";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
 import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
-import { constructPayloadFromParams } from "../utils/constructPayloadFromParams";
+import { constructPartsFromPayload } from "../utils/constructPartsFromPayload";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -643,7 +641,7 @@ export class Model extends Lister {
         targetMethodSignature.inputFieldsList,
       );
 
-      const payloadPart = constructPayloadFromParams(
+      const payloadPart = constructPartsFromPayload(
         payload as Record<string, JavaScriptValue>,
         targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
       );
