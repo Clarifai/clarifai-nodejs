@@ -664,6 +664,11 @@ export class Model extends Lister {
       request.setModel(this.modelInfo);
       const input = new GrpcInput();
       const requestData = new Data();
+      requestData.setMetadata(
+        Struct.fromJavaScript({
+          _method_name: methodName,
+        }),
+      );
       requestData.setPartsList([...payloadPart, ...paramsPart]);
       input.setData(requestData);
       request.setInputsList([input]);
@@ -718,7 +723,7 @@ export class Model extends Lister {
               } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
                 reject(
                   new Error(
-                    `Model Predict failed with response ${responseObject.status?.toString()}`,
+                    `Model Predict failed with response ${JSON.stringify(responseObject.status)}`,
                   ),
                 );
               } else {
