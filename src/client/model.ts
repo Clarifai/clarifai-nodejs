@@ -47,6 +47,7 @@ import uniqBy from "lodash/uniqBy";
 import compact from "lodash/compact";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
 import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
+import { constructPayloadFromParams } from "../utils/constructPayloadFromParams";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -642,27 +643,17 @@ export class Model extends Lister {
         targetMethodSignature.inputFieldsList,
       );
 
-      // const prompt: Part.AsObject[] = compact([
-      //   message
-      //     ? {
-      //         id: "prompt",
-      //         data: {
-      //           stringValue: message,
-      //         },
-      //       }
-      //     : undefined,
-      //   image
-      //     ? {
-      //         id: "image",
-      //         image,
-      //       }
-      //     : undefined,
-      // ]);
-
-      const partParams = constructPartsFromParams(
-        params as Record<string, JavaScriptValue>,
-        targetMethodSignature.inputFieldsList,
+      const payloadPart = constructPayloadFromParams(
+        payload as Record<string, JavaScriptValue>,
+        targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
       );
+
+      const paramsPart = constructPartsFromParams(
+        params as Record<string, JavaScriptValue>,
+        targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
+      );
+
+      console.log(JSON.stringify(payloadPart.map((each) => each.toObject())));
 
       // const request: PostModelOutputsRequest.AsObject = {
       //   userAppId: this.modelUserAppId?.toObject(),

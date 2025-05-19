@@ -9,7 +9,7 @@ import {
   Value,
 } from "google-protobuf/google/protobuf/struct_pb";
 
-const setPartDataTypes = (
+export const setPartDataTypes = (
   data: Data,
   value: Value.AsObject,
   fieldType?: number,
