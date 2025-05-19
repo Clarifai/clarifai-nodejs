@@ -23,6 +23,7 @@ import {
   RunnerSelector,
   Image,
   Part,
+  Data,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -605,6 +606,7 @@ export class Model extends Lister {
   async predict(
     config: ModelPredictConfig,
   ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+    const request = new PostModelOutputsRequest();
     if (isTextModelPredictConfig(config)) {
       await this.loadInfo();
 
@@ -651,16 +653,20 @@ export class Model extends Lister {
         targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
       );
 
-      console.log(JSON.stringify(payloadPart.map((each) => each.toObject())));
-
-      // const request: PostModelOutputsRequest.AsObject = {
-      //   userAppId: this.modelUserAppId?.toObject(),
-      //   modelId: this.id,
-      //   versionId: this.modelVersion?.id ?? "",
-      //   runnerSelector: runner,
-      //   usePredictCache: false,
-      // };
-      // console.log(request);
+      if (this.modelUserAppId) {
+        request.setUserAppId(this.modelUserAppId);
+      } else {
+        request.setUserAppId(this.userAppId);
+      }
+      request.setModelId(this.id);
+      if (this.modelVersion && this.modelVersion.id)
+        request.setVersionId(this.modelVersion.id);
+      request.setModel(this.modelInfo);
+      const input = new GrpcInput();
+      const requestData = new Data();
+      requestData.setPartsList([...payloadPart, ...paramsPart]);
+      input.setData(requestData);
+      request.setInputsList([input]);
     } else {
       const { inputs, inferenceParams, outputConfig } = config;
       if (!Array.isArray(inputs)) {
@@ -678,7 +684,6 @@ export class Model extends Lister {
         requestInputs.push(input);
       }
 
-      const request = new PostModelOutputsRequest();
       if (this.modelUserAppId) {
         request.setUserAppId(this.modelUserAppId);
       } else {
@@ -689,49 +694,46 @@ export class Model extends Lister {
         request.setVersionId(this.modelVersion.id);
       request.setInputsList(requestInputs);
       request.setModel(this.modelInfo);
-
-      const startTime = Date.now();
-      const backoffIterator = new BackoffIterator();
-      return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
-        (resolve, reject) => {
-          const makeRequest = () => {
-            const postModelOutputs = promisifyGrpcCall(
-              this.STUB.client.postModelOutputs,
-              this.STUB.client,
-            );
-            this.grpcRequest(postModelOutputs, request)
-              .then((response) => {
-                const responseObject = response.toObject();
-                if (
-                  responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
-                  Date.now() - startTime < 600000
-                ) {
-                  console.log(
-                    `${this.id} model is still deploying, please wait...`,
-                  );
-                  setTimeout(makeRequest, backoffIterator.next().value * 1000);
-                } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
-                  reject(
-                    new Error(
-                      `Model Predict failed with response ${responseObject.status?.toString()}`,
-                    ),
-                  );
-                } else {
-                  resolve(response.toObject().outputsList);
-                }
-              })
-              .catch((error) => {
+    }
+    const startTime = Date.now();
+    const backoffIterator = new BackoffIterator();
+    return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
+      (resolve, reject) => {
+        const makeRequest = () => {
+          const postModelOutputs = promisifyGrpcCall(
+            this.STUB.client.postModelOutputs,
+            this.STUB.client,
+          );
+          this.grpcRequest(postModelOutputs, request)
+            .then((response) => {
+              const responseObject = response.toObject();
+              if (
+                responseObject.status?.code === StatusCode.MODEL_DEPLOYING &&
+                Date.now() - startTime < 600000
+              ) {
+                console.log(
+                  `${this.id} model is still deploying, please wait...`,
+                );
+                setTimeout(makeRequest, backoffIterator.next().value * 1000);
+              } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
                 reject(
                   new Error(
-                    `Model Predict failed with error: ${error.message}`,
+                    `Model Predict failed with response ${responseObject.status?.toString()}`,
                   ),
                 );
-              });
-          };
-          makeRequest();
-        },
-      );
-    }
+              } else {
+                resolve(response.toObject().outputsList);
+              }
+            })
+            .catch((error) => {
+              reject(
+                new Error(`Model Predict failed with error: ${error.message}`),
+              );
+            });
+        };
+        makeRequest();
+      },
+    );
   }
 
   /**
