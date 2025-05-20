@@ -26,10 +26,15 @@ export const model = new Model({
 
 model
   .predict({
-    methodName: "chat",
-    messages: [{ foo: "bar" }, { foo: "bar" }, { foo: "bar" }],
+    methodName: "predict",
+    prompt: "Test message",
+    image: {
+      url: "foo",
+    },
+    // messages: [{ foo: "bar" }, { foo: "bar" }, { foo: "bar" }],
     max_tokens: 5,
   })
-  .then(() => {
+  .then((data) => {
+    console.log(JSON.stringify(data));
     console.log("promise resolved");
   });
