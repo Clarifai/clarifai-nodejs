@@ -72,7 +72,7 @@
     "from-protobuf-object": "^1.0.3",
     "google-protobuf": "^3.21.2",
     "js-yaml": "^4.1.0",
-    "llamaindex": "^0.2.13",
+    "llamaindex": "^0.11.0",
     "lodash": "^4.17.21",
     "safe-flat": "^2.1.0",
     "tmp": "^0.2.3",
