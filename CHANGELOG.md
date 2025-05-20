@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.4...v0.0.5) (2025-05-20)
+
+
+### Bug Fixes
+
+* vulnerable package versions ([#25](https://github.com/Clarifai/clarifai-nodejs/issues/25)) ([6bec1b8](https://github.com/Clarifai/clarifai-nodejs/commit/6bec1b8feff74ef9c96c2f5661fd07236d078ae9))
+
 ## [0.0.4](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.3...v0.0.4) (2025-04-24)
 
 
