@@ -31,7 +31,7 @@ describe("App", () => {
         },
       });
       const list = await app.listModels().next();
-      expect(list.value?.length).toBe(15);
+      expect(list.value?.length).toBe(16);
     },
   );
 
