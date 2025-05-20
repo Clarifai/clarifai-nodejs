@@ -64,7 +64,7 @@ export const constructPartsFromPayload = (
 
     let nestedPartsList: Part[] | undefined = undefined;
 
-    if (specs?.typeArgsList) {
+    if (specs?.typeArgsList?.length) {
       nestedPartsList = constructPartsFromPayload(
         fieldValue as JavaScriptValue[],
         specs.typeArgsList,
@@ -80,34 +80,33 @@ export const constructPartsFromPayload = (
     if (typeof fieldValue === "object" && fieldValue !== null) {
       if (fieldType === ModelTypeField.DataType.JSON_DATA) {
         updatedFieldValue = JSON.stringify(fieldValue);
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.IMAGE &&
         !Array.isArray(fieldValue)
       ) {
         const imageData = fromPartialProtobufObject(Image, fieldValue);
         data.setImage(imageData);
+        partsList.push(part);
         return;
-      }
-      if (fieldType === ModelTypeField.DataType.AUDIO) {
+      } else if (fieldType === ModelTypeField.DataType.AUDIO) {
         const audioData = fromPartialProtobufObject(Audio, fieldValue);
         data.setAudio(audioData);
+        partsList.push(part);
         return;
-      }
-      if (fieldType === ModelTypeField.DataType.VIDEO) {
+      } else if (fieldType === ModelTypeField.DataType.VIDEO) {
         const videoData = fromPartialProtobufObject(Video, fieldValue);
         data.setVideo(videoData);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.CONCEPT &&
         !Array.isArray(fieldValue)
       ) {
         const conceptData = fromPartialProtobufObject(Concept, fieldValue);
         data.setConceptsList([conceptData]);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.CONCEPT &&
         Array.isArray(fieldValue)
       ) {
@@ -115,17 +114,17 @@ export const constructPartsFromPayload = (
           return fromPartialProtobufObject(Concept, each);
         });
         data.setConceptsList(conceptsList);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.REGION &&
         !Array.isArray(fieldValue)
       ) {
         const regionData = fromPartialProtobufObject(Region, fieldValue);
         data.setRegionsList([regionData]);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.REGION &&
         Array.isArray(fieldValue)
       ) {
@@ -133,17 +132,17 @@ export const constructPartsFromPayload = (
           return fromPartialProtobufObject(Region, each);
         });
         data.setRegionsList(regionsList);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.FRAME &&
         !Array.isArray(fieldValue)
       ) {
         const frameData = fromPartialProtobufObject(Frame, fieldValue);
         data.setFramesList([frameData]);
+        partsList.push(part);
         return;
-      }
-      if (
+      } else if (
         fieldType === ModelTypeField.DataType.FRAME &&
         Array.isArray(fieldValue)
       ) {
@@ -151,9 +150,9 @@ export const constructPartsFromPayload = (
           return fromPartialProtobufObject(Frame, each);
         });
         data.setFramesList(framesList);
+        partsList.push(part);
         return;
-      }
-      if (!Array.isArray(fieldValue)) {
+      } else if (!Array.isArray(fieldValue)) {
         // Unknown object just store it as string
         updatedFieldValue = JSON.stringify(fieldValue);
       }
