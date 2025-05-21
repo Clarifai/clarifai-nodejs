@@ -568,6 +568,79 @@ export class Model extends Lister {
     }
   }
 
+  private async constructRequestWithMethodSignature(
+    request: PostModelOutputsRequest,
+    config: TextModelPredictConfig,
+  ): Promise<PostModelOutputsRequest> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const { methodName, ...otherParams } = config;
+
+    const modelInfoObject = this.modelInfo.toObject();
+
+    const methodSignatures =
+      modelInfoObject?.modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    const targetMethodSignature = methodSignatures.find((each) => {
+      return each.name === methodName;
+    });
+
+    if (!targetMethodSignature) {
+      throw new Error(
+        `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
+      );
+    }
+
+    validateMethodSignaturesList(
+      otherParams,
+      targetMethodSignature?.inputFieldsList ?? [],
+    );
+
+    const { params, payload } = extractPayloadAndParams(
+      otherParams,
+      targetMethodSignature.inputFieldsList,
+    );
+
+    const payloadPart = constructPartsFromPayload(
+      payload as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
+    );
+
+    const paramsPart = constructPartsFromParams(
+      params as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
+    );
+
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
+    request.setModelId(this.id);
+    if (this.modelVersion && this.modelVersion.id)
+      request.setVersionId(this.modelVersion.id);
+    request.setModel(this.modelInfo);
+    const input = new GrpcInput();
+    const requestData = new Data();
+    requestData.setMetadata(
+      Struct.fromJavaScript({
+        _method_name: methodName,
+      }),
+    );
+    requestData.setPartsList([...payloadPart, ...paramsPart]);
+    input.setData(requestData);
+    request.setInputsList([input]);
+
+    return request;
+  }
+
   /**
    * Predicts the model based on the given inputs.
    * Useful for chat / text based llms
@@ -600,73 +673,9 @@ export class Model extends Lister {
   async predict(
     config: ModelPredictConfig,
   ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
-    const request = new PostModelOutputsRequest();
+    let request = new PostModelOutputsRequest();
     if (isTextModelPredictConfig(config)) {
-      if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
-        await this.loadInfo();
-
-      const { methodName, ...otherParams } = config;
-
-      const modelInfoObject = this.modelInfo.toObject();
-
-      const methodSignatures =
-        modelInfoObject?.modelVersion?.methodSignaturesList;
-
-      if (!methodSignatures) {
-        throw new Error(
-          `Model ${this.id} is incompatible with the new interface`,
-        );
-      }
-
-      const targetMethodSignature = methodSignatures.find((each) => {
-        return each.name === methodName;
-      });
-
-      if (!targetMethodSignature) {
-        throw new Error(
-          `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
-        );
-      }
-
-      validateMethodSignaturesList(
-        otherParams,
-        targetMethodSignature?.inputFieldsList ?? [],
-      );
-
-      const { params, payload } = extractPayloadAndParams(
-        otherParams,
-        targetMethodSignature.inputFieldsList,
-      );
-
-      const payloadPart = constructPartsFromPayload(
-        payload as Record<string, JavaScriptValue>,
-        targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
-      );
-
-      const paramsPart = constructPartsFromParams(
-        params as Record<string, JavaScriptValue>,
-        targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
-      );
-
-      if (this.modelUserAppId) {
-        request.setUserAppId(this.modelUserAppId);
-      } else {
-        request.setUserAppId(this.userAppId);
-      }
-      request.setModelId(this.id);
-      if (this.modelVersion && this.modelVersion.id)
-        request.setVersionId(this.modelVersion.id);
-      request.setModel(this.modelInfo);
-      const input = new GrpcInput();
-      const requestData = new Data();
-      requestData.setMetadata(
-        Struct.fromJavaScript({
-          _method_name: methodName,
-        }),
-      );
-      requestData.setPartsList([...payloadPart, ...paramsPart]);
-      input.setData(requestData);
-      request.setInputsList([input]);
+      request = await this.constructRequestWithMethodSignature(request, config);
     } else {
       const { inputs, inferenceParams, outputConfig } = config;
       if (!Array.isArray(inputs)) {
@@ -742,71 +751,13 @@ export class Model extends Lister {
   }: TextModelPredictConfig): AsyncGenerator<
     MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
   > {
-    const request = new PostModelOutputsRequest();
-
-    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
-      await this.loadInfo();
-
-    const modelInfoObject = this.modelInfo.toObject();
-
-    const methodSignatures =
-      modelInfoObject?.modelVersion?.methodSignaturesList;
-
-    if (!methodSignatures) {
-      throw new Error(
-        `Model ${this.id} is incompatible with the new interface`,
-      );
-    }
-
-    const targetMethodSignature = methodSignatures.find((each) => {
-      return each.name === methodName;
-    });
-
-    if (!targetMethodSignature) {
-      throw new Error(
-        `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
-      );
-    }
-
-    validateMethodSignaturesList(
-      otherParams,
-      targetMethodSignature?.inputFieldsList ?? [],
+    const request = await this.constructRequestWithMethodSignature(
+      new PostModelOutputsRequest(),
+      {
+        methodName,
+        ...otherParams,
+      },
     );
-
-    const { params, payload } = extractPayloadAndParams(
-      otherParams,
-      targetMethodSignature.inputFieldsList,
-    );
-
-    const payloadPart = constructPartsFromPayload(
-      payload as Record<string, JavaScriptValue>,
-      targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
-    );
-
-    const paramsPart = constructPartsFromParams(
-      params as Record<string, JavaScriptValue>,
-      targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
-    );
-
-    if (this.modelUserAppId) {
-      request.setUserAppId(this.modelUserAppId);
-    } else {
-      request.setUserAppId(this.userAppId);
-    }
-    request.setModelId(this.id);
-    if (this.modelVersion && this.modelVersion.id)
-      request.setVersionId(this.modelVersion.id);
-    request.setModel(this.modelInfo);
-    const input = new GrpcInput();
-    const requestData = new Data();
-    requestData.setMetadata(
-      Struct.fromJavaScript({
-        _method_name: methodName,
-      }),
-    );
-    requestData.setPartsList([...payloadPart, ...paramsPart]);
-    input.setData(requestData);
-    request.setInputsList([input]);
 
     const metadata = new grpc.Metadata();
     const authMetadata = this.STUB.metadata;
