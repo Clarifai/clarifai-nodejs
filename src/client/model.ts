@@ -736,10 +736,12 @@ export class Model extends Lister {
     );
   }
 
-  async *generate({
+  private async *generateGrpc({
     methodName,
     ...otherParams
-  }: TextModelPredictConfig): AsyncGenerator<MultiOutputResponse.AsObject> {
+  }: TextModelPredictConfig): AsyncGenerator<
+    MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+  > {
     const request = new PostModelOutputsRequest();
 
     if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
@@ -814,7 +816,10 @@ export class Model extends Lister {
 
     const response = this.STUB.client.generateModelOutputs(request, metadata);
 
-    const queue: MultiOutputResponse.AsObject[] = [];
+    const queue: (
+      | MultiOutputResponse.AsObject
+      | ["deploying", MultiOutputResponse.AsObject]
+    )[] = [];
     let done = false;
     let error: Error | null = null;
     let resolveNext: (() => void) | null = null;
@@ -827,6 +832,8 @@ export class Model extends Lister {
         dataObject.status?.code === StatusCode.MODEL_LOADING
       ) {
         console.log(`${this.id} model is still deploying, please wait...`);
+        queue.push(["deploying", dataObject]);
+        resolveNext?.();
       } else if (dataObject.status?.code === StatusCode.SUCCESS) {
         queue.push(dataObject);
         resolveNext?.();
@@ -859,6 +866,54 @@ export class Model extends Lister {
         });
         resolveNext = null;
       }
+    }
+  }
+
+  async *generate({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): AsyncGenerator<MultiOutputResponse.AsObject> {
+    const startTime = Date.now();
+    const backoffIterator = new BackoffIterator();
+    const timeoutMs = 10 * 60 * 1000; // 10 minutes
+
+    let firstOutputReceived = false;
+
+    while (Date.now() - startTime < timeoutMs) {
+      const stream = this.generateGrpc({ methodName, ...otherParams });
+
+      for await (const message of stream) {
+        if (Array.isArray(message)) {
+          if (!firstOutputReceived) {
+            const waitSeconds = backoffIterator.next().value;
+            await new Promise((res) => setTimeout(res, waitSeconds * 1000));
+            continue; // Restart the stream
+          } else {
+            yield message?.[1];
+          }
+        } else if (message.status?.code === StatusCode.SUCCESS) {
+          firstOutputReceived = true;
+          yield message;
+        } else {
+          throw new Error(
+            `Model stream failed with response: ${JSON.stringify(message.status)}`,
+          );
+        }
+      }
+
+      // If stream ended and we never got valid output, retry
+      if (!firstOutputReceived) {
+        const waitSeconds = backoffIterator.next().value;
+        await new Promise((res) => setTimeout(res, waitSeconds * 1000));
+      } else {
+        break; // success; stream finished after yielding real output
+      }
+    }
+
+    if (!firstOutputReceived) {
+      throw new Error(
+        `Model was busy/deploying for more than ${timeoutMs / 1000} seconds.`,
+      );
     }
   }
 
