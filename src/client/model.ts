@@ -20,10 +20,9 @@ import {
   OutputConfig,
   OutputInfo,
   UserAppIDSet,
-  RunnerSelector,
-  Image,
-  Part,
   Data,
+  MethodSignature,
+  Output,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -568,6 +567,44 @@ export class Model extends Lister {
     }
   }
 
+  async methodSignatures(): Promise<MethodSignature.AsObject[]> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const methodSignatures =
+      this.modelInfo.toObject().modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    return methodSignatures;
+  }
+
+  static getOutputDataFromModelResponse(
+    outputs: Output.AsObject[],
+  ): Data.AsObject | undefined {
+    return outputs?.[0]?.data?.partsList?.[0]?.data;
+  }
+
+  async availableMethods(): Promise<string[]> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const methodSignatures =
+      this.modelInfo.toObject().modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    return methodSignatures.map((each) => each.name);
+  }
+
   private async constructRequestWithMethodSignature(
     request: PostModelOutputsRequest,
     config: TextModelPredictConfig,
@@ -823,7 +860,9 @@ export class Model extends Lister {
   async *generate({
     methodName,
     ...otherParams
-  }: TextModelPredictConfig): AsyncGenerator<MultiOutputResponse.AsObject> {
+  }: TextModelPredictConfig): AsyncGenerator<
+    MultiOutputResponse.AsObject["outputsList"]
+  > {
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
     const timeoutMs = 10 * 60 * 1000; // 10 minutes
@@ -840,11 +879,11 @@ export class Model extends Lister {
             await new Promise((res) => setTimeout(res, waitSeconds * 1000));
             continue; // Restart the stream
           } else {
-            yield message?.[1];
+            yield message?.[1].outputsList;
           }
         } else if (message.status?.code === StatusCode.SUCCESS) {
           firstOutputReceived = true;
-          yield message;
+          yield message.outputsList;
         } else {
           throw new Error(
             `Model stream failed with response: ${JSON.stringify(message.status)}`,

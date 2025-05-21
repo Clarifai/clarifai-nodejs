@@ -9,37 +9,6 @@ export const model = new Model({
   },
 });
 
-// (async () => {
-//   const versions = await model.listVersions().next();
-//   console.log(versions);
-// })();
+const versions = await model.listVersions().next();
 
-// model
-//   .listVersions()
-//   .next()
-//   .then((versions) => {
-//     console.log(JSON.stringify(versions));
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
-
-const responseStream = model.generate({
-  methodName: "predict",
-  prompt: "Test message",
-  image: {
-    url: "foo",
-  },
-  // messages: [{ foo: "bar" }, { foo: "bar" }, { foo: "bar" }],
-  max_tokens: 5,
-});
-// .then((data) => {
-//   console.log(JSON.stringify(data));
-//   console.log("promise resolved");
-// });
-
-(async () => {
-  for await (const response of responseStream) {
-    console.log("response", JSON.stringify(response));
-  }
-})();
+console.log(versions);
