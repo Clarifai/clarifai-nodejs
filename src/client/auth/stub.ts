@@ -45,7 +45,7 @@ export class AuthorizedStub {
   private authHelper: ClarifaiAuthHelper;
   private stub: V2Client;
   public client: V2Client;
-  private metadata: [string, string][];
+  public metadata: [string, string][];
 
   constructor(authHelper?: ClarifaiAuthHelper) {
     if (!authHelper) {

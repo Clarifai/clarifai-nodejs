@@ -1,7 +1,7 @@
 import { Model } from "../../src/index";
 
 export const model = new Model({
-  modelId: "face-detection",
+  modelId: "lvm-dummy-test",
   authConfig: {
     pat: process.env.CLARIFAI_PAT!,
     userId: process.env.CLARIFAI_USER_ID!,
@@ -10,4 +10,5 @@ export const model = new Model({
 });
 
 const versions = await model.listVersions().next();
+
 console.log(versions);
