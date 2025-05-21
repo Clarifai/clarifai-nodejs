@@ -857,6 +857,180 @@ export class Model extends Lister {
     }
   }
 
+  private streamWithControl({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): {
+    send: (request: PostModelOutputsRequest) => void;
+    end: () => void;
+    iterator: AsyncGenerator<
+      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+    >;
+  } {
+    const queue: (
+      | MultiOutputResponse.AsObject
+      | ["deploying", MultiOutputResponse.AsObject]
+    )[] = [];
+    let done = false;
+    let error: Error | null = null;
+    let resolveNext: (() => void) | null = null;
+
+    const metadata = new grpc.Metadata();
+    const authMetadata = this.STUB.metadata;
+    authMetadata.forEach((meta) => {
+      metadata.set(meta?.[0], meta?.[1]);
+    });
+
+    const duplexConnection = this.STUB.client.streamModelOutputs(metadata);
+
+    // Handle incoming messages
+    duplexConnection.on("data", (data) => {
+      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      if (
+        dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
+        dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
+        dataObject.status?.code === StatusCode.MODEL_LOADING
+      ) {
+        queue.push(["deploying", dataObject]);
+      } else if (dataObject.status?.code === StatusCode.SUCCESS) {
+        queue.push(dataObject);
+      } else {
+        error = new Error(
+          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+        );
+      }
+      resolveNext?.();
+    });
+
+    duplexConnection.on("end", () => {
+      done = true;
+      resolveNext?.();
+    });
+
+    duplexConnection.on("error", (err) => {
+      error = err;
+      resolveNext?.();
+    });
+
+    // Async generator to yield responses
+    const iterator = (async function* () {
+      while (!done || queue.length > 0) {
+        if (error) throw error;
+
+        if (queue.length > 0) {
+          yield queue.shift()!;
+        } else {
+          await new Promise<void>((resolve) => {
+            resolveNext = resolve;
+          });
+          resolveNext = null;
+        }
+      }
+    })();
+
+    // Construct and send first message
+    (async () => {
+      const request = await this.constructRequestWithMethodSignature(
+        new PostModelOutputsRequest(),
+        {
+          methodName,
+          ...otherParams,
+        },
+      );
+      duplexConnection.write(request);
+    })();
+
+    return {
+      send: (req: PostModelOutputsRequest) => {
+        duplexConnection.write(req);
+      },
+      end: () => {
+        duplexConnection.end();
+      },
+      iterator,
+    };
+  }
+
+  async stream(config: TextModelPredictConfig): Promise<{
+    send: (request: PostModelOutputsRequest) => void;
+    end: () => void;
+    iterator: AsyncGenerator<MultiOutputResponse.AsObject["outputsList"]>;
+  }> {
+    const startTime = Date.now();
+    const timeoutMs = 10 * 60 * 1000;
+    const backoff = new BackoffIterator();
+
+    let send!: (req: PostModelOutputsRequest) => void;
+    let end!: () => void;
+    let streamIterator!: AsyncGenerator<
+      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+    >;
+
+    while (Date.now() - startTime < timeoutMs) {
+      const stream = this.streamWithControl(config);
+
+      send = stream.send;
+      end = stream.end;
+      streamIterator = stream.iterator;
+
+      // Build and send the request
+      const request = await this.constructRequestWithMethodSignature(
+        new PostModelOutputsRequest(),
+        config,
+      );
+      send(request);
+
+      for await (const msg of streamIterator) {
+        if (Array.isArray(msg)) {
+          // It's a ["deploying", ...] message
+          const wait = backoff.next().value;
+          console.log(`Model still deploying. Retrying in ${wait} seconds...`);
+          end();
+          await new Promise((r) => setTimeout(r, wait * 1000));
+          break; // retry outer loop
+        } else if (msg.status?.code === StatusCode.SUCCESS) {
+          // Define clean iterator (from this point forward)
+          const finalIterator = (async function* () {
+            yield msg.outputsList;
+            for await (const next of streamIterator) {
+              if (!Array.isArray(next)) {
+                if (next.status?.code === StatusCode.SUCCESS) {
+                  yield next.outputsList;
+                } else {
+                  throw new Error(
+                    `Model stream failed after start: ${JSON.stringify(
+                      next.status,
+                    )}`,
+                  );
+                }
+              } else {
+                throw new Error(
+                  `Model stream failed after start: ${JSON.stringify(
+                    next?.[1].status,
+                  )}`,
+                );
+              }
+            }
+          })();
+
+          return {
+            send,
+            end,
+            iterator: finalIterator,
+          };
+        } else {
+          throw new Error(
+            `Model stream failed to start: ${JSON.stringify(msg.status)}`,
+          );
+        }
+      }
+    }
+
+    throw new Error(
+      `Model was busy/deploying for more than ${timeoutMs / 1000} seconds.`,
+    );
+  }
+
   async *generate({
     methodName,
     ...otherParams
