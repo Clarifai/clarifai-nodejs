@@ -440,7 +440,7 @@ describe(
           pat: CLARIFAI_PAT,
         },
       });
-      const response = await model.predict({
+      const responseStream = model.generate({
         methodName: "generate",
         prompt: "hello world!",
         chat_history: [
@@ -450,8 +450,12 @@ describe(
           },
         ],
       });
-      const responseData = Model.getOutputDataFromModelResponse(response);
-      expect(responseData?.stringValue).toBe("");
+      let responseMessage = "";
+      for await (const response of responseStream) {
+        const responseData = Model.getOutputDataFromModelResponse(response);
+        responseMessage += responseData?.stringValue ?? "";
+      }
+      expect(responseMessage).toBe("helloworld!chat_history");
     });
   },
 );
