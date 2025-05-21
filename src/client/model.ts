@@ -43,6 +43,7 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
+import { grpc } from "clarifai-nodejs-grpc";
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
 import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
@@ -571,16 +572,9 @@ export class Model extends Lister {
    * Predicts the model based on the given inputs.
    * Useful for chat / text based llms
    */
-  async predict({
-    methodName,
-    message,
-    image,
-    messageHistory,
-    runner,
-    inferenceParams,
-  }: TextModelPredictConfig): Promise<
-    MultiOutputResponse.AsObject["outputsList"]
-  >;
+  async predict(
+    predictArgs: TextModelPredictConfig,
+  ): Promise<MultiOutputResponse.AsObject["outputsList"]>;
   /**
    * Predicts the model based on the given inputs.
    * Use the `Input` module to create the input objects.
@@ -608,7 +602,8 @@ export class Model extends Lister {
   ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
     const request = new PostModelOutputsRequest();
     if (isTextModelPredictConfig(config)) {
-      await this.loadInfo();
+      if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+        await this.loadInfo();
 
       const { methodName, ...otherParams } = config;
 
@@ -739,6 +734,132 @@ export class Model extends Lister {
         makeRequest();
       },
     );
+  }
+
+  async *generate({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): AsyncGenerator<MultiOutputResponse.AsObject> {
+    const request = new PostModelOutputsRequest();
+
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const modelInfoObject = this.modelInfo.toObject();
+
+    const methodSignatures =
+      modelInfoObject?.modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    const targetMethodSignature = methodSignatures.find((each) => {
+      return each.name === methodName;
+    });
+
+    if (!targetMethodSignature) {
+      throw new Error(
+        `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
+      );
+    }
+
+    validateMethodSignaturesList(
+      otherParams,
+      targetMethodSignature?.inputFieldsList ?? [],
+    );
+
+    const { params, payload } = extractPayloadAndParams(
+      otherParams,
+      targetMethodSignature.inputFieldsList,
+    );
+
+    const payloadPart = constructPartsFromPayload(
+      payload as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
+    );
+
+    const paramsPart = constructPartsFromParams(
+      params as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
+    );
+
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
+    request.setModelId(this.id);
+    if (this.modelVersion && this.modelVersion.id)
+      request.setVersionId(this.modelVersion.id);
+    request.setModel(this.modelInfo);
+    const input = new GrpcInput();
+    const requestData = new Data();
+    requestData.setMetadata(
+      Struct.fromJavaScript({
+        _method_name: methodName,
+      }),
+    );
+    requestData.setPartsList([...payloadPart, ...paramsPart]);
+    input.setData(requestData);
+    request.setInputsList([input]);
+
+    const metadata = new grpc.Metadata();
+    const authMetadata = this.STUB.metadata;
+    authMetadata.forEach((meta) => {
+      metadata.set(meta?.[0], meta?.[1]);
+    });
+
+    const response = this.STUB.client.generateModelOutputs(request, metadata);
+
+    const queue: MultiOutputResponse.AsObject[] = [];
+    let done = false;
+    let error: Error | null = null;
+    let resolveNext: (() => void) | null = null;
+
+    response.on("data", (data) => {
+      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      if (
+        dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
+        dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
+        dataObject.status?.code === StatusCode.MODEL_LOADING
+      ) {
+        console.log(`${this.id} model is still deploying, please wait...`);
+      } else if (dataObject.status?.code === StatusCode.SUCCESS) {
+        queue.push(dataObject);
+        resolveNext?.();
+      } else {
+        error = new Error(
+          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+        );
+        resolveNext?.();
+      }
+    });
+
+    response.on("end", () => {
+      done = true;
+      resolveNext?.();
+    });
+
+    response.on("error", (err) => {
+      error = err;
+      resolveNext?.();
+    });
+
+    while (!done || queue.length > 0) {
+      if (error) throw error;
+
+      if (queue.length > 0) {
+        yield queue.shift()!;
+      } else {
+        await new Promise<void>((resolve) => {
+          resolveNext = resolve;
+        });
+        resolveNext = null;
+      }
+    }
   }
 
   /**
