@@ -1,8 +1,10 @@
-import { SentenceSplitter } from "llamaindex";
-import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
-import { PDFReader } from "@llamaindex/readers/pdf";
-import { DocxReader } from "@llamaindex/readers/docx";
-import { TextFileReader } from "@llamaindex/readers/text";
+import {
+  SimpleDirectoryReader,
+  DocxReader,
+  PDFReader,
+  TextFileReader,
+  SentenceSplitter,
+} from "llamaindex";
 import axios from "axios";
 import tmp from "tmp";
 import * as fs from "fs";
