@@ -951,7 +951,8 @@ export class Model extends Lister {
     };
   }
 
-  async stream(config: TextModelPredictConfig): Promise<{
+  // @ts-expect-error - this method will be used in the future
+  private async stream(config: TextModelPredictConfig): Promise<{
     send: (request: PostModelOutputsRequest) => void;
     end: () => void;
     iterator: AsyncGenerator<MultiOutputResponse.AsObject["outputsList"]>;
