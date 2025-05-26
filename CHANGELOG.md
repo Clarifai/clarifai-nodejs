@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.5...v0.1.0) (2025-05-26)
+
+
+### Features
+
+* new model interface update ([#27](https://github.com/Clarifai/clarifai-nodejs/issues/27)) ([7a3ef3e](https://github.com/Clarifai/clarifai-nodejs/commit/7a3ef3e8c3f0a140a7983f8e9d573b616b06d0e3))
+
 ## [0.0.5](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.4...v0.0.5) (2025-05-20)
 
 
