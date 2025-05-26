@@ -172,6 +172,7 @@ describe("fromPartialProtobufObject", () => {
         userId: "",
         description: "",
         license: "",
+        isDeprecated: false,
       },
       isStarred: false,
       starCount: 0,

@@ -20,6 +20,9 @@ import {
   OutputConfig,
   OutputInfo,
   UserAppIDSet,
+  Data,
+  MethodSignature,
+  Output,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import {
@@ -39,6 +42,11 @@ import {
   JavaScriptValue,
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb";
+import { grpc } from "clarifai-nodejs-grpc";
+import { constructPartsFromParams } from "../utils/setPartsFromParams";
+import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
+import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
+import { constructPartsFromPayload } from "../utils/constructPartsFromPayload";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
@@ -62,6 +70,29 @@ interface ModelConfigWithModelId extends BaseModelConfig {
 }
 
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
+
+interface GeneralModelPredictConfig {
+  inputs: GrpcInput[];
+  inferenceParams?: Record<string, JavaScriptValue>;
+  outputConfig?: OutputConfig;
+}
+
+type TextModelPredictConfig = {
+  methodName: string;
+} & Record<string, unknown>;
+
+type ModelPredictConfig = GeneralModelPredictConfig | TextModelPredictConfig;
+
+const isTextModelPredictConfig = (
+  config: ModelPredictConfig,
+): config is TextModelPredictConfig => {
+  return (
+    typeof config === "object" &&
+    config !== null &&
+    // @ts-expect-error - methodName check needed for the type guard
+    typeof config.methodName === "string"
+  );
+};
 
 const isModelConfigWithUrl = (
   config: ModelConfig,
@@ -197,6 +228,11 @@ export class Model extends Lister {
       grpcModelVersion.setId(responseObject.model?.modelVersion?.id);
     }
     this.modelInfo.setModelVersion(grpcModelVersion);
+    this.modelInfo
+      .getModelVersion()
+      ?.setMethodSignaturesList(
+        response.getModel()?.getModelVersion()?.getMethodSignaturesList() ?? [],
+      );
   }
 
   /**
@@ -531,6 +567,124 @@ export class Model extends Lister {
     }
   }
 
+  async methodSignatures(): Promise<MethodSignature.AsObject[]> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const methodSignatures =
+      this.modelInfo.toObject().modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    return methodSignatures;
+  }
+
+  static getOutputDataFromModelResponse(
+    outputs: Output.AsObject[],
+  ): Data.AsObject | undefined {
+    return outputs?.[0]?.data?.partsList?.[0]?.data;
+  }
+
+  async availableMethods(): Promise<string[]> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const methodSignatures =
+      this.modelInfo.toObject().modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    return methodSignatures.map((each) => each.name);
+  }
+
+  private async constructRequestWithMethodSignature(
+    request: PostModelOutputsRequest,
+    config: TextModelPredictConfig,
+  ): Promise<PostModelOutputsRequest> {
+    if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
+      await this.loadInfo();
+
+    const { methodName, ...otherParams } = config;
+
+    const modelInfoObject = this.modelInfo.toObject();
+
+    const methodSignatures =
+      modelInfoObject?.modelVersion?.methodSignaturesList;
+
+    if (!methodSignatures) {
+      throw new Error(
+        `Model ${this.id} is incompatible with the new interface`,
+      );
+    }
+
+    const targetMethodSignature = methodSignatures.find((each) => {
+      return each.name === methodName;
+    });
+
+    if (!targetMethodSignature) {
+      throw new Error(
+        `Invalid Method: ${methodName}, available methods are ${methodSignatures.map((each) => each.name).join(", ")}`,
+      );
+    }
+
+    validateMethodSignaturesList(
+      otherParams,
+      targetMethodSignature?.inputFieldsList ?? [],
+    );
+
+    const { params, payload } = extractPayloadAndParams(
+      otherParams,
+      targetMethodSignature.inputFieldsList,
+    );
+
+    const payloadPart = constructPartsFromPayload(
+      payload as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
+    );
+
+    const paramsPart = constructPartsFromParams(
+      params as Record<string, JavaScriptValue>,
+      targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
+    );
+
+    if (this.modelUserAppId) {
+      request.setUserAppId(this.modelUserAppId);
+    } else {
+      request.setUserAppId(this.userAppId);
+    }
+    request.setModelId(this.id);
+    if (this.modelVersion && this.modelVersion.id)
+      request.setVersionId(this.modelVersion.id);
+    request.setModel(this.modelInfo);
+    const input = new GrpcInput();
+    const requestData = new Data();
+    requestData.setMetadata(
+      Struct.fromJavaScript({
+        _method_name: methodName,
+      }),
+    );
+    requestData.setPartsList([...payloadPart, ...paramsPart]);
+    input.setData(requestData);
+    request.setInputsList([input]);
+
+    return request;
+  }
+
+  /**
+   * Predicts the model based on the given inputs.
+   * Useful for chat / text based llms
+   */
+  async predict(
+    predictArgs: TextModelPredictConfig,
+  ): Promise<MultiOutputResponse.AsObject["outputsList"]>;
   /**
    * Predicts the model based on the given inputs.
    * Use the `Input` module to create the input objects.
@@ -550,38 +704,43 @@ export class Model extends Lister {
     inputs,
     inferenceParams,
     outputConfig,
-  }: {
-    inputs: GrpcInput[];
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
-    if (!Array.isArray(inputs)) {
-      throw new Error(
-        "Invalid inputs, inputs must be an array of Input objects.",
-      );
-    }
-    if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
-      throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
-    }
-
-    this.overrideModelVersion({ inferenceParams, outputConfig });
-    const requestInputs: GrpcInput[] = [];
-    for (const input of inputs) {
-      requestInputs.push(input);
-    }
-
-    const request = new PostModelOutputsRequest();
-    if (this.modelUserAppId) {
-      request.setUserAppId(this.modelUserAppId);
+  }: GeneralModelPredictConfig): Promise<
+    MultiOutputResponse.AsObject["outputsList"]
+  >;
+  async predict(
+    config: ModelPredictConfig,
+  ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+    let request = new PostModelOutputsRequest();
+    if (isTextModelPredictConfig(config)) {
+      request = await this.constructRequestWithMethodSignature(request, config);
     } else {
-      request.setUserAppId(this.userAppId);
-    }
-    request.setModelId(this.id);
-    if (this.modelVersion && this.modelVersion.id)
-      request.setVersionId(this.modelVersion.id);
-    request.setInputsList(requestInputs);
-    request.setModel(this.modelInfo);
+      const { inputs, inferenceParams, outputConfig } = config;
+      if (!Array.isArray(inputs)) {
+        throw new Error(
+          "Invalid inputs, inputs must be an array of Input objects.",
+        );
+      }
+      if (inputs.length > MAX_MODEL_PREDICT_INPUTS) {
+        throw new Error(`Too many inputs. Max is ${MAX_MODEL_PREDICT_INPUTS}.`);
+      }
 
+      this.overrideModelVersion({ inferenceParams, outputConfig });
+      const requestInputs: GrpcInput[] = [];
+      for (const input of inputs) {
+        requestInputs.push(input);
+      }
+
+      if (this.modelUserAppId) {
+        request.setUserAppId(this.modelUserAppId);
+      } else {
+        request.setUserAppId(this.userAppId);
+      }
+      request.setModelId(this.id);
+      if (this.modelVersion && this.modelVersion.id)
+        request.setVersionId(this.modelVersion.id);
+      request.setInputsList(requestInputs);
+      request.setModel(this.modelInfo);
+    }
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
     return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
@@ -605,7 +764,7 @@ export class Model extends Lister {
               } else if (responseObject.status?.code !== StatusCode.SUCCESS) {
                 reject(
                   new Error(
-                    `Model Predict failed with response ${responseObject.status?.toString()}`,
+                    `Model Predict failed with response ${JSON.stringify(responseObject.status)}`,
                   ),
                 );
               } else {
@@ -621,6 +780,306 @@ export class Model extends Lister {
         makeRequest();
       },
     );
+  }
+
+  private async *generateGrpc({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): AsyncGenerator<
+    MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+  > {
+    const request = await this.constructRequestWithMethodSignature(
+      new PostModelOutputsRequest(),
+      {
+        methodName,
+        ...otherParams,
+      },
+    );
+
+    const metadata = new grpc.Metadata();
+    const authMetadata = this.STUB.metadata;
+    authMetadata.forEach((meta) => {
+      metadata.set(meta?.[0], meta?.[1]);
+    });
+
+    const response = this.STUB.client.generateModelOutputs(request, metadata);
+
+    const queue: (
+      | MultiOutputResponse.AsObject
+      | ["deploying", MultiOutputResponse.AsObject]
+    )[] = [];
+    let done = false;
+    let error: Error | null = null;
+    let resolveNext: (() => void) | null = null;
+
+    response.on("data", (data) => {
+      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      if (
+        dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
+        dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
+        dataObject.status?.code === StatusCode.MODEL_LOADING
+      ) {
+        console.log(`${this.id} model is still deploying, please wait...`);
+        queue.push(["deploying", dataObject]);
+        resolveNext?.();
+      } else if (dataObject.status?.code === StatusCode.SUCCESS) {
+        queue.push(dataObject);
+        resolveNext?.();
+      } else {
+        error = new Error(
+          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+        );
+        resolveNext?.();
+      }
+    });
+
+    response.on("end", () => {
+      done = true;
+      resolveNext?.();
+    });
+
+    response.on("error", (err) => {
+      error = err;
+      resolveNext?.();
+    });
+
+    while (!done || queue.length > 0) {
+      if (error) throw error;
+
+      if (queue.length > 0) {
+        yield queue.shift()!;
+      } else {
+        await new Promise<void>((resolve) => {
+          resolveNext = resolve;
+        });
+        resolveNext = null;
+      }
+    }
+  }
+
+  private streamWithControl({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): {
+    send: (request: PostModelOutputsRequest) => void;
+    end: () => void;
+    iterator: AsyncGenerator<
+      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+    >;
+  } {
+    const queue: (
+      | MultiOutputResponse.AsObject
+      | ["deploying", MultiOutputResponse.AsObject]
+    )[] = [];
+    let done = false;
+    let error: Error | null = null;
+    let resolveNext: (() => void) | null = null;
+
+    const metadata = new grpc.Metadata();
+    const authMetadata = this.STUB.metadata;
+    authMetadata.forEach((meta) => {
+      metadata.set(meta?.[0], meta?.[1]);
+    });
+
+    const duplexConnection = this.STUB.client.streamModelOutputs(metadata);
+
+    // Handle incoming messages
+    duplexConnection.on("data", (data) => {
+      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      if (
+        dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
+        dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
+        dataObject.status?.code === StatusCode.MODEL_LOADING
+      ) {
+        queue.push(["deploying", dataObject]);
+      } else if (dataObject.status?.code === StatusCode.SUCCESS) {
+        queue.push(dataObject);
+      } else {
+        error = new Error(
+          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+        );
+      }
+      resolveNext?.();
+    });
+
+    duplexConnection.on("end", () => {
+      done = true;
+      resolveNext?.();
+    });
+
+    duplexConnection.on("error", (err) => {
+      error = err;
+      resolveNext?.();
+    });
+
+    // Async generator to yield responses
+    const iterator = (async function* () {
+      while (!done || queue.length > 0) {
+        if (error) throw error;
+
+        if (queue.length > 0) {
+          yield queue.shift()!;
+        } else {
+          await new Promise<void>((resolve) => {
+            resolveNext = resolve;
+          });
+          resolveNext = null;
+        }
+      }
+    })();
+
+    // Construct and send first message
+    (async () => {
+      const request = await this.constructRequestWithMethodSignature(
+        new PostModelOutputsRequest(),
+        {
+          methodName,
+          ...otherParams,
+        },
+      );
+      duplexConnection.write(request);
+    })();
+
+    return {
+      send: (req: PostModelOutputsRequest) => {
+        duplexConnection.write(req);
+      },
+      end: () => {
+        duplexConnection.end();
+      },
+      iterator,
+    };
+  }
+
+  // @ts-expect-error - this method will be used in the future
+  private async stream(config: TextModelPredictConfig): Promise<{
+    send: (request: PostModelOutputsRequest) => void;
+    end: () => void;
+    iterator: AsyncGenerator<MultiOutputResponse.AsObject["outputsList"]>;
+  }> {
+    const startTime = Date.now();
+    const timeoutMs = 10 * 60 * 1000;
+    const backoff = new BackoffIterator();
+
+    let send!: (req: PostModelOutputsRequest) => void;
+    let end!: () => void;
+    let streamIterator!: AsyncGenerator<
+      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+    >;
+
+    while (Date.now() - startTime < timeoutMs) {
+      const stream = this.streamWithControl(config);
+
+      send = stream.send;
+      end = stream.end;
+      streamIterator = stream.iterator;
+
+      // Build and send the request
+      const request = await this.constructRequestWithMethodSignature(
+        new PostModelOutputsRequest(),
+        config,
+      );
+      send(request);
+
+      for await (const msg of streamIterator) {
+        if (Array.isArray(msg)) {
+          // It's a ["deploying", ...] message
+          const wait = backoff.next().value;
+          console.log(`Model still deploying. Retrying in ${wait} seconds...`);
+          end();
+          await new Promise((r) => setTimeout(r, wait * 1000));
+          break; // retry outer loop
+        } else if (msg.status?.code === StatusCode.SUCCESS) {
+          // Define clean iterator (from this point forward)
+          const finalIterator = (async function* () {
+            yield msg.outputsList;
+            for await (const next of streamIterator) {
+              if (!Array.isArray(next)) {
+                if (next.status?.code === StatusCode.SUCCESS) {
+                  yield next.outputsList;
+                } else {
+                  throw new Error(
+                    `Model stream failed after start: ${JSON.stringify(
+                      next.status,
+                    )}`,
+                  );
+                }
+              } else {
+                throw new Error(
+                  `Model stream failed after start: ${JSON.stringify(
+                    next?.[1].status,
+                  )}`,
+                );
+              }
+            }
+          })();
+
+          return {
+            send,
+            end,
+            iterator: finalIterator,
+          };
+        } else {
+          throw new Error(
+            `Model stream failed to start: ${JSON.stringify(msg.status)}`,
+          );
+        }
+      }
+    }
+
+    throw new Error(
+      `Model was busy/deploying for more than ${timeoutMs / 1000} seconds.`,
+    );
+  }
+
+  async *generate({
+    methodName,
+    ...otherParams
+  }: TextModelPredictConfig): AsyncGenerator<
+    MultiOutputResponse.AsObject["outputsList"]
+  > {
+    const startTime = Date.now();
+    const backoffIterator = new BackoffIterator();
+    const timeoutMs = 10 * 60 * 1000; // 10 minutes
+
+    let firstOutputReceived = false;
+
+    while (Date.now() - startTime < timeoutMs) {
+      const stream = this.generateGrpc({ methodName, ...otherParams });
+
+      for await (const message of stream) {
+        if (Array.isArray(message)) {
+          if (!firstOutputReceived) {
+            const waitSeconds = backoffIterator.next().value;
+            await new Promise((res) => setTimeout(res, waitSeconds * 1000));
+            continue; // Restart the stream
+          } else {
+            yield message?.[1].outputsList;
+          }
+        } else if (message.status?.code === StatusCode.SUCCESS) {
+          firstOutputReceived = true;
+          yield message.outputsList;
+        } else {
+          throw new Error(
+            `Model stream failed with response: ${JSON.stringify(message.status)}`,
+          );
+        }
+      }
+
+      // If stream ended and we never got valid output, retry
+      if (!firstOutputReceived) {
+        const waitSeconds = backoffIterator.next().value;
+        await new Promise((res) => setTimeout(res, waitSeconds * 1000));
+      } else {
+        break; // success; stream finished after yielding real output
+      }
+    }
+
+    if (!firstOutputReceived) {
+      throw new Error(
+        `Model was busy/deploying for more than ${timeoutMs / 1000} seconds.`,
+      );
+    }
   }
 
   /**

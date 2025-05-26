@@ -24,6 +24,11 @@ const CLIP_EMBED_MODEL_ID = "multimodal-clip-embed";
 
 const CLARIFAI_PAT = import.meta.env.VITE_CLARIFAI_PAT;
 
+const LLM_MODEL_URL =
+  "https://clarifai.com/dani-cfg/pythonic-models/models/llm-dummy-test";
+const LVM_MODEL_URL =
+  "https://clarifai.com/dani-cfg/pythonic-models/models/lvm-dummy-test";
+
 function validateConceptsLength(
   response: MultiOutputResponse.AsObject["outputsList"],
 ): void {
@@ -312,6 +317,145 @@ describe(
       });
 
       expect(modelPrediction?.[0]?.data?.text?.raw).toBeTruthy();
+    });
+
+    it("new model interface: should predict with right output", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const response = await model.predict({
+        methodName: "predict",
+        prompt: "Test Message",
+      });
+
+      const responseData = Model.getOutputDataFromModelResponse(response);
+
+      expect(responseData?.stringValue).toBe("Test Message");
+    });
+
+    it("new model interface: should generate stream response with right output", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const responseStream = model.generate({
+        methodName: "generate",
+        prompt: "Test Message",
+      });
+
+      let responseMessage = "";
+
+      for await (const response of responseStream) {
+        const responseData = Model.getOutputDataFromModelResponse(response);
+        responseMessage += responseData?.stringValue ?? "";
+      }
+
+      expect(responseMessage).toBe("TestMessage");
+    });
+
+    it("new model interface: should generate stream response on image Input with right output", async () => {
+      const model = new Model({
+        url: LVM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const responseStream = model.generate({
+        methodName: "generate",
+        prompt: "Test Message",
+        image: {
+          url: DOG_IMAGE_URL,
+        },
+      });
+
+      let responseMessage = "";
+
+      for await (const response of responseStream) {
+        const responseData = Model.getOutputDataFromModelResponse(response);
+        responseMessage += responseData?.stringValue ?? "";
+      }
+
+      expect(responseMessage).toBe("TestMessageimage");
+    });
+
+    it("new model interface: should fail with unknown methodName", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      expect(
+        model.predict({
+          methodName: "custom method",
+          prompt: "Test Message",
+        }),
+      ).rejects.toThrow(
+        "Invalid Method: custom method, available methods are predict, generate, chat",
+      );
+    });
+
+    it("new model interface: should fail with invalid input field type", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      expect(
+        model.predict({
+          methodName: "predict",
+          prompt: 123,
+        }),
+      ).rejects.toThrowError(/^Validation failed for field prompt:/);
+    });
+
+    it("new model interface: should fail with invalid input field type", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      expect(
+        model.predict({
+          methodName: "generate",
+          prompt: "hello world!",
+          chat_history: {
+            foo: "bar",
+          },
+        }),
+      ).rejects.toThrowError(/^Validation failed for field chat_history:/);
+    });
+
+    it("new model interface: should work with chat_history", async () => {
+      const model = new Model({
+        url: LLM_MODEL_URL,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const responseStream = model.generate({
+        methodName: "generate",
+        prompt: "hello world!",
+        chat_history: [
+          {
+            role: "user",
+            message: "Today is monday",
+          },
+        ],
+      });
+      let responseMessage = "";
+      for await (const response of responseStream) {
+        const responseData = Model.getOutputDataFromModelResponse(response);
+        responseMessage += responseData?.stringValue ?? "";
+      }
+      expect(responseMessage).toBe("helloworld!chat_history");
     });
   },
 );
