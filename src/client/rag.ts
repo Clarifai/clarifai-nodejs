@@ -13,10 +13,8 @@ import { MAX_UPLOAD_BATCH_SIZE } from "../constants/rag";
 import { UserError } from "../errors";
 import { AuthConfig } from "../utils/types";
 import { ClarifaiAppUrl, ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
-import {
-  ModelVersion,
-  OutputInfo,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { ModelVersion, OutputInfo } = resources_pb;
 import { validateWorkflow } from "../workflows/validate";
 import {
   Message,

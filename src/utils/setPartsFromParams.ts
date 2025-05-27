@@ -1,8 +1,5 @@
-import {
-  Data,
-  ModelTypeField,
-  Part,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { Data, Part } = resources_pb;
 import {
   JavaScriptValue,
   Struct,
@@ -10,7 +7,7 @@ import {
 } from "google-protobuf/google/protobuf/struct_pb.js";
 
 export const setPartDataTypes = (
-  data: Data,
+  data: resources_pb.Data,
   value: Value.AsObject,
   fieldType?: number,
 ) => {
@@ -37,7 +34,7 @@ export const setPartDataTypes = (
 
 export const constructPartsFromParams = (
   params: Record<string, JavaScriptValue>,
-  modelParamSpecs?: ModelTypeField.AsObject[],
+  modelParamSpecs?: resources_pb.ModelTypeField.AsObject[],
 ) => {
   const paramsStruct = Struct.fromJavaScript(params).toObject();
   const newParts = Object.entries(paramsStruct.fieldsMap).map(

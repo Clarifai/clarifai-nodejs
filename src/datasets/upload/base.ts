@@ -1,7 +1,4 @@
-import {
-  Annotation,
-  Input,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import {
   TextFeatures,
   VisualClassificationFeatures,
@@ -47,7 +44,7 @@ export abstract class ClarifaiDataset<T extends ClarifaiDataLoader> {
 
   protected abstract extractProtos(_args: {
     batchInputIds: string[];
-  }): [Input[], Annotation[]];
+  }): [resources_pb.Input[], resources_pb.Annotation[]];
 
   // TODO: Plan for implementation
   // abstract getProtos(_inputIds: number[]): [Input[], Annotation[]];

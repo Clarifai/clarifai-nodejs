@@ -1,7 +1,4 @@
-import {
-  Input as GrpcInput,
-  Annotation,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiDataLoader, ClarifaiDataset } from "./base";
 import path from "path";
 import { v4 as uuid } from "uuid";
@@ -22,9 +19,9 @@ export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoa
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(
@@ -94,9 +91,9 @@ export class VisualDetectionDataset extends ClarifaiDataset<ClarifaiDataLoader> 
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(
@@ -174,9 +171,9 @@ export class VisualSegmentationDataset extends ClarifaiDataset<ClarifaiDataLoade
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(

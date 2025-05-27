@@ -1,7 +1,5 @@
-import {
-  Model,
-  OutputInfo,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { OutputInfo } = resources_pb;
 import {
   JavaScriptValue,
   Struct,
@@ -15,7 +13,7 @@ type YamlModel = Record<string, unknown>;
 
 export function getYamlOutputInfoProto(
   yamlModelOutputInfo: YamlModelOutputInfo,
-): OutputInfo | undefined {
+): resources_pb.OutputInfo | undefined {
   if (!yamlModelOutputInfo?.params) {
     return undefined;
   }
@@ -36,7 +34,7 @@ function convertYamlParamsToApiParams(
 }
 
 export function isSameYamlModel(
-  apiModel: Model.AsObject,
+  apiModel: resources_pb.Model.AsObject,
   yamlModel: YamlModel,
 ): boolean {
   const yamlModelFromApi: YamlModel = {};

@@ -1,18 +1,16 @@
-import {
-  DatasetVersion,
-  Dataset as GrpcDataset,
-  Input as GrpcInput,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { DatasetVersion, Dataset: GrpcDataset } = resources_pb;
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import { Input, InputBulkUpload } from "./input";
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   DeleteDatasetVersionsRequest,
   ListDatasetVersionsRequest,
   PostDatasetVersionsRequest,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import {
   JavaScriptValue,
   Struct,
@@ -36,7 +34,7 @@ type DatasetConfig =
     };
 
 export class Dataset extends Lister {
-  private info: GrpcDataset = new GrpcDataset();
+  private info: resources_pb.Dataset = new GrpcDataset();
   private batchSize: number = 128;
   private input: Input;
 
@@ -67,7 +65,7 @@ export class Dataset extends Lister {
     id: string;
     description: string;
     metadata?: Record<string, JavaScriptValue>;
-  }): Promise<DatasetVersion.AsObject> {
+  }): Promise<resources_pb.DatasetVersion.AsObject> {
     const request = new PostDatasetVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setDatasetId(this.info.getId());
@@ -113,7 +111,7 @@ export class Dataset extends Lister {
   async *listVersions(
     pageNo?: number,
     perPage?: number,
-  ): AsyncGenerator<DatasetVersion.AsObject[], void, unknown> {
+  ): AsyncGenerator<resources_pb.DatasetVersion.AsObject[], void, unknown> {
     const request = new ListDatasetVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setDatasetId(this.info.getId());
@@ -151,7 +149,7 @@ export class Dataset extends Lister {
     if (["image", "text"].indexOf(inputType) === -1) {
       throw new UserError("Invalid input type");
     }
-    let inputProtos: GrpcInput[] = [];
+    let inputProtos: resources_pb.Input[] = [];
     if (inputType === "image") {
       inputProtos = Input.getImageInputsFromFolder({
         folderPath: folderPath,
