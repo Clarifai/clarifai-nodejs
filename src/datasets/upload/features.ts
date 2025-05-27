@@ -1,4 +1,4 @@
-import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb";
+import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb.js";
 import { Polygon } from "../../utils/types";
 
 export interface TextFeatures {

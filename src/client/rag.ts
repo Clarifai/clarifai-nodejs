@@ -6,7 +6,7 @@ import yaml from "js-yaml";
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { Model } from "./model";
 import { User } from "./user";
 import { MAX_UPLOAD_BATCH_SIZE } from "../constants/rag";
@@ -26,7 +26,7 @@ import {
   splitDocument,
 } from "../rag/utils";
 import { Input } from "./input";
-import compact from "lodash/compact";
+import compact from "lodash/compact.js";
 
 const DEFAULT_RAG_PROMPT_TEMPLATE =
   "Context information is below:\n{data.hits}\nGiven the context information and not prior knowledge, answer the query.\nQuery: {data.text.raw}\nAnswer: ";

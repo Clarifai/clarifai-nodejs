@@ -16,7 +16,7 @@ import {
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 

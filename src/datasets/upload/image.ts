@@ -11,7 +11,7 @@ import {
   VisualDetectionFeatures,
   VisualSegmentationFeatures,
 } from "./features";
-import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb";
+import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb.js";
 
 export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoader> {
   constructor(args: { dataGenerator: ClarifaiDataLoader; datasetId: string }) {

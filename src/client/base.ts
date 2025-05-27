@@ -3,7 +3,7 @@ import { ClarifaiAuthHelper } from "./auth/helper";
 import { getFromDictOrEnv } from "../utils/misc";
 import { createStub } from "./auth/stub";
 import { V2Stub } from "./auth/register";
-import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb";
+import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb.js";
 import { AuthConfig } from "../utils/types";
 import * as jspb from "google-protobuf";
 import { grpc } from "clarifai-nodejs-grpc";

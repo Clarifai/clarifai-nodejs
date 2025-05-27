@@ -5,7 +5,7 @@ import {
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 
 interface YamlModelOutputInfo {
   params?: Record<string, JavaScriptValue>;

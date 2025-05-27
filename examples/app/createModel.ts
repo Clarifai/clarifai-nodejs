@@ -3,7 +3,7 @@ import {
   ModelVersion,
   OutputInfo,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { Struct } from "google-protobuf/google/protobuf/struct_pb";
+import { Struct } from "google-protobuf/google/protobuf/struct_pb.js";
 
 const app = new App({
   authConfig: {

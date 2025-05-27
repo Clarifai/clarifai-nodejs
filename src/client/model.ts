@@ -41,7 +41,7 @@ import { Input } from "./input";
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { grpc } from "clarifai-nodejs-grpc";
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";

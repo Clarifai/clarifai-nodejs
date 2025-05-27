@@ -24,7 +24,7 @@ import { z } from "zod";
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { v4 as uuid } from "uuid";
@@ -40,7 +40,7 @@ import {
 import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import os from "os";
-import chunk from "lodash/chunk";
+import chunk from "lodash/chunk.js";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";

@@ -12,7 +12,7 @@ import {
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { setPartDataTypes } from "./setPartsFromParams";
 import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
 

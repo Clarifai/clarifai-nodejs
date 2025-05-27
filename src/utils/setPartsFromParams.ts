@@ -7,7 +7,7 @@ import {
   JavaScriptValue,
   Struct,
   Value,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 
 export const setPartDataTypes = (
   data: Data,

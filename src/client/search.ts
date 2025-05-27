@@ -29,7 +29,7 @@ import { z } from "zod";
 import {
   JavaScriptValue,
   Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+} from "google-protobuf/google/protobuf/struct_pb.js";
 import { promisifyGrpcCall } from "../utils/misc";
 import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 import { grpc } from "clarifai-nodejs-grpc";
