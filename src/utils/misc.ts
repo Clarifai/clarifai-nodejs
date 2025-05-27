@@ -1,7 +1,7 @@
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import { UserError } from "../errors";
 import { GrpcWithCallback, AuthConfig } from "./types";
-import { grpc } from "clarifai-nodejs-grpc";
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
 
 /**
  * Get a value from a dictionary or an environment variable.
@@ -36,13 +36,13 @@ export function promisifyGrpcCall<TRequest, TResponse>(
   client: V2Client,
 ): (
   request: TRequest,
-  metadata: grpc.Metadata,
-  options: Partial<grpc.CallOptions>,
+  metadata: clarifai_nodejs_grpc.grpc.Metadata,
+  options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
 ) => Promise<TResponse> {
   return (
     request: TRequest,
-    metadata: grpc.Metadata,
-    options: Partial<grpc.CallOptions>,
+    metadata: clarifai_nodejs_grpc.grpc.Metadata,
+    options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
   ): Promise<TResponse> => {
     return new Promise((resolve, reject) => {
       func.bind(client)(request, metadata, options, (error, response) => {

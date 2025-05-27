@@ -12,13 +12,10 @@ const {
   PostRunnersRequest,
 } = service_pb;
 import { promisifyGrpcCall } from "../utils/misc";
-import {
-  App,
-  Runner,
-  UserAppIDSet,
-  Workflow,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { App, Runner, UserAppIDSet, Workflow } = resources_pb;
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 export type UserConfig = AuthConfig;
@@ -147,7 +144,7 @@ export class User extends Lister {
   }: {
     appId: string;
     baseWorkflow?: string;
-  }): Promise<App.AsObject> {
+  }): Promise<resources_pb.App.AsObject> {
     const workflow = new Workflow();
     workflow.setId(baseWorkflow);
     workflow.setAppId("main");
