@@ -5,7 +5,8 @@ import {
 } from "../constants/search";
 import { Lister } from "./lister";
 import { AuthConfig } from "../utils/types";
-import {
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const {
   Annotation,
   Audio,
   Concept,
@@ -14,14 +15,14 @@ import {
   Geo,
   GeoLimit,
   GeoPoint,
-  Input as GrpcInput,
+  Input: GrpcInput,
   Image,
   Query,
   Rank,
   Text,
   Video,
-  Search as GrpcSearch,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+  Search: GrpcSearch,
+} = resources_pb;
 import { Input } from "./input";
 import { UserError } from "../errors";
 import { getSchema } from "../schema/search";
@@ -31,15 +32,17 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb.js";
 import { promisifyGrpcCall } from "../utils/misc";
-import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
-import { grpc } from "clarifai-nodejs-grpc";
-import {
-  MultiSearchResponse,
+import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+const { Status } = status_pb;
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   Pagination,
   PostAnnotationsSearchesRequest,
   PostInputsSearchesRequest,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+} = service_pb;
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 
 type FilterType = z.infer<ReturnType<typeof getSchema>>;
 type SupportedAlgorithm = "nearest_neighbor" | "brute_force";
@@ -51,8 +54,8 @@ type SupportedMetric = "cosine" | "euclidean";
 export class Search extends Lister {
   private topK: number;
   private metricDistance: "COSINE_DISTANCE" | "EUCLIDEAN_DISTANCE";
-  private dataProto: Data;
-  private inputProto: GrpcInput;
+  private dataProto: resources_pb.Data;
+  private inputProto: resources_pb.Input;
   private algorithm: SupportedAlgorithm;
 
   constructor({
@@ -90,7 +93,7 @@ export class Search extends Lister {
     this.inputProto = new GrpcInput();
   }
 
-  private getAnnotProto(args: FilterType[0]): Annotation {
+  private getAnnotProto(args: FilterType[0]): resources_pb.Annotation {
     if (Object.keys(args).length === 0) {
       return new Annotation();
     }
@@ -164,7 +167,7 @@ export class Search extends Lister {
     return annotation;
   }
 
-  private getInputProto(args: FilterType[0]): GrpcInput {
+  private getInputProto(args: FilterType[0]): resources_pb.Input {
     if (Object.keys(args).length === 0) {
       return new GrpcInput();
     }
@@ -204,7 +207,7 @@ export class Search extends Lister {
     longitude: number,
     latitude: number,
     geoLimit: number,
-  ): Geo {
+  ): resources_pb.Geo {
     const geo = new Geo();
     const geoPoint = new GeoPoint();
     geoPoint.setLongitude(longitude);
@@ -218,7 +221,9 @@ export class Search extends Lister {
   }
 
   private async *listAllPagesGenerator<
-    T extends PostInputsSearchesRequest | PostAnnotationsSearchesRequest,
+    T extends
+      | service_pb.PostInputsSearchesRequest
+      | service_pb.PostAnnotationsSearchesRequest,
   >({
     endpoint,
     requestData,
@@ -227,13 +232,13 @@ export class Search extends Lister {
   }: {
     endpoint: (
       request: T,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
-    ) => Promise<MultiSearchResponse>;
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
+    ) => Promise<service_pb.MultiSearchResponse>;
     requestData: T;
     page?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
+  }): AsyncGenerator<service_pb.MultiSearchResponse.AsObject, void, void> {
     const maxPages = Math.ceil(this.topK / this.defaultPageSize);
     let totalHits = 0;
     while (page) {
@@ -291,7 +296,7 @@ export class Search extends Lister {
     filters?: FilterType;
     page?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiSearchResponse.AsObject, void, void> {
+  }): AsyncGenerator<service_pb.MultiSearchResponse.AsObject, void, void> {
     try {
       getSchema().parse(ranks);
       getSchema().parse(filters);
@@ -299,7 +304,7 @@ export class Search extends Lister {
       throw new UserError(`Invalid rank or filter input: ${err}`);
     }
 
-    const rankAnnotProto: Annotation[] = [];
+    const rankAnnotProto: resources_pb.Annotation[] = [];
     for (const rankObject of ranks) {
       rankAnnotProto.push(this.getAnnotProto(rankObject));
     }
@@ -313,7 +318,7 @@ export class Search extends Lister {
       filters.length &&
       Object.keys(filters[0]).some((k) => k.includes("input"))
     ) {
-      const filtersInputProto: GrpcInput[] = [];
+      const filtersInputProto: resources_pb.Input[] = [];
       for (const filterDict of filters) {
         filtersInputProto.push(this.getInputProto(filterDict));
       }
@@ -348,7 +353,7 @@ export class Search extends Lister {
       });
     }
 
-    const filtersAnnotProto: Annotation[] = [];
+    const filtersAnnotProto: resources_pb.Annotation[] = [];
     for (const filterDict of filters) {
       filtersAnnotProto.push(this.getAnnotProto(filterDict));
     }

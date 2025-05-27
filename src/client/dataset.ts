@@ -18,7 +18,8 @@ import {
   Struct,
 } from "google-protobuf/google/protobuf/struct_pb.js";
 import { promisifyGrpcCall } from "../utils/misc";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 
 type DatasetConfig =
   | {

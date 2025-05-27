@@ -1,4 +1,5 @@
-import {
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const {
   Annotation,
   Audio,
   BoundingBox,
@@ -6,7 +7,7 @@ import {
   Data,
   Geo,
   GeoPoint,
-  Input as GrpcInput,
+  Input: GrpcInput,
   Image,
   Point,
   Polygon,
@@ -14,7 +15,7 @@ import {
   RegionInfo,
   Text,
   Video,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+} = resources_pb;
 import { AuthConfig, Polygon as PolygonType } from "../utils/types";
 import { Lister } from "./lister";
 import { Buffer } from "buffer";
@@ -28,7 +29,8 @@ import {
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { v4 as uuid } from "uuid";
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   CancelInputsAddJobRequest,
   DeleteInputsRequest,
   GetInputsAddJobRequest,
@@ -36,12 +38,14 @@ import {
   PatchInputsRequest,
   PostAnnotationsRequest,
   PostInputsRequest,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import os from "os";
 import chunk from "lodash/chunk.js";
-import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+const { Status } = status_pb;
 import async from "async";
 import { MAX_RETRIES } from "../constants/dataset";
 import { EventEmitter } from "events";
@@ -134,10 +138,10 @@ export class Input extends Lister {
     videoPb?: { base64: string } | null;
     audioPb?: { base64: string } | null;
     textPb?: { raw: string } | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     const geoInfoSchema = z
       .array(
         z.object({
@@ -243,10 +247,10 @@ export class Input extends Lister {
     audioBytes?: Uint8Array | null;
     textBytes?: Uint8Array | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     if (!(imageBytes || videoBytes || audioBytes || textBytes)) {
       throw new Error(
         "At least one of image_bytes, video_bytes, audio_bytes, text_bytes must be provided.",
@@ -307,10 +311,10 @@ export class Input extends Lister {
     audioFile?: string | null;
     textFile?: string | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     if (!(imageFile || videoFile || audioFile || textFile)) {
       throw new Error(
         "At least one of imageFile, videoFile, audioFile, textFile must be provided.",
@@ -371,10 +375,10 @@ export class Input extends Lister {
     audioUrl?: string | null;
     textUrl?: string | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     if (!(imageUrl || videoUrl || audioUrl || textUrl)) {
       throw new Error(
         "At least one of imageUrl, videoUrl, audioUrl, textUrl must be provided.",
@@ -436,8 +440,8 @@ export class Input extends Lister {
     folderPath: string;
     datasetId?: string | null;
     labels?: boolean;
-  }): GrpcInput[] {
-    const inputProtos: GrpcInput[] = [];
+  }): resources_pb.Input[] {
+    const inputProtos: resources_pb.Input[] = [];
     const folderName = folderPath.split("/").pop()!;
     const labelList = labels ? [folderName] : null;
     fs.readdirSync(folderPath).forEach((filename) => {
@@ -482,10 +486,10 @@ export class Input extends Lister {
     inputId: string;
     rawText: string;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     const textPb = rawText ? { raw: rawText } : null;
     return this.getProto({
       inputId,
@@ -524,7 +528,7 @@ export class Input extends Lister {
     imageBytes?: Uint8Array | null;
     datasetId?: string | null;
     labels?: string[] | null;
-  }): GrpcInput {
+  }): resources_pb.Input {
     if ((imageBytes && imageUrl) || (!imageBytes && !imageUrl)) {
       throw new Error(
         "Please supply only one of imageBytes or imageUrl, and not both.",
@@ -580,8 +584,8 @@ export class Input extends Lister {
     csvType: "raw" | "url" | "file";
     datasetId?: string | null;
     labels: boolean;
-  }): Promise<GrpcInput[]> {
-    const inputProtos: GrpcInput[] = [];
+  }): Promise<resources_pb.Input[]> {
+    const inputProtos: resources_pb.Input[] = [];
     const csvData = await fs.promises.readFile(csvPath, "utf8");
     const parser = parse(csvData, { columns: true });
     const records: Array<CSVRecord> = [];
@@ -691,8 +695,8 @@ export class Input extends Lister {
     folderPath: string;
     datasetId: string | null;
     labels: boolean;
-  }): GrpcInput[] {
-    const inputProtos: GrpcInput[] = [];
+  }): resources_pb.Input[] {
+    const inputProtos: resources_pb.Input[] = [];
     const labelList = labels ? [folderPath.split("/").pop()!] : null;
     const files = fs.readdirSync(folderPath);
     for (const filename of files) {
@@ -722,7 +726,7 @@ export class Input extends Lister {
     inputId: string;
     label: string;
     bbox: number[];
-  }): Annotation {
+  }): resources_pb.Annotation {
     const bboxSchema = z.array(z.number()).length(4);
     try {
       bboxSchema.parse(bbox);
@@ -763,7 +767,7 @@ export class Input extends Lister {
     inputId: string;
     label: string;
     polygons: PolygonType[];
-  }): Annotation {
+  }): resources_pb.Annotation {
     const polygonsSchema = z.array(z.array(z.tuple([z.number(), z.number()])));
     try {
       polygonsSchema.parse(polygons);
@@ -803,7 +807,7 @@ export class Input extends Lister {
     inputs,
     showLog = true,
   }: {
-    inputs: GrpcInput[];
+    inputs: resources_pb.Input[];
     showLog?: boolean;
   }): Promise<string> {
     if (!Array.isArray(inputs)) {
@@ -857,7 +861,7 @@ export class Input extends Lister {
     audioUrl?: string | null;
     textUrl?: string | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
   }): Promise<string> {
@@ -892,7 +896,7 @@ export class Input extends Lister {
     audioFile?: string | null;
     textFile?: string | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
   }): Promise<string> {
@@ -927,7 +931,7 @@ export class Input extends Lister {
     audioBytes?: Uint8Array | null;
     textBytes?: Uint8Array | null;
     datasetId?: string | null;
-    geoInfo?: GeoPoint.AsObject | null;
+    geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
     metadata?: Record<string, JavaScriptValue> | null;
   }): Promise<string> {
@@ -966,7 +970,7 @@ export class Input extends Lister {
     inputs,
     action = "merge",
   }: {
-    inputs: GrpcInput[];
+    inputs: resources_pb.Input[];
     action?: string;
   }): Promise<string> {
     if (!Array.isArray(inputs)) {
@@ -1002,10 +1006,10 @@ export class Input extends Lister {
     batchAnnot,
     showLog = true,
   }: {
-    batchAnnot: Annotation[];
+    batchAnnot: resources_pb.Annotation[];
     showLog?: boolean;
-  }): Promise<Annotation[]> {
-    const retryUpload: Annotation[] = []; // those that fail to upload are stored for retries
+  }): Promise<resources_pb.Annotation[]> {
+    const retryUpload: resources_pb.Annotation[] = []; // those that fail to upload are stored for retries
     const request = new PostAnnotationsRequest()
       .setUserAppId(this.userAppId)
       .setAnnotationsList(batchAnnot);
@@ -1035,7 +1039,7 @@ export class Input extends Lister {
     batchSize: providedBatchSize = 128,
     uploadProgressEmitter,
   }: {
-    inputs: GrpcInput[];
+    inputs: resources_pb.Input[];
     batchSize?: number;
     uploadProgressEmitter?: InputBulkUpload;
   }): Promise<void> {
@@ -1085,8 +1089,8 @@ export class Input extends Lister {
   private async uploadBatch({
     inputs,
   }: {
-    inputs: GrpcInput[];
-  }): Promise<GrpcInput[]> {
+    inputs: resources_pb.Input[];
+  }): Promise<resources_pb.Input[]> {
     const inputJobId = await this.uploadInputs({ inputs, showLog: false });
     await this.waitForInputs({ inputJobId });
     const failedInputs = await this.deleteFailedInputs({ inputs });
@@ -1160,8 +1164,8 @@ export class Input extends Lister {
   private async deleteFailedInputs({
     inputs,
   }: {
-    inputs: GrpcInput[];
-  }): Promise<GrpcInput[]> {
+    inputs: resources_pb.Input[];
+  }): Promise<resources_pb.Input[]> {
     const inputIds = inputs.map((input) => input.getId());
     const successStatus = new Status().setCode(
       StatusCode.INPUT_DOWNLOAD_SUCCESS, // Status code for successful download
@@ -1204,7 +1208,7 @@ export class Input extends Lister {
   private async retryUploads({
     failedInputs,
   }: {
-    failedInputs: GrpcInput[];
+    failedInputs: resources_pb.Input[];
   }): Promise<void> {
     for (let retry = 0; retry < MAX_RETRIES; retry++) {
       if (failedInputs.length > 0) {

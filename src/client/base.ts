@@ -1,4 +1,4 @@
-import { UserAppIDSet } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiAuthHelper } from "./auth/helper";
 import { getFromDictOrEnv } from "../utils/misc";
 import { createStub } from "./auth/stub";
@@ -6,8 +6,8 @@ import { V2Stub } from "./auth/register";
 import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb.js";
 import { AuthConfig } from "../utils/types";
 import * as jspb from "google-protobuf";
-import { grpc } from "clarifai-nodejs-grpc";
-import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
+import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 /**
  * BaseClient is the base class for all the classes interacting with Clarifai endpoints.
@@ -18,7 +18,7 @@ import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb
  * @property {V2Stub} STUB The gRPC Stub object for API interaction.
  * @property {[string, string][]} metadata The gRPC metadata containing the personal access token.
  * @property {string} pat The personal access token.
- * @property {UserAppIDSet} userAppId The protobuf object representing user and app IDs.
+ * @property {resources_pb.UserAppIDSet} userAppId The protobuf object representing user and app IDs.
  * @property {string} base The base URL for the API endpoint.
  */
 export class BaseClient {
@@ -26,7 +26,7 @@ export class BaseClient {
   protected STUB: V2Stub;
   protected metadata: [string, string][];
   protected pat: string;
-  protected userAppId: UserAppIDSet;
+  protected userAppId: resources_pb.UserAppIDSet;
   protected base: string;
   protected rootCertificatesPath: string;
 
@@ -75,15 +75,15 @@ export class BaseClient {
    */
   protected async grpcRequest<
     TRequest extends jspb.Message,
-    TResponseObject extends { status?: Status.AsObject },
+    TResponseObject extends { status?: status_pb.Status.AsObject },
     TResponse extends {
       toObject: (arg?: boolean) => TResponseObject;
     },
   >(
     endpoint: (
       request: TRequest,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
     ) => Promise<TResponse>,
     requestData: TRequest,
   ): Promise<TResponse> {
