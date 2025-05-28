@@ -20,6 +20,7 @@ const {
   OutputInfo,
   UserAppIDSet,
   Data,
+  RunnerSelector,
 } = resources_pb;
 import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 const { StatusCode } = status_code_pb;
@@ -44,9 +45,14 @@ import { constructPartsFromParams } from "../utils/setPartsFromParams";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
 import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
 import { constructPartsFromPayload } from "../utils/constructPartsFromPayload";
+import {
+  Subset,
+  fromPartialProtobufObject,
+} from "../utils/fromPartialProtobufObject";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
+  runner?: Subset<resources_pb.RunnerSelector.AsObject>;
 }
 
 interface ModelConfigWithUrl extends BaseModelConfig {
@@ -108,6 +114,7 @@ export class Model extends Lister {
   private modelVersion: { id: string } | undefined;
   public modelInfo: resources_pb.Model;
   private trainingParams: Record<string, unknown>;
+  private runner: resources_pb.RunnerSelector | undefined;
 
   /**
    * Initializes a Model object.
@@ -184,6 +191,24 @@ export class Model extends Lister {
     this.modelUserAppId = new UserAppIDSet()
       .setAppId(_authConfig.appId)
       .setUserId(_authConfig.userId);
+    if (config.runner) {
+      this.setRunner(config.runner);
+    }
+  }
+
+  /**
+   * Sets the runner for the model.
+   */
+  setRunner(runner: Subset<resources_pb.RunnerSelector.AsObject>): void {
+    this.runner = fromPartialProtobufObject(RunnerSelector, runner);
+  }
+
+  /**
+   * Returns the runner for the model.
+   * @returns - The runner for the model.
+   */
+  getRunner(): resources_pb.RunnerSelector.AsObject | undefined {
+    return this.runner?.toObject();
   }
 
   /**
@@ -738,6 +763,9 @@ export class Model extends Lister {
       request.setInputsList(requestInputs);
       request.setModel(this.modelInfo);
     }
+    if (this.runner) {
+      request.setRunnerSelector(this.runner);
+    }
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
     return new Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]>(
@@ -793,6 +821,9 @@ export class Model extends Lister {
         ...otherParams,
       },
     );
+    if (this.runner) {
+      request.setRunnerSelector(this.runner);
+    }
 
     const metadata = new grpc.Metadata();
     const authMetadata = this.STUB.metadata;
@@ -983,6 +1014,9 @@ export class Model extends Lister {
         new PostModelOutputsRequest(),
         config,
       );
+      if (this.runner) {
+        request.setRunnerSelector(this.runner);
+      }
       send(request);
 
       for await (const msg of streamIterator) {
