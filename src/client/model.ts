@@ -203,7 +203,13 @@ export class Model extends Lister {
     if (this.modelUserAppId?.getUserId()) {
       if (runner.deployment) {
         if (!runner.deployment.userId) {
-          runner.deployment.userId = this.modelUserAppId.getUserId();
+          runner = {
+            ...runner,
+            deployment: {
+              ...runner.deployment,
+              userId: this.modelUserAppId.getUserId(),
+            },
+          };
         }
       } else {
         runner = {
