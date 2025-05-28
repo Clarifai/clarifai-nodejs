@@ -978,6 +978,9 @@ export class Model extends Lister {
           ...otherParams,
         },
       );
+      if (this.runner) {
+        request.setRunnerSelector(this.runner);
+      }
       duplexConnection.write(request);
     })();
 
