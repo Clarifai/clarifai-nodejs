@@ -27,10 +27,8 @@ import { Input } from "./input";
 import { UserError } from "../errors";
 import { getSchema } from "../schema/search";
 import { z } from "zod";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import { promisifyGrpcCall } from "../utils/misc";
 import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 const { Status } = status_pb;
@@ -142,7 +140,7 @@ export class Search extends Lister {
         this.dataProto.setText(textProto);
       } else if (key === "metadata") {
         const metadataStruct = Struct.fromJavaScript(
-          value as Record<string, JavaScriptValue>,
+          value as Record<string, struct_pb.JavaScriptValue>,
         );
         this.dataProto.setMetadata(metadataStruct);
       } else if (key === "geoPoint") {

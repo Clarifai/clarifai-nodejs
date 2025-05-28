@@ -36,10 +36,8 @@ import {
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { Input } from "./input";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
 const { grpc } = clarifai_nodejs_grpc;
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
@@ -72,7 +70,7 @@ type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
 
 interface GeneralModelPredictConfig {
   inputs: resources_pb.Input[];
-  inferenceParams?: Record<string, JavaScriptValue>;
+  inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
   outputConfig?: resources_pb.OutputConfig;
 }
 
@@ -645,12 +643,12 @@ export class Model extends Lister {
     );
 
     const payloadPart = constructPartsFromPayload(
-      payload as Record<string, JavaScriptValue>,
+      payload as Record<string, struct_pb.JavaScriptValue>,
       targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
     );
 
     const paramsPart = constructPartsFromParams(
-      params as Record<string, JavaScriptValue>,
+      params as Record<string, struct_pb.JavaScriptValue>,
       targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
     );
 
@@ -1105,7 +1103,7 @@ export class Model extends Lister {
   }: {
     url: string;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
     outputConfig?: resources_pb.OutputConfig;
   }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     let inputProto: resources_pb.Input;
@@ -1147,7 +1145,7 @@ export class Model extends Lister {
   }: {
     filepath: string;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
     outputConfig?: resources_pb.OutputConfig;
   }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     if (!fs.existsSync(filepath)) {
@@ -1181,7 +1179,7 @@ export class Model extends Lister {
   }: {
     inputBytes: Buffer;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
     outputConfig?: resources_pb.OutputConfig;
   }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     if (!(inputBytes instanceof Buffer)) {
@@ -1236,7 +1234,7 @@ export class Model extends Lister {
     inferenceParams,
     outputConfig,
   }: {
-    inferenceParams?: Record<string, JavaScriptValue>;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
     outputConfig?: resources_pb.OutputConfig;
   }): void {
     let currentModelVersion = this.modelInfo.getModelVersion();

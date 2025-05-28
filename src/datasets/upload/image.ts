@@ -8,7 +8,7 @@ import {
   VisualDetectionFeatures,
   VisualSegmentationFeatures,
 } from "./features";
-import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
 
 export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoader> {
   constructor(args: { dataGenerator: ClarifaiDataLoader; datasetId: string }) {
@@ -27,7 +27,7 @@ export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoa
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualClassificationFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const imagePath = dataItem.imagePath;
       const labels = Array.isArray(dataItem.labels)
         ? dataItem.labels.map((label) => label.toString())
@@ -99,7 +99,7 @@ export class VisualDetectionDataset extends ClarifaiDataset<ClarifaiDataLoader> 
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualDetectionFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const image = dataItem.imagePath;
       const labels = dataItem.labels.map((label) => label.toString());
       const bboxes = dataItem.bboxes;
@@ -179,7 +179,7 @@ export class VisualSegmentationDataset extends ClarifaiDataset<ClarifaiDataLoade
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualSegmentationFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const image = dataItem.imagePath;
       const labels = dataItem.labels.map((label) => label.toString());
       const polygons = dataItem.polygons;

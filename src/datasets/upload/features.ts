@@ -1,4 +1,4 @@
-import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
 import { Polygon } from "../../utils/types";
 
 export interface TextFeatures {
@@ -8,7 +8,7 @@ export interface TextFeatures {
   text: string;
   labels: Array<string | number>;
   id?: number;
-  metadata?: Record<string, JavaScriptValue>;
+  metadata?: Record<string, struct_pb.JavaScriptValue>;
   bboxes?: undefined;
 }
 
@@ -17,7 +17,7 @@ export interface VisualClassificationFeatures {
   labels: Array<string | number>;
   geoInfo?: [number, number];
   id?: number;
-  metadata?: Record<string, JavaScriptValue>;
+  metadata?: Record<string, struct_pb.JavaScriptValue>;
   imageBytes?: Buffer;
 }
 
@@ -27,7 +27,7 @@ export interface VisualDetectionFeatures {
   bboxes: Array<Array<number>>;
   geoInfo?: [number, number];
   id?: number;
-  metadata?: Record<string, JavaScriptValue>;
+  metadata?: Record<string, struct_pb.JavaScriptValue>;
   imageBytes?: Buffer;
 }
 
@@ -37,6 +37,6 @@ export interface VisualSegmentationFeatures {
   polygons: Polygon[];
   geoInfo?: [number, number];
   id?: number;
-  metadata?: Record<string, JavaScriptValue>;
+  metadata?: Record<string, struct_pb.JavaScriptValue>;
   imageBytes?: Buffer;
 }

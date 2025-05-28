@@ -3,7 +3,8 @@ import { ClarifaiAuthHelper } from "./auth/helper";
 import { getFromDictOrEnv } from "../utils/misc";
 import { createStub } from "./auth/stub";
 import { V2Stub } from "./auth/register";
-import { Timestamp } from "google-protobuf/google/protobuf/timestamp_pb.js";
+import timestamp_pb from "google-protobuf/google/protobuf/timestamp_pb.js";
+const { Timestamp } = timestamp_pb;
 import { AuthConfig } from "../utils/types";
 import * as jspb from "google-protobuf";
 import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
@@ -96,7 +97,7 @@ export class BaseClient {
    * @param dateStr The string to convert.
    * @returns A Timestamp object representing the given date string.
    */
-  convertStringToTimestamp(dateStr: string): Timestamp {
+  convertStringToTimestamp(dateStr: string): timestamp_pb.Timestamp {
     const timestamp = new Timestamp();
 
     // Attempt to parse the date string into a Date object

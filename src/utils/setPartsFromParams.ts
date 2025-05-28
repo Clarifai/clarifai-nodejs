@@ -1,14 +1,11 @@
 import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 const { Data, Part } = resources_pb;
-import {
-  JavaScriptValue,
-  Struct,
-  Value,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 
 export const setPartDataTypes = (
   data: resources_pb.Data,
-  value: Value.AsObject,
+  value: struct_pb.Value.AsObject,
   fieldType?: number,
 ) => {
   const stringVal = value.stringValue;
@@ -33,7 +30,7 @@ export const setPartDataTypes = (
 };
 
 export const constructPartsFromParams = (
-  params: Record<string, JavaScriptValue>,
+  params: Record<string, struct_pb.JavaScriptValue>,
   modelParamSpecs?: resources_pb.ModelTypeField.AsObject[],
 ) => {
   const paramsStruct = Struct.fromJavaScript(params).toObject();

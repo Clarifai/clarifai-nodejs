@@ -22,10 +22,8 @@ import { Buffer } from "buffer";
 import fs from "fs";
 import path from "path";
 import { z } from "zod";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import { parse } from "csv-parse";
 import { finished } from "stream/promises";
 import { v4 as uuid } from "uuid";
@@ -140,7 +138,7 @@ export class Input extends Lister {
     textPb?: { raw: string } | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): resources_pb.Input {
     const geoInfoSchema = z
       .array(
@@ -249,7 +247,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): resources_pb.Input {
     if (!(imageBytes || videoBytes || audioBytes || textBytes)) {
       throw new Error(
@@ -313,7 +311,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): resources_pb.Input {
     if (!(imageFile || videoFile || audioFile || textFile)) {
       throw new Error(
@@ -377,7 +375,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): resources_pb.Input {
     if (!(imageUrl || videoUrl || audioUrl || textUrl)) {
       throw new Error(
@@ -488,7 +486,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): resources_pb.Input {
     const textPb = rawText ? { raw: rawText } : null;
     return this.getProto({
@@ -863,7 +861,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): Promise<string> {
     const inputPb = Input.getInputFromUrl({
       inputId,
@@ -898,7 +896,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): Promise<string> {
     const inputProto = Input.getInputFromFile({
       inputId,
@@ -933,7 +931,7 @@ export class Input extends Lister {
     datasetId?: string | null;
     geoInfo?: resources_pb.GeoPoint.AsObject | null;
     labels?: string[] | null;
-    metadata?: Record<string, JavaScriptValue> | null;
+    metadata?: Record<string, struct_pb.JavaScriptValue> | null;
   }): Promise<string> {
     const inputProto = Input.getInputFromBytes({
       inputId,

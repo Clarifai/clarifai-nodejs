@@ -11,10 +11,8 @@ const {
   ListDatasetVersionsRequest,
   PostDatasetVersionsRequest,
 } = service_pb;
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import { promisifyGrpcCall } from "../utils/misc";
 import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 const { StatusCode } = status_code_pb;
@@ -64,7 +62,7 @@ export class Dataset extends Lister {
   }: {
     id: string;
     description: string;
-    metadata?: Record<string, JavaScriptValue>;
+    metadata?: Record<string, struct_pb.JavaScriptValue>;
   }): Promise<resources_pb.DatasetVersion.AsObject> {
     const request = new PostDatasetVersionsRequest();
     request.setUserAppId(this.userAppId);

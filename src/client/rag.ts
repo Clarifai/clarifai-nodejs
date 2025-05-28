@@ -3,10 +3,8 @@ import { App, AuthAppConfig } from "./app";
 import { Workflow } from "./workflow";
 import * as fs from "fs";
 import yaml from "js-yaml";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb.js";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import { Model } from "./model";
 import { User } from "./user";
 import { MAX_UPLOAD_BATCH_SIZE } from "../constants/rag";
@@ -299,7 +297,7 @@ export class RAG {
     chunkSize?: number;
     chunkOverlap?: number;
     datasetId?: string;
-    metadata?: Record<string, JavaScriptValue>;
+    metadata?: Record<string, struct_pb.JavaScriptValue>;
   }): Promise<void> {
     if (batchSize > MAX_UPLOAD_BATCH_SIZE) {
       throw new UserError(
@@ -324,7 +322,7 @@ export class RAG {
     });
 
     const textChunks: string[] = [];
-    const metadataList: Array<Record<string, JavaScriptValue>> = [];
+    const metadataList: Array<Record<string, struct_pb.JavaScriptValue>> = [];
     let docI = 0;
 
     for (const doc of documents) {
