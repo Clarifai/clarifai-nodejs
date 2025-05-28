@@ -16,6 +16,7 @@
 
 ### Properties
 
+- [algorithm](Search.md#algorithm)
 - [dataProto](Search.md#dataproto)
 - [inputProto](Search.md#inputproto)
 - [metricDistance](Search.md#metricdistance)
@@ -40,8 +41,9 @@
 | Name | Type | Default value |
 | :------ | :------ | :------ |
 | `«destructured»` | `Object` | `undefined` |
+| › `algorithm?` | `SupportedAlgorithm` | `DEFAULT_SEARCH_ALGORITHM` |
 | › `authConfig?` | `AuthConfig` | `undefined` |
-| › `metric?` | `string` | `DEFAULT_SEARCH_METRIC` |
+| › `metric?` | `SupportedMetric` | `DEFAULT_SEARCH_METRIC` |
 | › `topK?` | `number` | `DEFAULT_TOP_K` |
 
 #### Returns
@@ -54,9 +56,19 @@ Lister.constructor
 
 #### Defined in
 
-[client/search.ts:51](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L51)
+[src/client/search.ts:59](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L59)
 
 ## Properties
+
+### algorithm
+
+• `Private` **algorithm**: `SupportedAlgorithm`
+
+#### Defined in
+
+[src/client/search.ts:57](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L57)
+
+___
 
 ### dataProto
 
@@ -64,7 +76,7 @@ Lister.constructor
 
 #### Defined in
 
-[client/search.ts:48](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L48)
+[src/client/search.ts:55](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L55)
 
 ___
 
@@ -74,7 +86,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:49](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L49)
+[src/client/search.ts:56](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L56)
 
 ___
 
@@ -84,7 +96,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:47](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L47)
+[src/client/search.ts:54](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L54)
 
 ___
 
@@ -94,7 +106,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:46](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L46)
+[src/client/search.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L53)
 
 ## Methods
 
@@ -126,7 +138,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:77](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L77)
+[src/client/search.ts:94](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L94)
 
 ___
 
@@ -148,7 +160,7 @@ ___
 
 #### Defined in
 
-[client/search.ts:185](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L185)
+[src/client/search.ts:204](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L204)
 
 ___
 
@@ -180,13 +192,13 @@ ___
 
 #### Defined in
 
-[client/search.ts:149](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L149)
+[src/client/search.ts:168](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L168)
 
 ___
 
 ### listAllPagesGenerator
 
-▸ **listAllPagesGenerator**\<`T`\>(`endpoint`, `requestData`): `AsyncGenerator`\<`AsObject` & `Record`\<``"hits"``, `unknown`\>, `void`, `void`\>
+▸ **listAllPagesGenerator**\<`T`\>(`«destructured»`): `AsyncGenerator`\<`AsObject`, `void`, `void`\>
 
 #### Type parameters
 
@@ -196,24 +208,27 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `endpoint` | (`request`: `T`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`MultiSearchResponse`\> |
-| `requestData` | `T` |
+| Name | Type | Default value |
+| :------ | :------ | :------ |
+| `«destructured»` | `Object` | `undefined` |
+| › `endpoint` | (`request`: `T`, `metadata`: `Metadata`, `options`: `Partial`\<`CallOptions`\>) => `Promise`\<`MultiSearchResponse`\> | `undefined` |
+| › `page?` | `number` | `1` |
+| › `perPage?` | `number` | `undefined` |
+| › `requestData` | `T` | `undefined` |
 
 #### Returns
 
-`AsyncGenerator`\<`AsObject` & `Record`\<``"hits"``, `unknown`\>, `void`, `void`\>
+`AsyncGenerator`\<`AsObject`, `void`, `void`\>
 
 #### Defined in
 
-[client/search.ts:202](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L202)
+[src/client/search.ts:221](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L221)
 
 ___
 
 ### query
 
-▸ **query**(`«destructured»`): `AsyncGenerator`\<`AsObject` & `Record`\<``"hits"``, `unknown`\>, `void`, `void`\>
+▸ **query**(`«destructured»`): `AsyncGenerator`\<`AsObject`, `void`, `void`\>
 
 #### Parameters
 
@@ -221,12 +236,14 @@ ___
 | :------ | :------ |
 | `«destructured»` | `Object` |
 | › `filters?` | \{ `concepts?`: \{ `id?`: `string` ; `language?`: `string` ; `name?`: `string` ; `value?`: `number`  }[] ; `geoPoint?`: \{ `geoLimit`: `number` ; `latitude`: `number` ; `longitude`: `number`  } ; `imageBytes?`: `unknown` ; `imageUrl?`: `string` ; `inputDatasetIds?`: `string`[] ; `inputStatusCode?`: `number` ; `inputTypes?`: (``"image"`` \| ``"text"`` \| ``"video"`` \| ``"audio"``)[] ; `metadata?`: `Record`\<`string`, `unknown`\> ; `textRaw?`: `string`  }[] |
+| › `page?` | `number` |
+| › `perPage?` | `number` |
 | › `ranks?` | \{ `concepts?`: \{ `id?`: `string` ; `language?`: `string` ; `name?`: `string` ; `value?`: `number`  }[] ; `geoPoint?`: \{ `geoLimit`: `number` ; `latitude`: `number` ; `longitude`: `number`  } ; `imageBytes?`: `unknown` ; `imageUrl?`: `string` ; `inputDatasetIds?`: `string`[] ; `inputStatusCode?`: `number` ; `inputTypes?`: (``"image"`` \| ``"text"`` \| ``"video"`` \| ``"audio"``)[] ; `metadata?`: `Record`\<`string`, `unknown`\> ; `textRaw?`: `string`  }[] |
 
 #### Returns
 
-`AsyncGenerator`\<`AsObject` & `Record`\<``"hits"``, `unknown`\>, `void`, `void`\>
+`AsyncGenerator`\<`AsObject`, `void`, `void`\>
 
 #### Defined in
 
-[client/search.ts:259](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/search.ts#L259)
+[src/client/search.ts:287](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L287)

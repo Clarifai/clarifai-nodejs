@@ -16,15 +16,24 @@ Inputs is a class that provides access to Clarifai API endpoints related to Inpu
 
 - [constructor](Input.md#constructor)
 
+### Properties
+
+- [numOfWorkers](Input.md#numofworkers)
+
 ### Methods
 
+- [bulkUpload](Input.md#bulkupload)
+- [deleteFailedInputs](Input.md#deletefailedinputs)
 - [patchInputs](Input.md#patchinputs)
+- [retryUploads](Input.md#retryuploads)
 - [uploadAnnotations](Input.md#uploadannotations)
+- [uploadBatch](Input.md#uploadbatch)
 - [uploadFromBytes](Input.md#uploadfrombytes)
 - [uploadFromFile](Input.md#uploadfromfile)
 - [uploadFromUrl](Input.md#uploadfromurl)
 - [uploadInputs](Input.md#uploadinputs)
 - [uploadText](Input.md#uploadtext)
+- [waitForInputs](Input.md#waitforinputs)
 - [getBboxProto](Input.md#getbboxproto)
 - [getImageInputsFromFolder](Input.md#getimageinputsfromfolder)
 - [getInputFromBytes](Input.md#getinputfrombytes)
@@ -75,9 +84,63 @@ Lister.constructor
 
 #### Defined in
 
-[client/input.ts:64](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L64)
+[src/client/input.ts:101](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L101)
+
+## Properties
+
+### numOfWorkers
+
+• `Private` **numOfWorkers**: `number`
+
+#### Defined in
+
+[src/client/input.ts:87](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L87)
 
 ## Methods
+
+### bulkUpload
+
+▸ **bulkUpload**(`«destructured»`): `Promise`\<`void`\>
+
+#### Parameters
+
+| Name | Type | Default value |
+| :------ | :------ | :------ |
+| `«destructured»` | `Object` | `undefined` |
+| › `batchSize?` | `number` | `128` |
+| › `inputs` | `Input`[] | `undefined` |
+| › `uploadProgressEmitter?` | [`InputBulkUpload`](../modules.md#inputbulkupload) | `undefined` |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+[src/client/input.ts:1035](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1035)
+
+___
+
+### deleteFailedInputs
+
+▸ **deleteFailedInputs**(`«destructured»`): `Promise`\<`Input`[]\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `«destructured»` | `Object` |
+| › `inputs` | `Input`[] |
+
+#### Returns
+
+`Promise`\<`Input`[]\>
+
+#### Defined in
+
+[src/client/input.ts:1162](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1162)
+
+___
 
 ### patchInputs
 
@@ -97,7 +160,28 @@ Lister.constructor
 
 #### Defined in
 
-[client/input.ts:923](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L923)
+[src/client/input.ts:967](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L967)
+
+___
+
+### retryUploads
+
+▸ **retryUploads**(`«destructured»`): `Promise`\<`void`\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `«destructured»` | `Object` |
+| › `failedInputs` | `Input`[] |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Defined in
+
+[src/client/input.ts:1206](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1206)
 
 ___
 
@@ -119,7 +203,28 @@ ___
 
 #### Defined in
 
-[client/input.ts:959](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L959)
+[src/client/input.ts:1003](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1003)
+
+___
+
+### uploadBatch
+
+▸ **uploadBatch**(`«destructured»`): `Promise`\<`Input`[]\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `«destructured»` | `Object` |
+| › `inputs` | `Input`[] |
+
+#### Returns
+
+`Promise`\<`Input`[]\>
+
+#### Defined in
+
+[src/client/input.ts:1087](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1087)
 
 ___
 
@@ -148,7 +253,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:871](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L871)
+[src/client/input.ts:915](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L915)
 
 ___
 
@@ -177,7 +282,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:836](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L836)
+[src/client/input.ts:880](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L880)
 
 ___
 
@@ -206,7 +311,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:801](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L801)
+[src/client/input.ts:845](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L845)
 
 ___
 
@@ -228,7 +333,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:760](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L760)
+[src/client/input.ts:804](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L804)
 
 ___
 
@@ -251,7 +356,28 @@ ___
 
 #### Defined in
 
-[client/input.ts:906](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L906)
+[src/client/input.ts:950](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L950)
+
+___
+
+### waitForInputs
+
+▸ **waitForInputs**(`«destructured»`): `Promise`\<`boolean`\>
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `«destructured»` | `Object` |
+| › `inputJobId` | `string` |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+#### Defined in
+
+[src/client/input.ts:1098](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L1098)
 
 ___
 
@@ -274,7 +400,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:679](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L679)
+[src/client/input.ts:719](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L719)
 
 ___
 
@@ -325,7 +451,7 @@ console.log(prediction);
 
 #### Defined in
 
-[client/input.ts:396](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L396)
+[src/client/input.ts:433](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L433)
 
 ___
 
@@ -386,7 +512,7 @@ An `Input` object for the specified input ID.
 
 #### Defined in
 
-[client/input.ts:194](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L194)
+[src/client/input.ts:231](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L231)
 
 ___
 
@@ -445,7 +571,7 @@ console.log(prediction);
 
 #### Defined in
 
-[client/input.ts:258](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L258)
+[src/client/input.ts:295](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L295)
 
 ___
 
@@ -503,7 +629,7 @@ console.log(prediction);
 
 #### Defined in
 
-[client/input.ts:322](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L322)
+[src/client/input.ts:359](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L359)
 
 ___
 
@@ -533,21 +659,22 @@ Create Input proto from CSV File. Supported columns are:
 
 #### Defined in
 
-[client/input.ts:533](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L533)
+[src/client/input.ts:573](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L573)
 
 ___
 
 ### getMaskProto
 
-▸ **getMaskProto**(`inputId`, `label`, `polygons`): `Annotation`
+▸ **getMaskProto**(`«destructured»`): `Annotation`
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `inputId` | `string` |
-| `label` | `string` |
-| `polygons` | `number`[][][] |
+| `«destructured»` | `Object` |
+| › `inputId` | `string` |
+| › `label` | `string` |
+| › `polygons` | `Polygon`[] |
 
 #### Returns
 
@@ -555,7 +682,7 @@ ___
 
 #### Defined in
 
-[client/input.ts:720](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L720)
+[src/client/input.ts:760](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L760)
 
 ___
 
@@ -574,6 +701,7 @@ Create input proto for text and image from bytes or url
 | › `imageBytes?` | ``null`` \| `Uint8Array` | `null` |
 | › `imageUrl?` | ``null`` \| `string` | `null` |
 | › `inputId` | `string` | `undefined` |
+| › `labels?` | ``null`` \| `string`[] | `null` |
 | › `rawText?` | ``null`` \| `string` | `null` |
 | › `textBytes?` | ``null`` \| `Uint8Array` | `null` |
 
@@ -585,7 +713,7 @@ Create input proto for text and image from bytes or url
 
 #### Defined in
 
-[client/input.ts:476](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L476)
+[src/client/input.ts:513](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L513)
 
 ___
 
@@ -618,7 +746,7 @@ Create input proto for image data type.
 
 #### Defined in
 
-[client/input.ts:82](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L82)
+[src/client/input.ts:119](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L119)
 
 ___
 
@@ -673,7 +801,7 @@ console.log(prediction);
 
 #### Defined in
 
-[client/input.ts:439](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L439)
+[src/client/input.ts:476](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L476)
 
 ___
 
@@ -696,4 +824,4 @@ ___
 
 #### Defined in
 
-[client/input.ts:648](https://github.com/Clarifai/clarifai-nodejs/blob/4511094/src/client/input.ts#L648)
+[src/client/input.ts:688](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L688)

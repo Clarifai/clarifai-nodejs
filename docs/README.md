@@ -1,12 +1,8 @@
 clarifai-nodejs / [Exports](modules.md)
 
-<h1 align="center">
-  <a href="https://www.clarifai.com/"><img alt="Clarifai" title="Clarifai" src="https://upload.wikimedia.org/wikipedia/commons/b/bc/Clarifai_Logo_FC_Web.png"></a>
-</h1>
+![image](https://github.com/user-attachments/assets/3721189c-01c0-4936-a73c-13dcbf808542)
 
-<h2 align="center">
-Clarifai Node.js SDK</a>
-</h2>
+<h2 align="center">Clarifai Node.js SDK</h2>
 
 [![npm](https://img.shields.io/npm/v/clarifai-nodejs)](https://www.npmjs.com/package/clarifai-nodejs)
 [![Build](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml/badge.svg)](https://github.com/Clarifai/clarifai-nodejs/actions/workflows/build.yml)
@@ -44,6 +40,20 @@ module.exports = nextConfig
 ```
 
 ## Usage
+
+Clarifai uses **Personal Access Tokens(PATs)** to validate requests. You can create and manage PATs under your Clarifai account security settings.
+
+* 🔗 [Create PAT:](https://docs.clarifai.com/clarifai-basics/authentication/personal-access-tokens/) ***Log into Portal &rarr; Profile Icon &rarr; Security Settings &rarr; Create Personal Access Token &rarr; Set the scopes &rarr; Confirm***
+
+Export your PAT as an environment variable. Then, import and initialize the API Client.
+
+Set PAT as environment variable through terminal:
+
+```cmd
+export CLARIFAI_PAT={your personal access token}
+```
+
+or use [dotenv](https://www.npmjs.com/package/dotenv) to load environment variables via a `.env` file
 
 ### Using Models
 
@@ -140,4 +150,4 @@ const apps = list.value;
 console.log(apps);
 ```
 
-For full usage details, checkout our [API Reference docs](https://docs.clarifai.com/nodejs-sdk/api-reference)
+For full usage details, checkout our [API Reference docs](https://docs.clarifai.com/nodejs-sdk/installation-guide/modules)
