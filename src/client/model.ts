@@ -213,6 +213,7 @@ export class Model extends Lister {
         }
       } else {
         runner = {
+          ...runner,
           deployment: {
             userId: this.modelUserAppId.getUserId(),
           },
