@@ -200,14 +200,18 @@ export class Model extends Lister {
    * Sets the runner for the model.
    */
   setRunner(runner: Subset<resources_pb.RunnerSelector.AsObject>): void {
-    if (runner.deployment) {
-      runner.deployment.userId = this.modelUserAppId?.getUserId();
-    } else {
-      runner = {
-        deployment: {
-          userId: this.modelUserAppId?.getUserId(),
-        },
-      };
+    if (this.modelUserAppId?.getUserId()) {
+      if (runner.deployment) {
+        if (!runner.deployment.userId) {
+          runner.deployment.userId = this.modelUserAppId.getUserId();
+        }
+      } else {
+        runner = {
+          deployment: {
+            userId: this.modelUserAppId.getUserId(),
+          },
+        };
+      }
     }
     this.runner = fromPartialProtobufObject(RunnerSelector, runner);
   }
