@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.0...v0.1.1) (2025-05-29)
+
+
+### Bug Fixes
+
+* package compatibility with ESM and CJS environments ([#29](https://github.com/Clarifai/clarifai-nodejs/issues/29)) ([aeac704](https://github.com/Clarifai/clarifai-nodejs/commit/aeac704ccde332c642b115134539e90e11cf5c91))
+
 ## [0.1.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.0.5...v0.1.0) (2025-05-26)
 
 
