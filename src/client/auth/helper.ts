@@ -1,5 +1,6 @@
-import resources_pb2 from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { grpc } from "clarifai-nodejs-grpc";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
+const { grpc } = clarifai_nodejs_grpc;
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import process from "process";
 import fs from "fs";
@@ -200,10 +201,10 @@ export class ClarifaiAuthHelper {
   getUserAppIdProto(
     userId?: string,
     appId?: string,
-  ): resources_pb2.UserAppIDSet {
+  ): resources_pb.UserAppIDSet {
     const effectiveUserId = userId ?? this.userId;
     const effectiveAppId = appId ?? this.appId;
-    const userAppIdSet = new resources_pb2.UserAppIDSet();
+    const userAppIdSet = new resources_pb.UserAppIDSet();
     userAppIdSet.setUserId(effectiveUserId);
     userAppIdSet.setAppId(effectiveAppId);
     return userAppIdSet;

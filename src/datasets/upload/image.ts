@@ -1,7 +1,4 @@
-import {
-  Input as GrpcInput,
-  Annotation,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { ClarifaiDataLoader, ClarifaiDataset } from "./base";
 import path from "path";
 import { v4 as uuid } from "uuid";
@@ -11,7 +8,7 @@ import {
   VisualDetectionFeatures,
   VisualSegmentationFeatures,
 } from "./features";
-import { JavaScriptValue } from "google-protobuf/google/protobuf/struct_pb";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
 
 export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoader> {
   constructor(args: { dataGenerator: ClarifaiDataLoader; datasetId: string }) {
@@ -22,15 +19,15 @@ export class VisualClassificationDataset extends ClarifaiDataset<ClarifaiDataLoa
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualClassificationFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const imagePath = dataItem.imagePath;
       const labels = Array.isArray(dataItem.labels)
         ? dataItem.labels.map((label) => label.toString())
@@ -94,15 +91,15 @@ export class VisualDetectionDataset extends ClarifaiDataset<ClarifaiDataLoader> 
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualDetectionFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const image = dataItem.imagePath;
       const labels = dataItem.labels.map((label) => label.toString());
       const bboxes = dataItem.bboxes;
@@ -174,15 +171,15 @@ export class VisualSegmentationDataset extends ClarifaiDataset<ClarifaiDataLoade
     batchInputIds,
   }: {
     batchInputIds: string[];
-  }): [GrpcInput[], Annotation[]] {
-    const inputProtos: GrpcInput[] = [];
-    const annotationProtos: Annotation[] = [];
+  }): [resources_pb.Input[], resources_pb.Annotation[]] {
+    const inputProtos: resources_pb.Input[] = [];
+    const annotationProtos: resources_pb.Annotation[] = [];
 
     const processDataItem = (id: string) => {
       const dataItem = this.dataGenerator.getItem(
         Number(id),
       ) as VisualSegmentationFeatures;
-      let metadata: Record<string, JavaScriptValue> = {};
+      let metadata: Record<string, struct_pb.JavaScriptValue> = {};
       const image = dataItem.imagePath;
       const labels = dataItem.labels.map((label) => label.toString());
       const polygons = dataItem.polygons;

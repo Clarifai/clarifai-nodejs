@@ -1,21 +1,17 @@
-import {
-  Model,
-  OutputInfo,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { OutputInfo } = resources_pb;
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 
 interface YamlModelOutputInfo {
-  params?: Record<string, JavaScriptValue>;
+  params?: Record<string, struct_pb.JavaScriptValue>;
 }
 
 type YamlModel = Record<string, unknown>;
 
 export function getYamlOutputInfoProto(
   yamlModelOutputInfo: YamlModelOutputInfo,
-): OutputInfo | undefined {
+): resources_pb.OutputInfo | undefined {
   if (!yamlModelOutputInfo?.params) {
     return undefined;
   }
@@ -27,7 +23,7 @@ export function getYamlOutputInfoProto(
 
 function convertYamlParamsToApiParams(
   yamlParams: YamlModelOutputInfo["params"],
-): Struct | undefined {
+): struct_pb.Struct | undefined {
   if (!yamlParams) {
     return undefined;
   }
@@ -36,7 +32,7 @@ function convertYamlParamsToApiParams(
 }
 
 export function isSameYamlModel(
-  apiModel: Model.AsObject,
+  apiModel: resources_pb.Model.AsObject,
   yamlModel: YamlModel,
 ): boolean {
   const yamlModelFromApi: YamlModel = {};

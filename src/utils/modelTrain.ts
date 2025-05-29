@@ -1,11 +1,11 @@
-import { MultiModelTypeResponse } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import { writeFileSync } from "fs";
 
 /**
  * Converts the response from the API to a list of templates for the given model type id.
  */
 export function responseToTemplates(
-  response: MultiModelTypeResponse.AsObject,
+  response: service_pb.MultiModelTypeResponse.AsObject,
   modelTypeId: string,
 ): string[] {
   let templates: string[] = [];
@@ -27,7 +27,7 @@ export function responseToTemplates(
  * Converts the response from the API to a dictionary of model params for the given model type id.
  */
 export function responseToModelParams(
-  response: MultiModelTypeResponse.AsObject,
+  response: service_pb.MultiModelTypeResponse.AsObject,
   modelTypeId: string,
   template: string | null = null,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,7 +130,7 @@ export function findAndReplaceKey(
  * Converts the response from the API to a dictionary of model param info for the given model type id.
  */
 export function responseToParamInfo(
-  response: MultiModelTypeResponse.AsObject,
+  response: service_pb.MultiModelTypeResponse.AsObject,
   modelTypeId: string,
   param: string,
   template: string | null = null,

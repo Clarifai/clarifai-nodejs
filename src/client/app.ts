@@ -1,4 +1,5 @@
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   GetDatasetRequest,
   GetModelRequest,
   GetWorkflowRequest,
@@ -8,38 +9,34 @@ import {
   ListModelsRequest,
   ListModulesRequest,
   ListWorkflowsRequest,
-  MultiDatasetResponse,
   PostDatasetsRequest,
   PostModelsRequest,
-  SingleModelResponse,
-  SingleWorkflowResponse,
-  SingleDatasetResponse,
   PostModulesRequest,
   DeleteDatasetsRequest,
   DeleteModelsRequest,
   DeleteWorkflowsRequest,
   DeleteModulesRequest,
   PostWorkflowsRequest,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import { UserError } from "../errors";
 import { ClarifaiAppUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
 import { Lister } from "./lister";
-import {
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const {
   Model,
-  App as GrpcApp,
+  App: GrpcApp,
   Workflow,
   Module,
-  InstalledModuleVersion,
-  Concept,
   Dataset,
   WorkflowNode,
   ModelVersion,
   UserAppIDSet,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+} = resources_pb;
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { validateWorkflow } from "../workflows/validate";
@@ -66,25 +63,28 @@ export type AppConfig =
     };
 
 export type ListDatasetsParam =
-  PaginationRequestParams<ListDatasetsRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListDatasetsRequest.AsObject>;
 export type ListModelsParam =
-  PaginationRequestParams<ListModelsRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListModelsRequest.AsObject>;
 export type ListWorkflowsParam =
-  PaginationRequestParams<ListWorkflowsRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListWorkflowsRequest.AsObject>;
 export type ListModulesParam =
-  PaginationRequestParams<ListModulesRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListModulesRequest.AsObject>;
 export type ListInstalledModuleVersionsParam =
-  PaginationRequestParams<ListInstalledModuleVersionsRequest.AsObject>;
-export type CreateDatasetParam = Omit<Partial<Dataset.AsObject>, "id">;
-export type CreateModelParam = Omit<Partial<Model.AsObject>, "id">;
+  PaginationRequestParams<service_pb.ListInstalledModuleVersionsRequest.AsObject>;
+export type CreateDatasetParam = Omit<
+  Partial<resources_pb.Dataset.AsObject>,
+  "id"
+>;
+export type CreateModelParam = Omit<Partial<resources_pb.Model.AsObject>, "id">;
 
 /**
  * App is a class that provides access to Clarifai API endpoints related to App information.
  * @noInheritDoc
  */
 export class App extends Lister {
-  private appInfo: GrpcApp;
-  public info: GrpcApp.AsObject;
+  private appInfo: resources_pb.App;
+  public info: resources_pb.App.AsObject;
 
   /**
    * Initializes an App object.
@@ -142,7 +142,7 @@ export class App extends Lister {
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<
-    MultiDatasetResponse.AsObject["datasetsList"],
+    service_pb.MultiDatasetResponse.AsObject["datasetsList"],
     void,
     unknown
   > {
@@ -187,7 +187,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<Model.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<resources_pb.Model.AsObject[], void, unknown> {
     const listModels = promisifyGrpcCall(
       this.STUB.client.listModels,
       this.STUB.client,
@@ -245,7 +245,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<Workflow.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<resources_pb.Workflow.AsObject[], void, unknown> {
     const request = fromPartialProtobufObject(ListWorkflowsRequest, params);
 
     const listWorkflows = promisifyGrpcCall(
@@ -298,7 +298,7 @@ export class App extends Lister {
     onlyInApp?: boolean;
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<Module.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<resources_pb.Module.AsObject[], void, unknown> {
     const listModules = promisifyGrpcCall(
       this.STUB.client.listModules,
       this.STUB.client,
@@ -347,7 +347,11 @@ export class App extends Lister {
     params?: ListInstalledModuleVersionsParam;
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<InstalledModuleVersion.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<
+    resources_pb.InstalledModuleVersion.AsObject[],
+    void,
+    unknown
+  > {
     const listInstalledModuleVersions = promisifyGrpcCall(
       this.STUB.client.listInstalledModuleVersions,
       this.STUB.client,
@@ -390,7 +394,7 @@ export class App extends Lister {
   }: {
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<Concept.AsObject[], void, unknown> {
+  } = {}): AsyncGenerator<resources_pb.Concept.AsObject[], void, unknown> {
     const listConcepts = promisifyGrpcCall(
       this.STUB.client.listConcepts,
       this.STUB.client,
@@ -428,7 +432,7 @@ export class App extends Lister {
   }: {
     datasetId: string;
     params?: CreateDatasetParam;
-  }): Promise<Dataset.AsObject> {
+  }): Promise<resources_pb.Dataset.AsObject> {
     const request = new PostDatasetsRequest();
     request.setUserAppId(this.userAppId);
 
@@ -470,7 +474,7 @@ export class App extends Lister {
   }: {
     modelId: string;
     params?: CreateModelParam;
-  }): Promise<Model.AsObject> {
+  }): Promise<resources_pb.Model.AsObject> {
     const request = new PostModelsRequest();
     request.setUserAppId(this.userAppId);
     const newModel = fromPartialProtobufObject(Model, {
@@ -509,7 +513,7 @@ export class App extends Lister {
   }: {
     moduleId: string;
     description: string;
-  }): Promise<Module.AsObject> {
+  }): Promise<resources_pb.Module.AsObject> {
     const request = new PostModulesRequest();
     request.setUserAppId(this.userAppId);
     const newModule = new Module();
@@ -547,7 +551,7 @@ export class App extends Lister {
     configFilePath: string;
     generateNewId?: boolean;
     display?: boolean;
-  }): Promise<Workflow.AsObject> {
+  }): Promise<resources_pb.Workflow.AsObject> {
     if (!fs.existsSync(configFilePath)) {
       throw new UserError(
         `Workflow config file not found at ${configFilePath}`,
@@ -560,9 +564,9 @@ export class App extends Lister {
     const workflow = validatedData["workflow"];
 
     // Get all model objects from the workflow nodes.
-    const allModels: Model.AsObject[] = [];
+    const allModels: resources_pb.Model.AsObject[] = [];
     for (const node of workflow.nodes) {
-      let modelObject: Model.AsObject | undefined;
+      let modelObject: resources_pb.Model.AsObject | undefined;
       const outputInfo = getYamlOutputInfoProto(node?.model?.outputInfo ?? {});
       try {
         const model = await this.model({
@@ -614,10 +618,10 @@ export class App extends Lister {
     }
 
     // Convert nodes to resources_pb2.WorkflowNodes.
-    const nodes: WorkflowNode.AsObject[] = [];
+    const nodes: resources_pb.WorkflowNode.AsObject[] = [];
     for (let i = 0; i < workflow["nodes"].length; i++) {
       const ymlNode = workflow["nodes"][i];
-      const node: WorkflowNode.AsObject = {
+      const node: resources_pb.WorkflowNode.AsObject = {
         id: ymlNode["id"],
         model: allModels[i],
         // TODO: setting default values, need to check for right values to set here
@@ -689,7 +693,7 @@ export class App extends Lister {
       userId: string;
       appId: string;
     };
-  }): Promise<SingleModelResponse.AsObject["model"]> {
+  }): Promise<service_pb.SingleModelResponse.AsObject["model"]> {
     const request = new GetModelRequest();
     if (modelUserAppId) {
       request.setUserAppId(
@@ -728,7 +732,7 @@ export class App extends Lister {
     workflowId,
   }: {
     workflowId: string;
-  }): Promise<SingleWorkflowResponse.AsObject["workflow"]> {
+  }): Promise<service_pb.SingleWorkflowResponse.AsObject["workflow"]> {
     const request = new GetWorkflowRequest();
     request.setUserAppId(this.userAppId);
     request.setWorkflowId(workflowId);
@@ -756,7 +760,7 @@ export class App extends Lister {
     datasetId,
   }: {
     datasetId: string;
-  }): Promise<SingleDatasetResponse.AsObject["dataset"]> {
+  }): Promise<service_pb.SingleDatasetResponse.AsObject["dataset"]> {
     const request = new GetDatasetRequest();
     request.setUserAppId(this.userAppId);
     request.setDatasetId(datasetId);

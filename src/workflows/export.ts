@@ -1,4 +1,4 @@
-import { SingleWorkflowResponse } from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 
@@ -14,11 +14,11 @@ const VALID_YAML_KEYS = [
 ];
 
 export class Exporter {
-  private wf?: SingleWorkflowResponse.AsObject;
+  private wf?: service_pb.SingleWorkflowResponse.AsObject;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private wf_dict?: Record<string, any>;
 
-  constructor(workflow: SingleWorkflowResponse.AsObject) {
+  constructor(workflow: service_pb.SingleWorkflowResponse.AsObject) {
     this.wf = workflow;
   }
 

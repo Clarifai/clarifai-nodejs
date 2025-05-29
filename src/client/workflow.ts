@@ -2,21 +2,22 @@ import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
-import {
-  Input as GrpcInput,
-  OutputConfig as GrpcOutputConfig,
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const {
+  Input: GrpcInput,
+  OutputConfig: GrpcOutputConfig,
   WorkflowState,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+} = resources_pb;
 import { MAX_WORKFLOW_PREDICT_INPUTS } from "../constants/workflow";
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   GetWorkflowRequest,
   ListWorkflowVersionsRequest,
-  MultiWorkflowVersionResponse,
   PostWorkflowResultsRequest,
-  PostWorkflowResultsResponse,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import { Input } from "./input";
 import { Exporter } from "../workflows/export";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
@@ -84,9 +85,9 @@ export class Workflow extends Lister {
     inputs,
     workflowStateId,
   }: {
-    inputs: GrpcInput[];
-    workflowStateId?: WorkflowState.AsObject["id"];
-  }): Promise<PostWorkflowResultsResponse.AsObject> {
+    inputs: resources_pb.Input[];
+    workflowStateId?: resources_pb.WorkflowState.AsObject["id"];
+  }): Promise<service_pb.PostWorkflowResultsResponse.AsObject> {
     if (inputs.length > MAX_WORKFLOW_PREDICT_INPUTS) {
       throw new UserError(
         `Too many inputs. Max is ${MAX_WORKFLOW_PREDICT_INPUTS}.`,
@@ -154,7 +155,7 @@ export class Workflow extends Lister {
   predictByBytes(
     inputBytes: Buffer,
     inputType: "image" | "text" | "video" | "audio",
-  ): Promise<PostWorkflowResultsResponse.AsObject> {
+  ): Promise<service_pb.PostWorkflowResultsResponse.AsObject> {
     if (!["image", "text", "video", "audio"].includes(inputType)) {
       throw new UserError(
         "Invalid input type. It should be image, text, video, or audio.",
@@ -193,7 +194,7 @@ export class Workflow extends Lister {
   predictByUrl(
     url: string,
     inputType: "image" | "text" | "video" | "audio",
-  ): Promise<PostWorkflowResultsResponse.AsObject> {
+  ): Promise<service_pb.PostWorkflowResultsResponse.AsObject> {
     if (!["image", "text", "video", "audio"].includes(inputType)) {
       throw new UserError(
         "Invalid input type. It should be image, text, video, or audio.",
@@ -218,7 +219,11 @@ export class Workflow extends Lister {
   }: {
     pageNo?: number;
     perPage?: number;
-  }): AsyncGenerator<MultiWorkflowVersionResponse.AsObject, void, void> {
+  }): AsyncGenerator<
+    service_pb.MultiWorkflowVersionResponse.AsObject,
+    void,
+    void
+  > {
     const request = new ListWorkflowVersionsRequest();
     request.setUserAppId(this.userAppId);
     request.setWorkflowId(this.id);

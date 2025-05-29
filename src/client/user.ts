@@ -1,34 +1,28 @@
 import { Lister } from "./lister";
 import { AuthConfig, PaginationRequestParams } from "../utils/types";
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   DeleteAppRequest,
   DeleteRunnersRequest,
   GetAppRequest,
   GetRunnerRequest,
   ListAppsRequest,
   ListRunnersRequest,
-  MultiAppResponse,
-  MultiRunnerResponse,
   PostAppsRequest,
   PostRunnersRequest,
-  SingleAppResponse,
-  SingleRunnerResponse,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import { promisifyGrpcCall } from "../utils/misc";
-import {
-  App,
-  Runner,
-  UserAppIDSet,
-  Workflow,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { App, Runner, UserAppIDSet, Workflow } = resources_pb;
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 
 export type UserConfig = AuthConfig;
 export type ListAppsRequestParams =
-  PaginationRequestParams<ListAppsRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListAppsRequest.AsObject>;
 export type ListRunnersRequestParams =
-  PaginationRequestParams<ListRunnersRequest.AsObject>;
+  PaginationRequestParams<service_pb.ListRunnersRequest.AsObject>;
 
 /**
  * User is a class that provides access to Clarifai API endpoints related to user information.
@@ -74,7 +68,7 @@ export class User extends Lister {
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<
-    MultiAppResponse.AsObject["appsList"],
+    service_pb.MultiAppResponse.AsObject["appsList"],
     void,
     unknown
   > {
@@ -114,7 +108,11 @@ export class User extends Lister {
     params?: ListRunnersRequestParams;
     pageNo?: number;
     perPage?: number;
-  } = {}): AsyncGenerator<MultiRunnerResponse.AsObject, void, unknown> {
+  } = {}): AsyncGenerator<
+    service_pb.MultiRunnerResponse.AsObject,
+    void,
+    unknown
+  > {
     const listRunners = promisifyGrpcCall(
       this.STUB.client.listRunners,
       this.STUB.client,
@@ -146,7 +144,7 @@ export class User extends Lister {
   }: {
     appId: string;
     baseWorkflow?: string;
-  }): Promise<App.AsObject> {
+  }): Promise<resources_pb.App.AsObject> {
     const workflow = new Workflow();
     workflow.setId(baseWorkflow);
     workflow.setAppId("main");
@@ -196,7 +194,7 @@ export class User extends Lister {
     runnerId: string;
     labels: string[];
     description: string;
-  }): Promise<MultiRunnerResponse.AsObject["runnersList"][0]> {
+  }): Promise<service_pb.MultiRunnerResponse.AsObject["runnersList"][0]> {
     if (!Array.isArray(labels)) {
       throw new Error("Labels must be an array of strings");
     }
@@ -237,7 +235,7 @@ export class User extends Lister {
     appId,
   }: {
     appId: string;
-  }): Promise<SingleAppResponse.AsObject["app"]> {
+  }): Promise<service_pb.SingleAppResponse.AsObject["app"]> {
     const request = new GetAppRequest();
     const appIdSet = new UserAppIDSet();
     appIdSet.setUserId(this.userAppId.getUserId());
@@ -266,7 +264,7 @@ export class User extends Lister {
     runnerId,
   }: {
     runnerId: string;
-  }): Promise<SingleRunnerResponse.AsObject["runner"]> {
+  }): Promise<service_pb.SingleRunnerResponse.AsObject["runner"]> {
     const request = new GetRunnerRequest();
     request.setUserAppId(this.userAppId);
     request.setRunnerId(runnerId);

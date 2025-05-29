@@ -1,4 +1,8 @@
-import {
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+import { setPartDataTypes } from "./setPartsFromParams";
+import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
+const {
   Audio,
   Concept,
   Data,
@@ -8,19 +12,16 @@ import {
   Part,
   Region,
   Video,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
-import { setPartDataTypes } from "./setPartsFromParams";
-import { fromPartialProtobufObject } from "./fromPartialProtobufObject";
+} = resources_pb;
+const { Struct } = struct_pb;
 
 export const constructPartsFromPayload = (
-  payload: Record<string, JavaScriptValue> | JavaScriptValue[],
-  modelPayloadSpecs?: ModelTypeField.AsObject[],
+  payload:
+    | Record<string, struct_pb.JavaScriptValue>
+    | struct_pb.JavaScriptValue[],
+  modelPayloadSpecs?: resources_pb.ModelTypeField.AsObject[],
 ) => {
-  const partsList: Part[] = [];
+  const partsList: resources_pb.Part[] = [];
 
   if (Array.isArray(payload)) {
     payload.forEach((nestedPayload) => {
@@ -62,11 +63,11 @@ export const constructPartsFromPayload = (
     part.setData(data);
     part.setId(fieldName);
 
-    let nestedPartsList: Part[] | undefined = undefined;
+    let nestedPartsList: resources_pb.Part[] | undefined = undefined;
 
     if (specs?.typeArgsList?.length) {
       nestedPartsList = constructPartsFromPayload(
-        fieldValue as JavaScriptValue[],
+        fieldValue as struct_pb.JavaScriptValue[],
         specs.typeArgsList,
       );
     }

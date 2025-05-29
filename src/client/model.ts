@@ -1,30 +1,29 @@
-import {
+import service_pb from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+const {
   DeleteModelVersionRequest,
   GetModelRequest,
   ListModelTypesRequest,
   ListModelVersionsRequest,
-  MultiModelVersionResponse,
-  MultiOutputResponse,
   PostModelOutputsRequest,
   PostModelVersionsRequest,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/service_pb";
+} = service_pb;
 import { UserError } from "../errors";
 import { ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
 import { BackoffIterator, promisifyGrpcCall } from "../utils/misc";
 import { AuthConfig } from "../utils/types";
 import { Lister } from "./lister";
-import {
-  Model as GrpcModel,
-  Input as GrpcInput,
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const {
+  Model: GrpcModel,
+  Input: GrpcInput,
   ModelVersion,
-  OutputConfig,
   OutputInfo,
   UserAppIDSet,
   Data,
-  MethodSignature,
-  Output,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+  RunnerSelector,
+} = resources_pb;
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
 import {
   MAX_MODEL_PREDICT_INPUTS,
   TRAINABLE_MODEL_TYPES,
@@ -38,18 +37,22 @@ import {
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import { Input } from "./input";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
-import { grpc } from "clarifai-nodejs-grpc";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
+const { grpc } = clarifai_nodejs_grpc;
 import { constructPartsFromParams } from "../utils/setPartsFromParams";
 import { validateMethodSignaturesList } from "../utils/validateMethodSignaturesList";
 import { extractPayloadAndParams } from "../utils/extractPayloadAndParams";
 import { constructPartsFromPayload } from "../utils/constructPartsFromPayload";
+import {
+  Subset,
+  fromPartialProtobufObject,
+} from "../utils/fromPartialProtobufObject";
 
 interface BaseModelConfig {
   modelVersion?: { id: string };
+  runner?: Subset<resources_pb.RunnerSelector.AsObject>;
 }
 
 interface ModelConfigWithUrl extends BaseModelConfig {
@@ -72,9 +75,9 @@ interface ModelConfigWithModelId extends BaseModelConfig {
 type ModelConfig = ModelConfigWithUrl | ModelConfigWithModelId;
 
 interface GeneralModelPredictConfig {
-  inputs: GrpcInput[];
-  inferenceParams?: Record<string, JavaScriptValue>;
-  outputConfig?: OutputConfig;
+  inputs: resources_pb.Input[];
+  inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
+  outputConfig?: resources_pb.OutputConfig;
 }
 
 type TextModelPredictConfig = {
@@ -107,10 +110,11 @@ const isModelConfigWithUrl = (
 export class Model extends Lister {
   private appId: string;
   private id: string;
-  private modelUserAppId: UserAppIDSet | undefined;
+  private modelUserAppId: resources_pb.UserAppIDSet | undefined;
   private modelVersion: { id: string } | undefined;
-  public modelInfo: GrpcModel;
+  public modelInfo: resources_pb.Model;
   private trainingParams: Record<string, unknown>;
+  private runner: resources_pb.RunnerSelector | undefined;
 
   /**
    * Initializes a Model object.
@@ -187,6 +191,44 @@ export class Model extends Lister {
     this.modelUserAppId = new UserAppIDSet()
       .setAppId(_authConfig.appId)
       .setUserId(_authConfig.userId);
+    if (config.runner) {
+      this.setRunner(config.runner);
+    }
+  }
+
+  /**
+   * Sets the runner for the model.
+   */
+  setRunner(runner: Subset<resources_pb.RunnerSelector.AsObject>): void {
+    if (this.modelUserAppId?.getUserId()) {
+      if (runner.deployment) {
+        if (!runner.deployment.userId) {
+          runner = {
+            ...runner,
+            deployment: {
+              ...runner.deployment,
+              userId: this.modelUserAppId.getUserId(),
+            },
+          };
+        }
+      } else {
+        runner = {
+          ...runner,
+          deployment: {
+            userId: this.modelUserAppId.getUserId(),
+          },
+        };
+      }
+    }
+    this.runner = fromPartialProtobufObject(RunnerSelector, runner);
+  }
+
+  /**
+   * Returns the runner for the model.
+   * @returns - The runner for the model.
+   */
+  getRunner(): resources_pb.RunnerSelector.AsObject | undefined {
+    return this.runner?.toObject();
   }
 
   /**
@@ -490,8 +532,8 @@ export class Model extends Lister {
    * @includeExample examples/model/createVersion.ts
    */
   async createVersion(
-    modelVersion: ModelVersion,
-  ): Promise<GrpcModel.AsObject | undefined> {
+    modelVersion: resources_pb.ModelVersion,
+  ): Promise<resources_pb.Model.AsObject | undefined> {
     if (this.modelInfo.getModelTypeId() in TRAINABLE_MODEL_TYPES) {
       throw new UserError(
         `${this.modelInfo.getModelTypeId()} is a trainable model type. Use 'model.train()' to train the model`,
@@ -538,7 +580,7 @@ export class Model extends Lister {
     pageNo?: number;
     perPage?: number;
   } = {}): AsyncGenerator<
-    MultiModelVersionResponse.AsObject["modelVersionsList"],
+    service_pb.MultiModelVersionResponse.AsObject["modelVersionsList"],
     void,
     void
   > {
@@ -567,7 +609,7 @@ export class Model extends Lister {
     }
   }
 
-  async methodSignatures(): Promise<MethodSignature.AsObject[]> {
+  async methodSignatures(): Promise<resources_pb.MethodSignature.AsObject[]> {
     if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
       await this.loadInfo();
 
@@ -584,8 +626,8 @@ export class Model extends Lister {
   }
 
   static getOutputDataFromModelResponse(
-    outputs: Output.AsObject[],
-  ): Data.AsObject | undefined {
+    outputs: resources_pb.Output.AsObject[],
+  ): resources_pb.Data.AsObject | undefined {
     return outputs?.[0]?.data?.partsList?.[0]?.data;
   }
 
@@ -606,9 +648,9 @@ export class Model extends Lister {
   }
 
   private async constructRequestWithMethodSignature(
-    request: PostModelOutputsRequest,
+    request: service_pb.PostModelOutputsRequest,
     config: TextModelPredictConfig,
-  ): Promise<PostModelOutputsRequest> {
+  ): Promise<service_pb.PostModelOutputsRequest> {
     if (!this.modelInfo.toObject().modelVersion?.methodSignaturesList)
       await this.loadInfo();
 
@@ -646,12 +688,12 @@ export class Model extends Lister {
     );
 
     const payloadPart = constructPartsFromPayload(
-      payload as Record<string, JavaScriptValue>,
+      payload as Record<string, struct_pb.JavaScriptValue>,
       targetMethodSignature.inputFieldsList.filter((each) => !each.isParam),
     );
 
     const paramsPart = constructPartsFromParams(
-      params as Record<string, JavaScriptValue>,
+      params as Record<string, struct_pb.JavaScriptValue>,
       targetMethodSignature.inputFieldsList.filter((each) => each.isParam),
     );
 
@@ -684,7 +726,7 @@ export class Model extends Lister {
    */
   async predict(
     predictArgs: TextModelPredictConfig,
-  ): Promise<MultiOutputResponse.AsObject["outputsList"]>;
+  ): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]>;
   /**
    * Predicts the model based on the given inputs.
    * Use the `Input` module to create the input objects.
@@ -705,11 +747,11 @@ export class Model extends Lister {
     inferenceParams,
     outputConfig,
   }: GeneralModelPredictConfig): Promise<
-    MultiOutputResponse.AsObject["outputsList"]
+    service_pb.MultiOutputResponse.AsObject["outputsList"]
   >;
   async predict(
     config: ModelPredictConfig,
-  ): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+  ): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     let request = new PostModelOutputsRequest();
     if (isTextModelPredictConfig(config)) {
       request = await this.constructRequestWithMethodSignature(request, config);
@@ -725,7 +767,7 @@ export class Model extends Lister {
       }
 
       this.overrideModelVersion({ inferenceParams, outputConfig });
-      const requestInputs: GrpcInput[] = [];
+      const requestInputs: resources_pb.Input[] = [];
       for (const input of inputs) {
         requestInputs.push(input);
       }
@@ -741,9 +783,12 @@ export class Model extends Lister {
       request.setInputsList(requestInputs);
       request.setModel(this.modelInfo);
     }
+    if (this.runner) {
+      request.setRunnerSelector(this.runner);
+    }
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
-    return new Promise<MultiOutputResponse.AsObject["outputsList"]>(
+    return new Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]>(
       (resolve, reject) => {
         const makeRequest = () => {
           const postModelOutputs = promisifyGrpcCall(
@@ -786,7 +831,8 @@ export class Model extends Lister {
     methodName,
     ...otherParams
   }: TextModelPredictConfig): AsyncGenerator<
-    MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+    | service_pb.MultiOutputResponse.AsObject
+    | ["deploying", service_pb.MultiOutputResponse.AsObject]
   > {
     const request = await this.constructRequestWithMethodSignature(
       new PostModelOutputsRequest(),
@@ -795,6 +841,9 @@ export class Model extends Lister {
         ...otherParams,
       },
     );
+    if (this.runner) {
+      request.setRunnerSelector(this.runner);
+    }
 
     const metadata = new grpc.Metadata();
     const authMetadata = this.STUB.metadata;
@@ -805,15 +854,16 @@ export class Model extends Lister {
     const response = this.STUB.client.generateModelOutputs(request, metadata);
 
     const queue: (
-      | MultiOutputResponse.AsObject
-      | ["deploying", MultiOutputResponse.AsObject]
+      | service_pb.MultiOutputResponse.AsObject
+      | ["deploying", service_pb.MultiOutputResponse.AsObject]
     )[] = [];
     let done = false;
     let error: Error | null = null;
     let resolveNext: (() => void) | null = null;
 
     response.on("data", (data) => {
-      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      const dataObject =
+        data.toObject() as service_pb.MultiOutputResponse.AsObject;
       if (
         dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
         dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
@@ -861,15 +911,16 @@ export class Model extends Lister {
     methodName,
     ...otherParams
   }: TextModelPredictConfig): {
-    send: (request: PostModelOutputsRequest) => void;
+    send: (request: service_pb.PostModelOutputsRequest) => void;
     end: () => void;
     iterator: AsyncGenerator<
-      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+      | service_pb.MultiOutputResponse.AsObject
+      | ["deploying", service_pb.MultiOutputResponse.AsObject]
     >;
   } {
     const queue: (
-      | MultiOutputResponse.AsObject
-      | ["deploying", MultiOutputResponse.AsObject]
+      | service_pb.MultiOutputResponse.AsObject
+      | ["deploying", service_pb.MultiOutputResponse.AsObject]
     )[] = [];
     let done = false;
     let error: Error | null = null;
@@ -885,7 +936,8 @@ export class Model extends Lister {
 
     // Handle incoming messages
     duplexConnection.on("data", (data) => {
-      const dataObject = data.toObject() as MultiOutputResponse.AsObject;
+      const dataObject =
+        data.toObject() as service_pb.MultiOutputResponse.AsObject;
       if (
         dataObject.status?.code === StatusCode.MODEL_DEPLOYING ||
         dataObject.status?.code === StatusCode.MODEL_BUSY_PLEASE_RETRY ||
@@ -937,11 +989,14 @@ export class Model extends Lister {
           ...otherParams,
         },
       );
+      if (this.runner) {
+        request.setRunnerSelector(this.runner);
+      }
       duplexConnection.write(request);
     })();
 
     return {
-      send: (req: PostModelOutputsRequest) => {
+      send: (req: service_pb.PostModelOutputsRequest) => {
         duplexConnection.write(req);
       },
       end: () => {
@@ -953,18 +1008,21 @@ export class Model extends Lister {
 
   // @ts-expect-error - this method will be used in the future
   private async stream(config: TextModelPredictConfig): Promise<{
-    send: (request: PostModelOutputsRequest) => void;
+    send: (request: service_pb.PostModelOutputsRequest) => void;
     end: () => void;
-    iterator: AsyncGenerator<MultiOutputResponse.AsObject["outputsList"]>;
+    iterator: AsyncGenerator<
+      service_pb.MultiOutputResponse.AsObject["outputsList"]
+    >;
   }> {
     const startTime = Date.now();
     const timeoutMs = 10 * 60 * 1000;
     const backoff = new BackoffIterator();
 
-    let send!: (req: PostModelOutputsRequest) => void;
+    let send!: (req: service_pb.PostModelOutputsRequest) => void;
     let end!: () => void;
     let streamIterator!: AsyncGenerator<
-      MultiOutputResponse.AsObject | ["deploying", MultiOutputResponse.AsObject]
+      | service_pb.MultiOutputResponse.AsObject
+      | ["deploying", service_pb.MultiOutputResponse.AsObject]
     >;
 
     while (Date.now() - startTime < timeoutMs) {
@@ -979,6 +1037,9 @@ export class Model extends Lister {
         new PostModelOutputsRequest(),
         config,
       );
+      if (this.runner) {
+        request.setRunnerSelector(this.runner);
+      }
       send(request);
 
       for await (const msg of streamIterator) {
@@ -1036,7 +1097,7 @@ export class Model extends Lister {
     methodName,
     ...otherParams
   }: TextModelPredictConfig): AsyncGenerator<
-    MultiOutputResponse.AsObject["outputsList"]
+    service_pb.MultiOutputResponse.AsObject["outputsList"]
   > {
     const startTime = Date.now();
     const backoffIterator = new BackoffIterator();
@@ -1099,10 +1160,10 @@ export class Model extends Lister {
   }: {
     url: string;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
-    let inputProto: GrpcInput;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
+    outputConfig?: resources_pb.OutputConfig;
+  }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
+    let inputProto: resources_pb.Input;
     if (inputType === "image") {
       inputProto = Input.getInputFromUrl({ inputId: "", imageUrl: url });
     } else if (inputType === "text") {
@@ -1141,9 +1202,9 @@ export class Model extends Lister {
   }: {
     filepath: string;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
+    outputConfig?: resources_pb.OutputConfig;
+  }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     if (!fs.existsSync(filepath)) {
       throw new Error("Invalid filepath.");
     }
@@ -1175,14 +1236,14 @@ export class Model extends Lister {
   }: {
     inputBytes: Buffer;
     inputType: "image" | "text" | "video" | "audio";
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
-  }): Promise<MultiOutputResponse.AsObject["outputsList"]> {
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
+    outputConfig?: resources_pb.OutputConfig;
+  }): Promise<service_pb.MultiOutputResponse.AsObject["outputsList"]> {
     if (!(inputBytes instanceof Buffer)) {
       throw new Error("Invalid bytes.");
     }
 
-    let inputProto: GrpcInput;
+    let inputProto: resources_pb.Input;
     if (inputType === "image") {
       inputProto = Input.getInputFromBytes({
         inputId: "",
@@ -1230,8 +1291,8 @@ export class Model extends Lister {
     inferenceParams,
     outputConfig,
   }: {
-    inferenceParams?: Record<string, JavaScriptValue>;
-    outputConfig?: OutputConfig;
+    inferenceParams?: Record<string, struct_pb.JavaScriptValue>;
+    outputConfig?: resources_pb.OutputConfig;
   }): void {
     let currentModelVersion = this.modelInfo.getModelVersion();
     if (!currentModelVersion) {

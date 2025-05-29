@@ -1,11 +1,13 @@
 import { ServiceError, status } from "@grpc/grpc-js";
 import { V2Client } from "clarifai-nodejs-grpc/proto/clarifai/api/service_grpc_pb";
 import { ClarifaiAuthHelper } from "./helper";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
 import { V2Stub } from "./register";
-import { grpc } from "clarifai-nodejs-grpc";
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
+const { grpc } = clarifai_nodejs_grpc;
 import * as jspb from "google-protobuf";
-import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+const { StatusCode } = status_code_pb;
 
 const throttleStatusCodes = new Set([
   StatusCode.CONN_THROTTLED,
@@ -35,7 +37,7 @@ type CallbackParameterType<T> = T extends (
 
 // Utility type to infer response type from callback
 type CallbackResponseType<T> = T extends (
-  error: grpc.ServiceError | null,
+  error: clarifai_nodejs_grpc.grpc.ServiceError | null,
   response: infer R,
 ) => void
   ? R
@@ -95,15 +97,15 @@ export class AuthorizedStub {
 
   async makeCallPromise<
     TRequest extends jspb.Message,
-    TResponseObject extends { status?: Status.AsObject },
+    TResponseObject extends { status?: status_pb.Status.AsObject },
     TResponse extends {
       toObject: (arg?: boolean) => TResponseObject;
     },
   >(
     endpoint: (
       request: TRequest,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
     ) => Promise<TResponse>,
     requestData: TRequest,
   ): Promise<TResponse> {
@@ -164,15 +166,15 @@ export class RetryStub extends AuthorizedStub {
 
   async makeCallPromise<
     TRequest extends jspb.Message,
-    TResponseObject extends { status?: Status.AsObject },
+    TResponseObject extends { status?: status_pb.Status.AsObject },
     TResponse extends {
       toObject: (arg?: boolean) => TResponseObject;
     },
   >(
     endpoint: (
       request: TRequest,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
     ) => Promise<TResponse>,
     requestData: TRequest,
   ): Promise<TResponse> {

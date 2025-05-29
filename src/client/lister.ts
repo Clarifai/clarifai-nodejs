@@ -1,9 +1,10 @@
-import { grpc } from "clarifai-nodejs-grpc";
+import clarifai_nodejs_grpc from "clarifai-nodejs-grpc";
 import * as jspb from "google-protobuf";
 import { AuthConfig } from "../utils/types";
 import { BaseClient } from "./base";
-import { StatusCode } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
-import { Status } from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
+import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
+const { StatusCode } = status_code_pb;
+import status_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_pb";
 
 export class Lister extends BaseClient {
   defaultPageSize: number;
@@ -21,15 +22,15 @@ export class Lister extends BaseClient {
 
   async *listPagesGenerator<
     TRequest extends jspb.Message,
-    TResponseObject extends { status?: Status.AsObject },
+    TResponseObject extends { status?: status_pb.Status.AsObject },
     TResponse extends {
       toObject: (arg?: boolean) => TResponseObject;
     },
   >(
     endpoint: (
       request: TRequest,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
     ) => Promise<TResponse>,
     requestData: TRequest,
     pageNo: number = 1,
@@ -85,15 +86,15 @@ export class Lister extends BaseClient {
 
   async listPagesData<
     TRequest extends jspb.Message,
-    TResponseObject extends { status?: Status.AsObject },
+    TResponseObject extends { status?: status_pb.Status.AsObject },
     TResponse extends {
       toObject: (arg?: boolean) => TResponseObject;
     },
   >(
     endpoint: (
       request: TRequest,
-      metadata: grpc.Metadata,
-      options: Partial<grpc.CallOptions>,
+      metadata: clarifai_nodejs_grpc.grpc.Metadata,
+      options: Partial<clarifai_nodejs_grpc.grpc.CallOptions>,
     ) => Promise<TResponse>,
     requestData: TRequest,
     pageNo: number = 1,

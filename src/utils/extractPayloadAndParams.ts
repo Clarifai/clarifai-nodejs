@@ -1,8 +1,8 @@
-import { ModelTypeField } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 
 export const extractPayloadAndParams = (
   requestObject: Record<string, unknown>,
-  paramSpecs: ModelTypeField.AsObject[],
+  paramSpecs: resources_pb.ModelTypeField.AsObject[],
 ) => {
   const payload: Record<string, unknown> = {};
   const params: Record<string, unknown> = {};

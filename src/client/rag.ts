@@ -3,20 +3,16 @@ import { App, AuthAppConfig } from "./app";
 import { Workflow } from "./workflow";
 import * as fs from "fs";
 import yaml from "js-yaml";
-import {
-  JavaScriptValue,
-  Struct,
-} from "google-protobuf/google/protobuf/struct_pb";
+import struct_pb from "google-protobuf/google/protobuf/struct_pb.js";
+const { Struct } = struct_pb;
 import { Model } from "./model";
 import { User } from "./user";
 import { MAX_UPLOAD_BATCH_SIZE } from "../constants/rag";
 import { UserError } from "../errors";
 import { AuthConfig } from "../utils/types";
 import { ClarifaiAppUrl, ClarifaiUrl, ClarifaiUrlHelper } from "../urls/helper";
-import {
-  ModelVersion,
-  OutputInfo,
-} from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import resources_pb from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+const { ModelVersion, OutputInfo } = resources_pb;
 import { validateWorkflow } from "../workflows/validate";
 import {
   Message,
@@ -26,7 +22,7 @@ import {
   splitDocument,
 } from "../rag/utils";
 import { Input } from "./input";
-import compact from "lodash/compact";
+import compact from "lodash/compact.js";
 
 const DEFAULT_RAG_PROMPT_TEMPLATE =
   "Context information is below:\n{data.hits}\nGiven the context information and not prior knowledge, answer the query.\nQuery: {data.text.raw}\nAnswer: ";
@@ -301,7 +297,7 @@ export class RAG {
     chunkSize?: number;
     chunkOverlap?: number;
     datasetId?: string;
-    metadata?: Record<string, JavaScriptValue>;
+    metadata?: Record<string, struct_pb.JavaScriptValue>;
   }): Promise<void> {
     if (batchSize > MAX_UPLOAD_BATCH_SIZE) {
       throw new UserError(
@@ -326,7 +322,7 @@ export class RAG {
     });
 
     const textChunks: string[] = [];
-    const metadataList: Array<Record<string, JavaScriptValue>> = [];
+    const metadataList: Array<Record<string, struct_pb.JavaScriptValue>> = [];
     let docI = 0;
 
     for (const doc of documents) {
