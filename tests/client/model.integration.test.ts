@@ -29,6 +29,8 @@ const LLM_MODEL_URL =
 const LVM_MODEL_URL =
   "https://clarifai.com/dani-cfg/pythonic-models/models/lvm-dummy-test";
 
+const DEPLOYMENT_ID = "test-deployment";
+
 function validateConceptsLength(
   response: MultiOutputResponse.AsObject["outputsList"],
 ): void {
@@ -358,30 +360,72 @@ describe(
       expect(responseMessage).toBe("TestMessage");
     });
 
-    it("new model interface: should generate stream response on image Input with right output", async () => {
-      const model = new Model({
-        url: LVM_MODEL_URL,
-        authConfig: {
-          pat: CLARIFAI_PAT,
-        },
-      });
-      const responseStream = model.generate({
-        methodName: "generate",
-        prompt: "Test Message",
-        image: {
-          url: DOG_IMAGE_URL,
-        },
-      });
+    it(
+      "new model interface: should generate stream response on image Input with right output",
+      {
+        timeout: 5 * 60 * 1000, // 5 minutes timeout for this test
+      },
+      async () => {
+        const model = new Model({
+          url: LVM_MODEL_URL,
+          authConfig: {
+            pat: CLARIFAI_PAT,
+          },
+        });
+        const responseStream = model.generate({
+          methodName: "generate",
+          prompt: "Test Message",
+          image: {
+            url: DOG_IMAGE_URL,
+          },
+        });
 
-      let responseMessage = "";
+        let responseMessage = "";
 
-      for await (const response of responseStream) {
-        const responseData = Model.getOutputDataFromModelResponse(response);
-        responseMessage += responseData?.stringValue ?? "";
-      }
+        for await (const response of responseStream) {
+          const responseData = Model.getOutputDataFromModelResponse(response);
+          responseMessage += responseData?.stringValue ?? "";
+        }
 
-      expect(responseMessage).toBe("TestMessageimage");
-    });
+        expect(responseMessage).toBe("TestMessageimage");
+      },
+    );
+
+    it(
+      "new model interface: should generate stream response on image Input with right output - custom deployment",
+      {
+        timeout: 5 * 60 * 1000, // 5 minutes timeout for this test
+      },
+      async () => {
+        const model = new Model({
+          url: LVM_MODEL_URL,
+          authConfig: {
+            pat: CLARIFAI_PAT,
+          },
+          runner: {
+            deployment: {
+              id: DEPLOYMENT_ID,
+            },
+          },
+        });
+        const responseStream = model.generate({
+          methodName: "generate",
+          prompt: "Test Message",
+          image: {
+            url: DOG_IMAGE_URL,
+          },
+        });
+
+        let responseMessage = "";
+
+        for await (const response of responseStream) {
+          const responseData = Model.getOutputDataFromModelResponse(response);
+          responseMessage += responseData?.stringValue ?? "";
+        }
+
+        expect(responseMessage).toBe("TestMessageimage");
+      },
+    );
 
     it("new model interface: should fail with unknown methodName", async () => {
       const model = new Model({
