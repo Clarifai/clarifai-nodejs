@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.1...v0.1.2) (2025-05-30)
+
+
+### Bug Fixes
+
+* minor issue with exporting types ([#32](https://github.com/Clarifai/clarifai-nodejs/issues/32)) ([b19e1e4](https://github.com/Clarifai/clarifai-nodejs/commit/b19e1e44b3e232c265c9db19bfaa84fd52f32550))
+
 ## [0.1.1](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.0...v0.1.1) (2025-05-29)
 
 
