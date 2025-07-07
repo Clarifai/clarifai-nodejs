@@ -830,6 +830,9 @@ export class Input extends Lister {
       }
       throw new Error(
         `Inputs upload failed with response ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     } else {
       if (showLog) {

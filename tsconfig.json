@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     /* Basic Options */
-    "target": "es2020", // Specify ECMAScript target version
+    "target": "es2022", // Specify ECMAScript target version
     "module": "ESNext", // Specify module code generation
-    "lib": ["es2020"], // Specify library files to be included in the compilation
+    "lib": ["es2022"], // Specify library files to be included in the compilation
     "types": ["node"], // Specify type package to be included in the compilation
     "outDir": "./dist", // Redirect output structure to the directory
     "rootDir": "./", // Specify the root directory of input files
@@ -30,8 +30,8 @@
     // these options are overrides used only by ts-node
     // same as our --compilerOptions flag and our TS_NODE_COMPILER_OPTIONS environment variable
     "compilerOptions": {
-      "module": "commonjs"
-    }
+      "module": "commonjs",
+    },
   },
   "include": ["src/**/*", "tests/**/*", "examples/**/*"], // Include all files in the src folder
   "exclude": ["node_modules", "dist"], // Exclude node_modules and dist directories

@@ -267,6 +267,9 @@ export class Search extends Lister {
         } else {
           throw new Error(
             `Listing failed with response ${responseObject.status?.description}`,
+            {
+              cause: responseObject,
+            },
           );
         }
       }

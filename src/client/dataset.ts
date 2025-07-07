@@ -81,7 +81,9 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(postDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nDataset Version created\n%s", response.getStatus());
 
@@ -101,7 +103,9 @@ export class Dataset extends Lister {
     const response = await this.grpcRequest(deleteDatasetVersions, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nDataset Version Deleted\n%s", response.getStatus());
   }
