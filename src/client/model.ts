@@ -895,7 +895,7 @@ export class Model extends Lister {
         resolveNext?.();
       } else {
         error = new Error(
-          `Model Predict failed with response ${JSON.stringify(dataObject.status?.description)}`,
+          `Model Predict failed with response ${dataObject.status?.description}`,
           {
             cause: dataObject,
           },
@@ -969,7 +969,7 @@ export class Model extends Lister {
         queue.push(dataObject);
       } else {
         error = new Error(
-          `Model Predict failed with response ${JSON.stringify(dataObject.status?.description)}`,
+          `Model Predict failed with response ${dataObject.status?.description}`,
           {
             cause: dataObject,
           },
