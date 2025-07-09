@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,6 +21,6 @@ jobs:
         run: npm run test
         env:
           VITE_CLARIFAI_USER_ID: ${{ secrets.VITE_CLARIFAI_USER_ID }}
-          VITE_CLARIFAI_PAT:  ${{ secrets.VITE_CLARIFAI_PAT }}
+          VITE_CLARIFAI_PAT: ${{ secrets.VITE_CLARIFAI_PAT }}
       - name: Build
         run: npm run build
