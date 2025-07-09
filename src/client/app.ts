@@ -47,7 +47,6 @@ import { v4 as uuid } from "uuid";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
-import { Struct } from "google-protobuf/google/protobuf/struct_pb";
 
 export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
   appId?: undefined;
@@ -608,9 +607,7 @@ export class App extends Lister {
           if (outputInfo) {
             modelVersion = new ModelVersion().setOutputInfo(outputInfo);
           } else {
-            modelVersion = new ModelVersion().setOutputInfo(
-              new OutputInfo().setParams(Struct.fromJavaScript({})),
-            );
+            modelVersion = new ModelVersion();
           }
           const modelWithVersion = await model.createVersion(modelVersion);
           if (modelWithVersion) {
