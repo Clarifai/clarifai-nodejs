@@ -450,7 +450,9 @@ export class App extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
 
     console.info("\nDataset created\n%s", responseObject.status.description);
@@ -492,7 +494,9 @@ export class App extends Lister {
       responseObject.status?.code !== StatusCode.SUCCESS ||
       !responseObject.model
     ) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nModel created\n%s", responseObject.status.description);
     return responseObject.model;
@@ -527,7 +531,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(postModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nModule created\n%s", responseObject.status.description);
     return responseObject.modulesList?.[0];
@@ -661,7 +667,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(postWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nWorkflow created\n%s", responseObject.status?.description);
 
@@ -715,7 +723,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(getModel, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     return responseObject.model;
   }
@@ -743,7 +753,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(getWorkflow, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     return responseObject.workflow;
   }
@@ -771,7 +783,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(getDataset, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     return responseObject.dataset;
   }
@@ -794,7 +808,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteDatasets, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nDataset Deleted\n%s", responseObject.status?.description);
   }
@@ -817,7 +833,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModels, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nModel Deleted\n%s", responseObject.status?.description);
   }
@@ -840,7 +858,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteWorkflows, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nWorkflow Deleted\n%s", responseObject.status?.description);
   }
@@ -863,7 +883,9 @@ export class App extends Lister {
     const response = await this.grpcRequest(deleteModules, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nModule Deleted\n%s", responseObject.status?.description);
   }

@@ -135,6 +135,9 @@ export class Workflow extends Lister {
               reject(
                 new Error(
                   `Workflow Predict failed with response ${responseObject.status?.description}`,
+                  {
+                    cause: responseObject,
+                  },
                 ),
               );
             } else {
@@ -143,7 +146,9 @@ export class Workflow extends Lister {
           })
           .catch((error) => {
             reject(
-              new Error(`Model Predict failed with error: ${error.message}`),
+              new Error(`Model Predict failed with error: ${error.message}`, {
+                cause: error.cause,
+              }),
             );
           });
       };
@@ -273,7 +278,10 @@ export class Workflow extends Lister {
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
-        `Workflow Export failed with response ${response.getStatus()?.toString()}`,
+        `Workflow Export failed with response ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
 

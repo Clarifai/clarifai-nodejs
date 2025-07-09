@@ -53,7 +53,12 @@ export class Lister extends BaseClient {
 
       // Check response status
       if (responseObject.status?.code !== StatusCode.SUCCESS) {
-        throw new Error(`Listing failed with response ${response}`);
+        throw new Error(
+          `Listing failed with response ${responseObject.status?.description}`,
+          {
+            cause: responseObject,
+          },
+        );
       }
 
       const dataListEntries = Object.entries(responseObject).find(
@@ -114,7 +119,12 @@ export class Lister extends BaseClient {
 
     // Check response status
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(`Listing failed with response ${response}`);
+      throw new Error(
+        `Listing failed with response ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
+      );
     }
 
     return response;

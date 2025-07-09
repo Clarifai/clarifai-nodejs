@@ -170,6 +170,9 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
         `Failed to create app: ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
 
@@ -216,6 +219,9 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
         `Failed to create runner: ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
     console.info("\nRunner created\n%s", responseObject.status.description);
@@ -247,6 +253,9 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
         `Failed to retrieve app: ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
     return responseObject["app"];
@@ -277,6 +286,9 @@ export class User extends Lister {
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
         `Failed to retrieve runner: ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
     return responseObject.runner;
@@ -302,7 +314,9 @@ export class User extends Lister {
     const response = await this.grpcRequest(deleteApp, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nApp Deleted\n%s", responseObject.status.description);
   }
@@ -325,7 +339,9 @@ export class User extends Lister {
     const response = await this.grpcRequest(deleteRunners, request);
     const responseObject = response.toObject();
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     console.info("\nRunner Deleted\n%s", responseObject.status.description);
   }

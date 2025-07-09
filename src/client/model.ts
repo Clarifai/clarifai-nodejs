@@ -254,7 +254,10 @@ export class Model extends Lister {
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
-        `Failed to get model: ${responseObject.status} : ${responseObject.status?.description}`,
+        `Failed to get model: ${responseObject.status?.code} : ${responseObject.status?.description}`,
+        {
+          cause: responseObject,
+        },
       );
     }
 
@@ -309,7 +312,9 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
 
     const templates = responseToTemplates(
@@ -378,7 +383,9 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
 
     const params = responseToModelParams(
@@ -479,7 +486,9 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
     const paramInfo = responseToParamInfo(
       responseObject,
@@ -522,7 +531,9 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.toString());
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
   }
 
@@ -559,7 +570,9 @@ export class Model extends Lister {
     const responseObject = response.toObject();
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
-      throw new Error(responseObject.status?.description);
+      throw new Error(responseObject.status?.description, {
+        cause: responseObject,
+      });
     }
 
     return responseObject.model;
@@ -810,6 +823,9 @@ export class Model extends Lister {
                 reject(
                   new Error(
                     `Model Predict failed with response ${JSON.stringify(responseObject.status)}`,
+                    {
+                      cause: responseObject,
+                    },
                   ),
                 );
               } else {
@@ -818,7 +834,9 @@ export class Model extends Lister {
             })
             .catch((error) => {
               reject(
-                new Error(`Model Predict failed with error: ${error.message}`),
+                new Error(`Model Predict failed with error: ${error.message}`, {
+                  cause: error.cause,
+                }),
               );
             });
         };
@@ -877,7 +895,10 @@ export class Model extends Lister {
         resolveNext?.();
       } else {
         error = new Error(
-          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+          `Model Predict failed with response ${dataObject.status?.description}`,
+          {
+            cause: dataObject,
+          },
         );
         resolveNext?.();
       }
@@ -948,7 +969,10 @@ export class Model extends Lister {
         queue.push(dataObject);
       } else {
         error = new Error(
-          `Model Predict failed with response ${JSON.stringify(dataObject.status)}`,
+          `Model Predict failed with response ${dataObject.status?.description}`,
+          {
+            cause: dataObject,
+          },
         );
       }
       resolveNext?.();
