@@ -598,20 +598,20 @@ export class App extends Lister {
             modelId: modelObject.id,
             authConfig: {
               pat: this.pat,
-              appId: this.userAppId.getAppId(),
-              userId: this.userAppId.getUserId(),
+              appId: modelObject.appId,
+              userId: modelObject.userId,
             },
           });
+          let modelVersion: resources_pb.ModelVersion;
           if (outputInfo) {
-            const modelVersion = new ModelVersion().setOutputInfo(outputInfo);
-            const modelWithVersion = await model.createVersion(modelVersion);
-            if (modelWithVersion) {
-              allModels.push(modelWithVersion);
-              continue;
-            }
+            modelVersion = new ModelVersion().setOutputInfo(outputInfo);
           } else {
-            await model.loadInfo();
-            allModels.push(model.modelInfo.toObject());
+            modelVersion = new ModelVersion();
+          }
+          const modelWithVersion = await model.createVersion(modelVersion);
+          if (modelWithVersion) {
+            allModels.push(modelWithVersion);
+            continue;
           }
         }
       }
