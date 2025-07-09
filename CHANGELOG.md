@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.2...v0.2.0) (2025-07-09)
+
+
+### Features
+
+* expose error cause via error object ([#34](https://github.com/Clarifai/clarifai-nodejs/issues/34)) ([60e115e](https://github.com/Clarifai/clarifai-nodejs/commit/60e115e0d72ec2781f8b59e4795d36449d9015de))
+* workflow predict tests ([#36](https://github.com/Clarifai/clarifai-nodejs/issues/36)) ([ab18705](https://github.com/Clarifai/clarifai-nodejs/commit/ab18705275f76a72b7416ab4b22caba8d8a40151))
+
+
+### Bug Fixes
+
+* workflows updated to support changes in model ID ([#35](https://github.com/Clarifai/clarifai-nodejs/issues/35)) ([13b5725](https://github.com/Clarifai/clarifai-nodejs/commit/13b5725ef0d04be4ce68b49a3fbfdb6b81e40dc4))
+
 ## [0.1.2](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.1...v0.1.2) (2025-05-30)
 
 
