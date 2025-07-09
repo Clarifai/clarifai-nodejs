@@ -8,6 +8,7 @@ import {
   Frame,
   OutputConfig,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
+import { ClarifaiUrl } from "../../src/urls/helper";
 
 const DOG_IMAGE_URL = "https://samples.clarifai.com/dog2.jpeg";
 const NON_EXISTING_IMAGE_URL = "http://example.com/non-existing.jpg";
@@ -500,6 +501,95 @@ describe(
         responseMessage += responseData?.stringValue ?? "";
       }
       expect(responseMessage).toBe("helloworld!chat_history");
+    });
+
+    it("should display error cause for failed predictions", async () => {
+      const model = new Model({
+        url: (LLM_MODEL_URL + "invalid-model") as ClarifaiUrl,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      try {
+        await model.predict({
+          methodName: "predict",
+          prompt: "Test Message",
+        });
+        throw new Error("Expected an error to be thrown");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        expect(error.message).toMatch(/Failed to get model/);
+        expect(error.cause.status.code).toBe(21200);
+      }
+    });
+
+    it(
+      "should display error cause for failed streaming predictions with custom deployment",
+      {
+        timeout: 5 * 60 * 1000, // 5 minutes timeout for this test
+      },
+      async () => {
+        const model = new Model({
+          url: LVM_MODEL_URL,
+          authConfig: {
+            pat: CLARIFAI_PAT,
+          },
+          runner: {
+            deployment: {
+              id: DEPLOYMENT_ID + "invalid",
+            },
+          },
+        });
+        const responseStream = model.generate({
+          methodName: "generate",
+          prompt: "Test Message",
+          image: {
+            url: DOG_IMAGE_URL,
+          },
+        });
+
+        try {
+          for await (const response of responseStream) {
+            Model.getOutputDataFromModelResponse(response);
+          }
+          throw new Error("Expected an error to be thrown");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          expect(error.message).toMatch(
+            /Model Predict failed with response Resource does not exist/,
+          );
+          expect(error.cause.status.code).toBe(11101);
+        }
+      },
+    );
+
+    it("should display error cause for failed streaming predictions", async () => {
+      const model = new Model({
+        url: (LLM_MODEL_URL + "invalid-model") as ClarifaiUrl,
+        authConfig: {
+          pat: CLARIFAI_PAT,
+        },
+      });
+      const responseStream = model.generate({
+        methodName: "generate",
+        prompt: "hello world!",
+        chat_history: [
+          {
+            role: "user",
+            message: "Today is monday",
+          },
+        ],
+      });
+      try {
+        for await (const response of responseStream) {
+          Model.getOutputDataFromModelResponse(response);
+        }
+        throw new Error("Expected an error to be thrown");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        expect(error.message).toMatch(/Failed to get model/);
+        expect(error.cause.status.code).toBe(21200);
+      }
     });
   },
 );

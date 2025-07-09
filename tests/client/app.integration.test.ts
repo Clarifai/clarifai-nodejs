@@ -254,4 +254,49 @@ describe("App", () => {
       user.deleteApp({ appId: CREATE_APP_ID }),
     ).resolves.not.toThrow();
   });
+
+  it("displays error cause", async () => {
+    const user = new User({
+      pat: CLARIFAI_PAT,
+      userId: MAIN_APP_USER_ID,
+      appId: MAIN_APP_ID,
+    });
+    const appObject = await user.app({ appId: MAIN_APP_ID });
+    const app = new App({
+      authConfig: {
+        pat: CLARIFAI_PAT,
+        userId: MAIN_APP_USER_ID,
+        appId: appObject?.id ?? "",
+      },
+    });
+    try {
+      await app.model({
+        modelId: GENERAL_MODEL_ID + "invalid",
+        modelVersionId: "",
+      });
+      throw new Error("Expected an error to be thrown");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      expect(error.message).toMatch(/Model does not exist/);
+      expect(error.cause.status.code).toBe(21200);
+    }
+
+    try {
+      await app.workflow({ workflowId: General_Workflow_ID + "invalid" });
+      throw new Error("Expected an error to be thrown");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      expect(error.message).toMatch(/Resource does not exist/);
+      expect(error.cause.status.code).toBe(11101);
+    }
+
+    try {
+      await user.deleteApp({ appId: CREATE_APP_ID + "invalid" });
+      throw new Error("Expected an error to be thrown");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      expect(error.message).toMatch(/Resource does not exist/);
+      expect(error.cause.status.code).toBe(11101);
+    }
+  });
 });

@@ -254,7 +254,7 @@ export class Model extends Lister {
 
     if (responseObject.status?.code !== StatusCode.SUCCESS) {
       throw new Error(
-        `Failed to get model: ${responseObject.status} : ${responseObject.status?.description}`,
+        `Failed to get model: ${responseObject.status?.code} : ${responseObject.status?.description}`,
         {
           cause: responseObject,
         },
