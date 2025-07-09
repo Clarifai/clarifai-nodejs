@@ -33,7 +33,6 @@ const {
   WorkflowNode,
   ModelVersion,
   UserAppIDSet,
-  OutputInfo,
 } = resources_pb;
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
