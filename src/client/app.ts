@@ -33,6 +33,7 @@ const {
   WorkflowNode,
   ModelVersion,
   UserAppIDSet,
+  OutputInfo,
 } = resources_pb;
 import { TRAINABLE_MODEL_TYPES } from "../constants/model";
 import status_code_pb from "clarifai-nodejs-grpc/proto/clarifai/api/status/status_code_pb";
@@ -46,6 +47,7 @@ import { v4 as uuid } from "uuid";
 import { fromProtobufObject } from "from-protobuf-object";
 import { fromPartialProtobufObject } from "../utils/fromPartialProtobufObject";
 import { flatten } from "safe-flat";
+import { Struct } from "google-protobuf/google/protobuf/struct_pb";
 
 export type AuthAppConfig = Omit<AuthConfig, "appId" | "userId"> & {
   appId?: undefined;
@@ -598,20 +600,22 @@ export class App extends Lister {
             modelId: modelObject.id,
             authConfig: {
               pat: this.pat,
-              appId: this.userAppId.getAppId(),
-              userId: this.userAppId.getUserId(),
+              appId: modelObject.appId,
+              userId: modelObject.userId,
             },
           });
+          let modelVersion: resources_pb.ModelVersion;
           if (outputInfo) {
-            const modelVersion = new ModelVersion().setOutputInfo(outputInfo);
-            const modelWithVersion = await model.createVersion(modelVersion);
-            if (modelWithVersion) {
-              allModels.push(modelWithVersion);
-              continue;
-            }
+            modelVersion = new ModelVersion().setOutputInfo(outputInfo);
           } else {
-            await model.loadInfo();
-            allModels.push(model.modelInfo.toObject());
+            modelVersion = new ModelVersion().setOutputInfo(
+              new OutputInfo().setParams(Struct.fromJavaScript({})),
+            );
+          }
+          const modelWithVersion = await model.createVersion(modelVersion);
+          if (modelWithVersion) {
+            allModels.push(modelWithVersion);
+            continue;
           }
         }
       }
