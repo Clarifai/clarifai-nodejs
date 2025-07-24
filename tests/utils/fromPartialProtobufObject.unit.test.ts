@@ -2,6 +2,7 @@ import {
   LicenseType,
   Workflow,
   Model,
+  DeployRestriction,
 } from "clarifai-nodejs-grpc/proto/clarifai/api/resources_pb";
 import { describe, expect, it } from "vitest";
 import {
@@ -54,6 +55,8 @@ describe("fromPartialProtobufObject", () => {
             creator: "",
             versionCount: 0,
             billingType: Model.BillingType.UNKNOWN,
+            deployRestriction: DeployRestriction.NO_LIMITS,
+            replicaCount: 1,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -97,6 +100,8 @@ describe("fromPartialProtobufObject", () => {
             creator: "",
             versionCount: 0,
             billingType: Model.BillingType.UNKNOWN,
+            deployRestriction: DeployRestriction.NO_LIMITS,
+            replicaCount: 1,
           },
           nodeInputsList: [],
           suppressOutput: false,
@@ -140,6 +145,8 @@ describe("fromPartialProtobufObject", () => {
             creator: "",
             versionCount: 0,
             billingType: Model.BillingType.UNKNOWN,
+            deployRestriction: DeployRestriction.NO_LIMITS,
+            replicaCount: 1,
           },
           nodeInputsList: [
             {
