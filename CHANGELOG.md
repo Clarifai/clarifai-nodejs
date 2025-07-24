@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Clarifai/clarifai-nodejs/compare/v0.2.0...v0.2.1) (2025-07-24)
+
+
+### Bug Fixes
+
+* vulnerability in form-data ([89fbecf](https://github.com/Clarifai/clarifai-nodejs/commit/89fbecfb54f38f2a5139c385d800c6967e095adb))
+
 ## [0.2.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.1.2...v0.2.0) (2025-07-09)
 
 
