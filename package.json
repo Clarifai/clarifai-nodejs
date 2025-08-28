@@ -1,6 +1,6 @@
 {
   "name": "clarifai-nodejs",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "The official Clarifai Node.js SDK",
   "source": "src/index.ts",
   "main": "dist/main.js",
