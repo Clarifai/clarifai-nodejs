@@ -79,7 +79,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/app.ts:102](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L102)
+[src/client/app.ts:102](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L102)
 
 ## Properties
 
@@ -89,7 +89,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/app.ts:86](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L86)
+[src/client/app.ts:86](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L86)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:87](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L87)
+[src/client/app.ts:87](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L87)
 
 ## Methods
 
@@ -171,7 +171,7 @@ A Dataset object for the specified dataset ID.
 
 #### Defined in
 
-[src/client/app.ts:429](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L429)
+[src/client/app.ts:429](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L429)
 
 ___
 
@@ -248,7 +248,7 @@ A Model object for the specified model ID.
 
 #### Defined in
 
-[src/client/app.ts:471](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L471)
+[src/client/app.ts:473](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L473)
 
 ___
 
@@ -294,7 +294,7 @@ A Module object for the specified module ID.
 
 #### Defined in
 
-[src/client/app.ts:510](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L510)
+[src/client/app.ts:514](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L514)
 
 ___
 
@@ -367,7 +367,7 @@ A Workflow object for the specified workflow config.
 
 #### Defined in
 
-[src/client/app.ts:546](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L546)
+[src/client/app.ts:552](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L552)
 
 ___
 
@@ -409,7 +409,7 @@ A Dataset object for the existing dataset ID.
 
 #### Defined in
 
-[src/client/app.ts:759](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L759)
+[src/client/app.ts:771](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L771)
 
 ___
 
@@ -447,7 +447,7 @@ await app.deleteDataset({ datasetId: "dataset-id" });
 
 #### Defined in
 
-[src/client/app.ts:786](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L786)
+[src/client/app.ts:800](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L800)
 
 ___
 
@@ -485,7 +485,7 @@ await app.deleteModel({ modelId: "modelId" });
 
 #### Defined in
 
-[src/client/app.ts:809](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L809)
+[src/client/app.ts:825](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L825)
 
 ___
 
@@ -523,7 +523,7 @@ await app.deleteModule({ moduleId: "moduleId" });
 
 #### Defined in
 
-[src/client/app.ts:855](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L855)
+[src/client/app.ts:875](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L875)
 
 ___
 
@@ -561,7 +561,7 @@ await app.deleteWorkflow({ workflowId: "workflowId" });
 
 #### Defined in
 
-[src/client/app.ts:832](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L832)
+[src/client/app.ts:850](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L850)
 
 ___
 
@@ -605,7 +605,7 @@ Concepts in the app.
 
 #### Defined in
 
-[src/client/app.ts:391](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L391)
+[src/client/app.ts:391](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L391)
 
 ___
 
@@ -654,7 +654,7 @@ Defaults to 16 per page
 
 #### Defined in
 
-[src/client/app.ts:136](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L136)
+[src/client/app.ts:136](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L136)
 
 ___
 
@@ -703,7 +703,7 @@ Defaults to 16 per page
 
 #### Defined in
 
-[src/client/app.ts:342](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L342)
+[src/client/app.ts:342](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L342)
 
 ___
 
@@ -749,7 +749,7 @@ Defaults to 16 per page
 
 #### Defined in
 
-[src/client/app.ts:180](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L180)
+[src/client/app.ts:180](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L180)
 
 ___
 
@@ -799,7 +799,7 @@ Defaults to 16 per page
 
 #### Defined in
 
-[src/client/app.ts:291](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L291)
+[src/client/app.ts:291](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L291)
 
 ___
 
@@ -813,7 +813,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:415](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L415)
+[src/client/app.ts:415](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L415)
 
 ___
 
@@ -863,7 +863,7 @@ Defaults to 16 per page
 
 #### Defined in
 
-[src/client/app.ts:238](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L238)
+[src/client/app.ts:238](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L238)
 
 ___
 
@@ -910,7 +910,7 @@ A model object for the specified model ID.
 
 #### Defined in
 
-[src/client/app.ts:685](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L685)
+[src/client/app.ts:693](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L693)
 
 ___
 
@@ -951,4 +951,4 @@ A workflow object for the specified workflow ID.
 
 #### Defined in
 
-[src/client/app.ts:731](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L731)
+[src/client/app.ts:741](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L741)

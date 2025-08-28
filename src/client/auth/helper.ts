@@ -27,6 +27,12 @@ const validResourceTypes = [
 const baseHttpsCache: Cache = {};
 const uiHttpsCache: Cache = {};
 
+const MAX_MESSAGE_LENGTH = 1024 * 1024 * 1024; // 1GB
+const requestOptions = {
+  "grpc.max_receive_message_length": MAX_MESSAGE_LENGTH,
+  "grpc.max_send_message_length": MAX_MESSAGE_LENGTH,
+};
+
 function getHostnameFromUrl(url: string): string {
   // Remove protocol (http, https) if present
   let hostname = url.indexOf("//") > -1 ? url.split("/")[2] : url.split("/")[0];
@@ -249,9 +255,14 @@ export class ClarifaiAuthHelper {
           grpc.ChannelCredentials.createSsl(
             fs.readFileSync(this._rootCertificatesPath),
           ),
+          requestOptions,
         );
       } else {
-        client = new V2Client(this._base, grpc.ChannelCredentials.createSsl());
+        client = new V2Client(
+          this._base,
+          grpc.ChannelCredentials.createSsl(),
+          requestOptions,
+        );
       }
     } else {
       let host: string;
@@ -269,6 +280,7 @@ export class ClarifaiAuthHelper {
       client = new V2Client(
         `${host}:${port}`,
         grpc.ChannelCredentials.createInsecure(),
+        requestOptions,
       );
     }
 

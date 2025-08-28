@@ -39,7 +39,7 @@
 
 #### Defined in
 
-[src/client/rag.ts:67](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L67)
+[src/client/rag.ts:67](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L67)
 
 ## Properties
 
@@ -49,7 +49,7 @@
 
 #### Defined in
 
-[src/client/rag.ts:65](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L65)
+[src/client/rag.ts:65](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L65)
 
 ___
 
@@ -59,7 +59,7 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:61](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L61)
+[src/client/rag.ts:61](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L61)
 
 ___
 
@@ -69,7 +69,7 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:63](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L63)
+[src/client/rag.ts:63](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L63)
 
 ## Methods
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:405](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L405)
+[src/client/rag.ts:405](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L405)
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:283](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L283)
+[src/client/rag.ts:283](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L283)
 
 ___
 
@@ -141,7 +141,7 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:89](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L89)
+[src/client/rag.ts:89](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L89)
 
 ___
 
@@ -170,4 +170,4 @@ ___
 
 #### Defined in
 
-[src/client/rag.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/rag.ts#L109)
+[src/client/rag.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/rag.ts#L109)

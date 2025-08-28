@@ -23,6 +23,7 @@ Model is a class that provides access to Clarifai API endpoints related to Model
 - [modelInfo](Model.md#modelinfo)
 - [modelUserAppId](Model.md#modeluserappid)
 - [modelVersion](Model.md#modelversion)
+- [runner](Model.md#runner)
 - [trainingParams](Model.md#trainingparams)
 
 ### Methods
@@ -35,6 +36,7 @@ Model is a class that provides access to Clarifai API endpoints related to Model
 - [generateGrpc](Model.md#generategrpc)
 - [getParamInfo](Model.md#getparaminfo)
 - [getParams](Model.md#getparams)
+- [getRunner](Model.md#getrunner)
 - [listTrainingTemplates](Model.md#listtrainingtemplates)
 - [listVersions](Model.md#listversions)
 - [loadInfo](Model.md#loadinfo)
@@ -44,6 +46,7 @@ Model is a class that provides access to Clarifai API endpoints related to Model
 - [predictByBytes](Model.md#predictbybytes)
 - [predictByFilepath](Model.md#predictbyfilepath)
 - [predictByUrl](Model.md#predictbyurl)
+- [setRunner](Model.md#setrunner)
 - [stream](Model.md#stream)
 - [streamWithControl](Model.md#streamwithcontrol)
 - [updateParams](Model.md#updateparams)
@@ -87,7 +90,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/model.ts:125](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L125)
+[src/client/model.ts:132](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L132)
 
 ## Properties
 
@@ -97,7 +100,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/model.ts:105](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L105)
+[src/client/model.ts:111](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L111)
 
 ___
 
@@ -107,7 +110,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:106](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L106)
+[src/client/model.ts:112](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L112)
 
 ___
 
@@ -117,7 +120,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L109)
+[src/client/model.ts:115](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L115)
 
 ___
 
@@ -127,7 +130,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:107](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L107)
+[src/client/model.ts:113](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L113)
 
 ___
 
@@ -137,7 +140,17 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:108](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L108)
+[src/client/model.ts:114](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L114)
+
+___
+
+### runner
+
+• `Private` **runner**: `undefined` \| `RunnerSelector`
+
+#### Defined in
+
+[src/client/model.ts:117](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L117)
 
 ___
 
@@ -147,7 +160,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:110](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L110)
+[src/client/model.ts:116](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L116)
 
 ## Methods
 
@@ -161,7 +174,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:589](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L589)
+[src/client/model.ts:647](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L647)
 
 ___
 
@@ -182,7 +195,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:605](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L605)
+[src/client/model.ts:663](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L663)
 
 ___
 
@@ -237,7 +250,7 @@ console.log(modelObjectWithVersion);
 
 #### Defined in
 
-[src/client/model.ts:489](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L489)
+[src/client/model.ts:545](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L545)
 
 ___
 
@@ -275,7 +288,7 @@ model.deleteVersion("version_id");
 
 #### Defined in
 
-[src/client/model.ts:460](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L460)
+[src/client/model.ts:514](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L514)
 
 ___
 
@@ -295,7 +308,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:1039](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L1039)
+[src/client/model.ts:1120](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1120)
 
 ___
 
@@ -315,7 +328,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:782](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L782)
+[src/client/model.ts:848](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L848)
 
 ___
 
@@ -353,7 +366,7 @@ model.getParamInfo("template");
 
 #### Defined in
 
-[src/client/model.ts:394](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L394)
+[src/client/model.ts:446](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L446)
 
 ___
 
@@ -395,7 +408,25 @@ console.log(modelParams);
 
 #### Defined in
 
-[src/client/model.ts:286](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L286)
+[src/client/model.ts:336](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L336)
+
+___
+
+### getRunner
+
+▸ **getRunner**(): `undefined` \| `AsObject`
+
+Returns the runner for the model.
+
+#### Returns
+
+`undefined` \| `AsObject`
+
+- The runner for the model.
+
+#### Defined in
+
+[src/client/model.ts:230](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L230)
 
 ___
 
@@ -430,7 +461,7 @@ console.log(trainingTemplates);
 
 #### Defined in
 
-[src/client/model.ts:241](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L241)
+[src/client/model.ts:289](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L289)
 
 ___
 
@@ -476,7 +507,7 @@ Defaults to 16 per page if pageNo is not specified
 
 #### Defined in
 
-[src/client/model.ts:531](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L531)
+[src/client/model.ts:589](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L589)
 
 ___
 
@@ -493,7 +524,7 @@ Usually called internally by other methods, to ensure the model info is loaded w
 
 #### Defined in
 
-[src/client/model.ts:193](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L193)
+[src/client/model.ts:238](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L238)
 
 ___
 
@@ -507,7 +538,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:567](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L567)
+[src/client/model.ts:625](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L625)
 
 ___
 
@@ -531,7 +562,7 @@ Overrides the model version.
 
 #### Defined in
 
-[src/client/model.ts:1233](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L1233)
+[src/client/model.ts:1314](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1314)
 
 ___
 
@@ -554,7 +585,7 @@ Useful for chat / text based llms
 
 #### Defined in
 
-[src/client/model.ts:682](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L682)
+[src/client/model.ts:740](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L740)
 
 ▸ **predict**(`«destructured»`): `Promise`\<`AsObject`[]\>
 
@@ -612,7 +643,7 @@ console.log(imagePrediction);
 
 #### Defined in
 
-[src/client/model.ts:700](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L700)
+[src/client/model.ts:758](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L758)
 
 ___
 
@@ -641,7 +672,7 @@ Inputs can be provided as a Buffer.
 
 #### Defined in
 
-[src/client/model.ts:1174](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L1174)
+[src/client/model.ts:1255](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1255)
 
 ___
 
@@ -670,7 +701,7 @@ Inputs can be provided as a filepath which can be read.
 
 #### Defined in
 
-[src/client/model.ts:1140](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L1140)
+[src/client/model.ts:1221](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1221)
 
 ___
 
@@ -699,7 +730,29 @@ Inputs can be provided as a URL.
 
 #### Defined in
 
-[src/client/model.ts:1098](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L1098)
+[src/client/model.ts:1179](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1179)
+
+___
+
+### setRunner
+
+▸ **setRunner**(`runner`): `void`
+
+Sets the runner for the model.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `runner` | `Subset`\<`AsObject`\> |
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+[src/client/model.ts:202](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L202)
 
 ___
 
@@ -719,7 +772,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:956](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L956)
+[src/client/model.ts:1034](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L1034)
 
 ___
 
@@ -745,7 +798,7 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:859](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L859)
+[src/client/model.ts:931](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L931)
 
 ___
 
@@ -786,7 +839,7 @@ model.updateParams({
 
 #### Defined in
 
-[src/client/model.ts:363](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L363)
+[src/client/model.ts:415](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L415)
 
 ___
 
@@ -806,4 +859,4 @@ ___
 
 #### Defined in
 
-[src/client/model.ts:583](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/model.ts#L583)
+[src/client/model.ts:641](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/model.ts#L641)
