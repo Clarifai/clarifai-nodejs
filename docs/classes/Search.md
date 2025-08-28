@@ -56,7 +56,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/search.ts:59](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L59)
+[src/client/search.ts:59](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L59)
 
 ## Properties
 
@@ -66,7 +66,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/search.ts:57](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L57)
+[src/client/search.ts:57](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L57)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:55](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L55)
+[src/client/search.ts:55](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L55)
 
 ___
 
@@ -86,7 +86,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:56](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L56)
+[src/client/search.ts:56](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L56)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:54](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L54)
+[src/client/search.ts:54](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L54)
 
 ___
 
@@ -106,7 +106,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L53)
+[src/client/search.ts:53](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L53)
 
 ## Methods
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:94](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L94)
+[src/client/search.ts:94](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L94)
 
 ___
 
@@ -160,7 +160,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:204](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L204)
+[src/client/search.ts:204](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L204)
 
 ___
 
@@ -192,7 +192,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:168](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L168)
+[src/client/search.ts:168](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L168)
 
 ___
 
@@ -222,7 +222,7 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:221](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L221)
+[src/client/search.ts:221](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L221)
 
 ___
 
@@ -246,4 +246,4 @@ ___
 
 #### Defined in
 
-[src/client/search.ts:287](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/search.ts#L287)
+[src/client/search.ts:290](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/search.ts#L290)

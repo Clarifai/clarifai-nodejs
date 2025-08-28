@@ -39,7 +39,7 @@
 
 #### Defined in
 
-[src/client/app.ts:55](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L55)
+[src/client/app.ts:55](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L55)
 
 ___
 
@@ -61,7 +61,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L50)
+[src/client/app.ts:50](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L50)
 
 ___
 
@@ -91,7 +91,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:75](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L75)
+[src/client/app.ts:75](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L75)
 
 ___
 
@@ -110,6 +110,7 @@ ___
 | `createdAt` | `undefined` \| `AsObject` |
 | `creator` | `undefined` \| `string` |
 | `defaultEvalInfo` | `undefined` \| `AsObject` |
+| `deployRestriction` | `undefined` \| `DeployRestriction` |
 | `description` | `undefined` \| `string` |
 | `displayName` | `undefined` \| `string` |
 | `featuredOrder` | `undefined` \| `AsObject` |
@@ -126,6 +127,7 @@ ___
 | `notes` | `undefined` \| `string` |
 | `outputInfo` | `undefined` \| `AsObject` |
 | `presets` | `undefined` \| `AsObject` |
+| `replicaCount` | `undefined` \| `number` |
 | `source` | `undefined` \| `Source` |
 | `starCount` | `undefined` \| `number` |
 | `task` | `undefined` \| `string` |
@@ -138,7 +140,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:79](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L79)
+[src/client/app.ts:79](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L79)
 
 ___
 
@@ -169,7 +171,7 @@ ___
 
 #### Defined in
 
-[src/client/input.ts:80](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/input.ts#L80)
+[src/client/input.ts:80](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/input.ts#L80)
 
 ___
 
@@ -199,7 +201,7 @@ ___
 
 #### Defined in
 
-[src/client/user.ts:22](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/user.ts#L22)
+[src/client/user.ts:22](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/user.ts#L22)
 
 ___
 
@@ -225,7 +227,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:65](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L65)
+[src/client/app.ts:65](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L65)
 
 ___
 
@@ -241,7 +243,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:73](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L73)
+[src/client/app.ts:73](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L73)
 
 ___
 
@@ -271,6 +273,7 @@ ___
 | `page` | `undefined` \| `number` |
 | `query` | `undefined` \| `string` |
 | `search` | `undefined` \| `string` |
+| `showReplicas` | `undefined` \| `boolean` |
 | `sortAscending` | `undefined` \| `boolean` |
 | `sortByCreatedAt` | `undefined` \| `boolean` |
 | `sortByModifiedAt` | `undefined` \| `boolean` |
@@ -285,7 +288,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:67](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L67)
+[src/client/app.ts:67](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L67)
 
 ___
 
@@ -312,7 +315,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:71](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L71)
+[src/client/app.ts:71](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L71)
 
 ___
 
@@ -326,12 +329,13 @@ ___
 | :------ | :------ |
 | `computeClusterId` | `undefined` \| `string` |
 | `minReplicas` | `undefined` \| `number` |
+| `modelVersionIdsList` | `undefined` \| `string`[] |
 | `nodepoolId` | `undefined` \| `string` |
 | `page` | `undefined` \| `number` |
 
 #### Defined in
 
-[src/client/user.ts:24](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/user.ts#L24)
+[src/client/user.ts:24](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/user.ts#L24)
 
 ___
 
@@ -360,7 +364,7 @@ ___
 
 #### Defined in
 
-[src/client/app.ts:69](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/app.ts#L69)
+[src/client/app.ts:69](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/app.ts#L69)
 
 ___
 
@@ -382,4 +386,4 @@ ___
 
 #### Defined in
 
-[src/client/user.ts:21](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/user.ts#L21)
+[src/client/user.ts:21](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/user.ts#L21)

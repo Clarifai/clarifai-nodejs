@@ -62,7 +62,7 @@ Lister.constructor
 
 #### Defined in
 
-[src/client/dataset.ts:39](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L39)
+[src/client/dataset.ts:39](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L39)
 
 ## Properties
 
@@ -76,7 +76,7 @@ Lister.STUB
 
 #### Defined in
 
-[src/client/base.ts:27](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L27)
+[src/client/base.ts:27](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L27)
 
 ___
 
@@ -90,7 +90,7 @@ Lister.authHelper
 
 #### Defined in
 
-[src/client/base.ts:26](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L26)
+[src/client/base.ts:26](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L26)
 
 ___
 
@@ -104,7 +104,7 @@ Lister.base
 
 #### Defined in
 
-[src/client/base.ts:31](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L31)
+[src/client/base.ts:31](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L31)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:36](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L36)
+[src/client/dataset.ts:36](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L36)
 
 ___
 
@@ -128,7 +128,7 @@ Lister.defaultPageSize
 
 #### Defined in
 
-[src/client/lister.ts:10](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/lister.ts#L10)
+[src/client/lister.ts:10](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/lister.ts#L10)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:35](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L35)
+[src/client/dataset.ts:35](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L35)
 
 ___
 
@@ -148,7 +148,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:37](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L37)
+[src/client/dataset.ts:37](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L37)
 
 ___
 
@@ -162,7 +162,7 @@ Lister.metadata
 
 #### Defined in
 
-[src/client/base.ts:28](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L28)
+[src/client/base.ts:28](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L28)
 
 ___
 
@@ -176,7 +176,7 @@ Lister.pat
 
 #### Defined in
 
-[src/client/base.ts:29](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L29)
+[src/client/base.ts:29](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L29)
 
 ___
 
@@ -190,7 +190,7 @@ Lister.rootCertificatesPath
 
 #### Defined in
 
-[src/client/base.ts:32](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L32)
+[src/client/base.ts:32](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L32)
 
 ___
 
@@ -204,7 +204,7 @@ Lister.userAppId
 
 #### Defined in
 
-[src/client/base.ts:30](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L30)
+[src/client/base.ts:30](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L30)
 
 ## Methods
 
@@ -232,7 +232,7 @@ Lister.convertStringToTimestamp
 
 #### Defined in
 
-[src/client/base.ts:100](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L100)
+[src/client/base.ts:100](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L100)
 
 ___
 
@@ -255,7 +255,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:58](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L58)
+[src/client/dataset.ts:58](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L58)
 
 ___
 
@@ -275,7 +275,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:91](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L91)
+[src/client/dataset.ts:93](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L93)
 
 ___
 
@@ -312,7 +312,7 @@ Lister.grpcRequest
 
 #### Defined in
 
-[src/client/base.ts:77](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/base.ts#L77)
+[src/client/base.ts:77](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/base.ts#L77)
 
 ___
 
@@ -347,7 +347,7 @@ Lister.listPagesData
 
 #### Defined in
 
-[src/client/lister.ts:87](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/lister.ts#L87)
+[src/client/lister.ts:92](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/lister.ts#L92)
 
 ___
 
@@ -382,7 +382,7 @@ Lister.listPagesGenerator
 
 #### Defined in
 
-[src/client/lister.ts:23](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/lister.ts#L23)
+[src/client/lister.ts:23](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/lister.ts#L23)
 
 ___
 
@@ -403,7 +403,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:109](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L109)
+[src/client/dataset.ts:113](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L113)
 
 ___
 
@@ -429,7 +429,7 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:172](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L172)
+[src/client/dataset.ts:176](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L176)
 
 ___
 
@@ -454,4 +454,4 @@ ___
 
 #### Defined in
 
-[src/client/dataset.ts:134](https://github.com/Clarifai/clarifai-nodejs/blob/caa21f4/src/client/dataset.ts#L134)
+[src/client/dataset.ts:138](https://github.com/Clarifai/clarifai-nodejs/blob/435d969/src/client/dataset.ts#L138)
