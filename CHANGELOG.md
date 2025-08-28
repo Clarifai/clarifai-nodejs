@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.2.1...v0.3.0) (2025-08-28)
+
+
+### Features
+
+* increase grpc message size limits ([#40](https://github.com/Clarifai/clarifai-nodejs/issues/40)) ([05ceeef](https://github.com/Clarifai/clarifai-nodejs/commit/05ceeef14d270a07c485b1e762d6a245376712be))
+
 ## [0.2.1](https://github.com/Clarifai/clarifai-nodejs/compare/v0.2.0...v0.2.1) (2025-07-24)
 
 
