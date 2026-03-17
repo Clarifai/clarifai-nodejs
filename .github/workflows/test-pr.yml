@@ -28,10 +28,7 @@ jobs:
       - name: "Lint"
         run: npm run lint
       - name: "Test"
-        run: npx vitest --coverage.enabled true
-        env:
-          VITE_CLARIFAI_USER_ID: ${{ secrets.VITE_CLARIFAI_USER_ID }}
-          VITE_CLARIFAI_PAT:  ${{ secrets.VITE_CLARIFAI_PAT }}
+        run: npx vitest --coverage.enabled true unit.test
       - name: Prepare Branch Name
         id: prepare
         run: |
