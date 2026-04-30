@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.2](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.0...v0.3.2) (2026-04-30)
+
+
+### Bug Fixes
+
+* Publish Action 🔧 ([#47](https://github.com/Clarifai/clarifai-nodejs/issues/47)) ([2a5a6a7](https://github.com/Clarifai/clarifai-nodejs/commit/2a5a6a767b8d8abfaca674a302db6571cece6642))
+* Security update for packages ([#44](https://github.com/Clarifai/clarifai-nodejs/issues/44)) ([ee00e3f](https://github.com/Clarifai/clarifai-nodejs/commit/ee00e3f2b5178563c1c1a79b100ee3d804fae5f7))
+
+
+### Miscellaneous Chores
+
+* **release:** release 0.3.2 ([8f77238](https://github.com/Clarifai/clarifai-nodejs/commit/8f77238fd6fae45b6babeb3bc7e860d8ce472254))
+* **release:** release 0.3.2 ([#46](https://github.com/Clarifai/clarifai-nodejs/issues/46)) ([878a623](https://github.com/Clarifai/clarifai-nodejs/commit/878a623cf85ac1658a99d0c2c5db7e55c0954137))
+
 ## [0.3.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.2.1...v0.3.0) (2025-08-28)
 
 
