@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.2...v0.3.3) (2026-05-08)
+
+
+### Bug Fixes
+
+* security update for dependencies ([272c5e7](https://github.com/Clarifai/clarifai-nodejs/commit/272c5e757bc14f98efd720eb50e01444c1a97cce))
+
 ## [0.3.2](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.0...v0.3.2) (2026-04-30)
 
 
