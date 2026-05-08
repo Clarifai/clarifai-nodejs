@@ -16,11 +16,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ matrix.branch }}
       - name: "Install Node"
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20.11.0"
       - name: "Install Deps"
@@ -34,7 +34,7 @@ jobs:
         run: |
           echo "CLEAN_BRANCH=$(echo '${{ matrix.branch }}' | sed 's/[":<>|*?\r\n\\\/]/-/g')" >> $GITHUB_ENV
       - name: "Upload Coverage"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-${{ env.CLEAN_BRANCH }}
           path: coverage
@@ -42,21 +42,25 @@ jobs:
   report-coverage:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     steps:
       - name: Prepare Branch Name
         id: prepare
         run: |
           echo "CLEAN_BRANCH=$(echo '${{ github.head_ref }}' | sed 's/[":<>|*?\r\n\\\/]/-/g')" >> $GITHUB_ENV
       - name: "Download Coverage Artifacts"
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: coverage-${{ env.CLEAN_BRANCH }}
           path: coverage
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: coverage-main
           path: coverage-main
       - name: "Report Coverage"
-        uses: davelosert/vitest-coverage-report-action@v2
+        uses: davelosert/vitest-coverage-report-action@3c50566c523e04813df28de8f7c48dd97d663f1c # v2
         with:
           json-summary-compare-path: coverage-main/coverage-summary.json
