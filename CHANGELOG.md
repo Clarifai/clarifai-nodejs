@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.4](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.3...v0.3.4) (2026-05-12)
+
+
+### Bug Fixes
+
+* securely pin workflows ([#54](https://github.com/Clarifai/clarifai-nodejs/issues/54)) ([464bff8](https://github.com/Clarifai/clarifai-nodejs/commit/464bff86ce749c2cb15435542aabaed76d8dbbda))
+* security update for fast-uri dependency ([#50](https://github.com/Clarifai/clarifai-nodejs/issues/50)) ([5d8c69b](https://github.com/Clarifai/clarifai-nodejs/commit/5d8c69b1c8a65dbbafe704fe544931886c16ae25))
+* suppress high level vulnerabilities ([#53](https://github.com/Clarifai/clarifai-nodejs/issues/53)) ([b89ca6c](https://github.com/Clarifai/clarifai-nodejs/commit/b89ca6c36aff86b999562469155844fcd600f9db))
+* update low risk security vulnerabilities ([#52](https://github.com/Clarifai/clarifai-nodejs/issues/52)) ([1e5c845](https://github.com/Clarifai/clarifai-nodejs/commit/1e5c8454d424216d4ec2d70ac6d720c6b1f11cc9))
+
 ## [0.3.3](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.2...v0.3.3) (2026-05-08)
 
 
