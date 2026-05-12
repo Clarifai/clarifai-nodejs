@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.5](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.4...v0.3.5) (2026-05-12)
+
+
+### Bug Fixes
+
+* update tmp dependency ([#57](https://github.com/Clarifai/clarifai-nodejs/issues/57)) ([339ab5c](https://github.com/Clarifai/clarifai-nodejs/commit/339ab5cc02317e7a5f4eb8e2a2ca0cacec5d6d13))
+* upgrade protobuf dependencies ([#55](https://github.com/Clarifai/clarifai-nodejs/issues/55)) ([047e872](https://github.com/Clarifai/clarifai-nodejs/commit/047e87295ae06fe13dc66f0380fc16889a4894af))
+
 ## [0.3.4](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.3...v0.3.4) (2026-05-12)
 
 
