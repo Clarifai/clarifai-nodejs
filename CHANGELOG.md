@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.5...v0.4.0) (2026-05-13)
+
+
+### Features
+
+* refactor and update llamaindex packages ([#58](https://github.com/Clarifai/clarifai-nodejs/issues/58)) ([e7510ba](https://github.com/Clarifai/clarifai-nodejs/commit/e7510bac60a0619ab2ff38677c7fd0131b0d9f71))
+
+
+### Bug Fixes
+
+* address false positive dependency issues ([#60](https://github.com/Clarifai/clarifai-nodejs/issues/60)) ([a92604c](https://github.com/Clarifai/clarifai-nodejs/commit/a92604cd4f11ca45049868e4eef87940dd53df34))
+
 ## [0.3.5](https://github.com/Clarifai/clarifai-nodejs/compare/v0.3.4...v0.3.5) (2026-05-12)
 
 
