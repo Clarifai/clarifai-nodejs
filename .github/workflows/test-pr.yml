@@ -3,22 +3,12 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test-pr:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        branch:
-          - ${{ github.head_ref }}
-          - "main"
-
     permissions:
-      # Required to checkout the code
       contents: read
-
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          ref: ${{ matrix.branch }}
       - name: "Install Node"
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -30,17 +20,38 @@ jobs:
       - name: "Test"
         run: npx vitest --coverage.enabled true unit.test
       - name: Prepare Branch Name
-        id: prepare
         run: |
-          echo "CLEAN_BRANCH=$(echo '${{ matrix.branch }}' | sed 's/[":<>|*?\r\n\\\/]/-/g')" >> $GITHUB_ENV
+          echo "CLEAN_BRANCH=$(echo '${{ github.head_ref }}' | sed 's/[":<>|*?\r\n\\\/]/-/g')" >> $GITHUB_ENV
       - name: "Upload Coverage"
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage-${{ env.CLEAN_BRANCH }}
           path: coverage
 
+  test-main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+      - name: "Install Node"
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20.11.0"
+      - name: "Install Deps"
+        run: npm ci
+      - name: "Test"
+        run: npx vitest --coverage.enabled true unit.test
+      - name: "Upload Coverage"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-main
+          path: coverage
+
   report-coverage:
-    needs: test
+    needs: [test-pr, test-main]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,7 +59,6 @@ jobs:
       pull-requests: write
     steps:
       - name: Prepare Branch Name
-        id: prepare
         run: |
           echo "CLEAN_BRANCH=$(echo '${{ github.head_ref }}' | sed 's/[":<>|*?\r\n\\\/]/-/g')" >> $GITHUB_ENV
       - name: "Download Coverage Artifacts"
