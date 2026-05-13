@@ -101,6 +101,7 @@
     "glob@10": "^10.5.0",
     "mammoth": "^1.11.0",
     "rollup@4": "^4.59.0",
-    "@parcel/reporter-dev-server": "^2.16.4"
+    "@parcel/reporter-dev-server": "^2.16.4",
+    "tar": "^7.5.11"
   }
 }
