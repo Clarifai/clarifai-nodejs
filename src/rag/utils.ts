@@ -1,10 +1,8 @@
-import {
-  SimpleDirectoryReader,
-  DocxReader,
-  PDFReader,
-  TextFileReader,
-  SentenceSplitter,
-} from "llamaindex";
+import { SimpleDirectoryReader } from "@llamaindex/readers/directory";
+import { DocxReader } from "@llamaindex/readers/docx";
+import { PDFReader } from "@llamaindex/readers/pdf";
+import { TextFileReader } from "@llamaindex/readers/text";
+import { SentenceSplitter } from "@llamaindex/core/node-parser";
 import axios from "axios";
 import tmp from "tmp";
 import * as fs from "fs";
@@ -38,16 +36,20 @@ async function downloadFileToTemp(url: string): Promise<DownloadResponse> {
       ?.toString()
       ?.toLowerCase();
 
-    // Stream the file content to the temporary file
-    response.data.pipe(fs.createWriteStream(tempFile.name));
+    const writeStream = fs.createWriteStream(tempFile.name);
+    response.data.pipe(writeStream);
 
     return new Promise((resolve, reject) => {
-      response.data.on("end", () => {
+      writeStream.on("finish", () => {
         resolve({ filePath: tempFile.name, mimeType });
       });
 
+      writeStream.on("error", (err: Error) => {
+        tempFile.removeCallback();
+        reject(err);
+      });
+
       response.data.on("error", (err: Error) => {
-        // Clean up the temporary file in case of an error
         tempFile.removeCallback();
         reject(err);
       });
